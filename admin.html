@@ -1,0 +1,9 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>IzzyDrop Admin</title><link rel="stylesheet" href="styles.css"></head><body>
+<div class="wrap"><header class="nav"><a class="brand" href="index.html">IzzyDrop <span>Admin</span></a><div class="navlinks"><a class="btn ghost" href="index.html">Marketplace</a><button id="logout" class="btn secondary">Sign out</button></div></header>
+<div class="dash"><aside class="side"><div class="brand">Control center</div><nav><button class="on" data-view="suppliers">Suppliers</button><button data-view="products">Products</button><button data-view="orders">Orders</button></nav></aside>
+<main class="main"><header class="dash-head"><div><h1>Admin dashboard</h1><div class="muted">Review suppliers and watch marketplace activity.</div></div></header><div id="status" class="status"></div>
+<section id="view-suppliers" class="view"><div class="catalog-head"><div><h2>Supplier applications</h2><p class="muted">Approve trusted suppliers before their products enter the marketplace.</p></div></div><div id="suppliers" class="list"></div></section>
+<section id="view-products" class="view" hidden><h2>Products</h2><div id="products" class="list"></div></section>
+<section id="view-orders" class="view" hidden><h2>Orders</h2><div id="orders" class="list"></div></section>
+</main></div></div>
+<script src="config.js"></script><script src="common.js"></script><script src="admin.js"></script></body></html>
