@@ -1,0 +1,34 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>IzzyDrop Dropshipper Hub</title><link rel="stylesheet" href="styles.css"></head><body>
+<div class="wrap"><header class="nav"><a class="brand" href="index.html">IzzyDrop <span>Dropshipper</span></a><div class="navlinks"><a class="btn ghost" href="index.html">Marketplace</a></div></header>
+<div id="auth" class="auth-shell"><div class="auth-card"><div class="eyebrow">Dropshipper hub</div><h1>Run your store your way.</h1><p class="muted">No Shopify required.</p><div class="tabs"><button class="tab on" data-mode="login">Log in</button><button class="tab" data-mode="signup">Create account</button></div><form id="login-form" class="form"><input id="login-email" type="email" placeholder="Email" required><input id="login-password" type="password" placeholder="Password" required><button class="btn">Log in</button></form><form id="signup-form" class="form" hidden><input id="signup-name" placeholder="Your name" required><input id="signup-business" placeholder="Store / business name"><input id="signup-email" type="email" placeholder="Email" required><input id="signup-password" type="password" minlength="6" placeholder="Password" required><button class="btn">Create dropshipper account</button></form><div id="auth-status" class="status"></div></div></div>
+<div id="dashboard" hidden><div class="dash"><aside class="side"><div class="brand">IzzyDrop</div><nav><button class="on" data-view="overview">Overview</button><button data-view="products">Products</button><button data-view="linked">My products</button><button data-view="orders">Orders</button></nav></aside><main class="main"><header class="dash-head"><div><h1>Dashboard</h1><div id="user-email" class="muted"></div></div><button id="logout" class="btn secondary">Sign out</button></header><div id="dash-status" class="status"></div>
+<section id="view-overview" class="view"><div class="stat-grid"><div class="card stat">Products available<strong id="stat-products">—</strong></div><div class="card stat">My products<strong id="stat-linked">—</strong></div><div class="card stat">Orders<strong id="stat-orders">—</strong></div></div><div class="card"><h2>Freedom first.</h2><p class="muted">Pick products from IzzyDrop and use their public links on any storefront you want. Your website technology is your decision.</p></div></section>
+<section id="view-products" class="view" hidden><div class="catalog-head"><h2>Products</h2><input id="product-search" class="search" placeholder="Search products or SKU"></div><div id="products" class="product-grid"></div></section>
+<section id="view-linked" class="view" hidden><h2>My products</h2><div id="linked" class="list"></div></section>
+<section id="view-orders" class="view" hidden>
+  <div class="catalog-head"><div><h2>Orders</h2><p class="muted">Create an order manually from any website, then the supplier can fulfill it through IzzyDrop.</p></div></div>
+  <div class="card" style="margin-bottom:18px">
+    <h3 style="margin-top:0">Create order</h3>
+    <form id="order-form" class="form">
+      <select id="order-product" required><option value="">Choose one of My products</option></select>
+      <select id="order-variant" required disabled><option value="">Choose variant</option></select>
+      <input id="order-qty" type="number" min="1" value="1" placeholder="Quantity" required>
+      <input id="order-customer-name" placeholder="Customer name" required>
+      <input id="order-customer-phone" placeholder="Customer phone" required>
+      <input id="order-customer-email" type="email" placeholder="Customer email (optional)">
+      <input id="order-address1" placeholder="Street / address" required>
+      <div class="row">
+        <input id="order-city" placeholder="City" required style="flex:1">
+        <input id="order-governorate" placeholder="Governorate" style="flex:1">
+      </div>
+      <input id="order-ref" placeholder="Your order reference (optional)">
+      <button id="order-submit" class="btn" type="submit">Send order to IzzyDrop</button>
+    </form>
+    <div id="order-status" class="status"></div>
+  </div>
+  <div id="orders" class="list"></div>
+</section>
+</main></div></div>
+</div>
+<div id="link-modal" class="modal" hidden><div class="modal-card"><div class="row"><h2 style="margin:0">Link to your web</h2><button id="close-modal" class="btn secondary">Close</button></div><p class="muted">Use this public IzzyDrop product page anywhere. You can link to it directly or use the product data in your own code.</p><div class="linkbox"><input id="product-link" readonly><button id="copy-link" class="btn">Copy link</button></div><div id="copy-status" class="status"></div></div></div>
+<script src="config.js"></script><script src="common.js"></script><script src="app.js"></script></body></html>
