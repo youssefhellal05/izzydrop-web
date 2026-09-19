@@ -4,15 +4,20 @@
     const s=IZZY.session();
     if(!s?.user?.id)return;
     const id=encodeURIComponent(s.user.id);
-    const [drops,sups,profiles]=await Promise.all([
+    const [drops,sups,profiles,roles]=await Promise.all([
       IZZY.request(`/rest/v1/dropshippers?select=id,status&profile_id=eq.${id}`),
       IZZY.request(`/rest/v1/suppliers?select=id,status&profile_id=eq.${id}`),
-      IZZY.request(`/rest/v1/profiles?select=requested_account_type&id=eq.${id}&limit=1`)
+      IZZY.request(`/rest/v1/profiles?select=requested_account_type&id=eq.${id}&limit=1`),
+      IZZY.request(`/rest/v1/user_roles?select=role&user_id=eq.${id}`)
     ]);
     const hasDrop=Array.isArray(drops)&&drops.length>0;
     const hasSup=Array.isArray(sups)&&sups.length>0;
     const requested=profiles?.[0]?.requested_account_type;
-    if(hasDrop&&hasSup){$('#role-choice').hidden=false;$('#auth-status').textContent='Choose which dashboard you want to open.';return}
+    const isAdmin=roles?.some(r=>r.role==='admin');
+    if(isAdmin)$('#go-admin').hidden=false;
+    const choices=(hasDrop?1:0)+(hasSup?1:0)+(isAdmin?1:0);
+    if(choices>1){$('#role-choice').hidden=false;$('#auth-status').textContent='Choose which dashboard you want to open.';return}
+    if(isAdmin){location.href='admin.html';return}
     if(hasSup||requested==='supplier'){location.href='supplier.html';return}
     if(hasDrop||requested==='dropshipper'){location.href='app.html';return}
     $('#auth-status').textContent='Account found, but no IzzyDrop role is attached yet.';
