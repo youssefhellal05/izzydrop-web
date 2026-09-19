@@ -1,0 +1,34 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Log in · IzzyDrop</title><link rel="stylesheet" href="styles.css"></head><body>
+<div class="wrap"><header class="nav"><a class="brand" href="index.html">IzzyDrop</a><div class="navlinks"><a class="btn ghost" href="index.html#catalog">Explore products</a></div></header>
+<div class="auth-shell"><div class="auth-card">
+  <div class="eyebrow">One account. One login.</div>
+  <h1>Welcome to IzzyDrop.</h1>
+  <p class="muted">Dropshippers and suppliers use the same login. We’ll open the right dashboard automatically.</p>
+  <div class="tabs"><button class="tab on" data-mode="login">Log in</button><button class="tab" data-mode="signup">Create account</button></div>
+  <form id="login-form" class="form">
+    <input id="login-email" type="email" placeholder="Email" required>
+    <input id="login-password" type="password" placeholder="Password" required>
+    <button class="btn">Log in</button>
+  </form>
+  <form id="signup-form" class="form" hidden>
+    <input id="signup-name" placeholder="Your name" required>
+    <input id="signup-business" placeholder="Business / store name">
+    <select id="signup-type" required>
+      <option value="">I am a…</option>
+      <option value="dropshipper">Dropshipper</option>
+      <option value="supplier">Supplier</option>
+    </select>
+    <input id="signup-email" type="email" placeholder="Email" required>
+    <input id="signup-password" type="password" minlength="6" placeholder="Password" required>
+    <button class="btn">Create account</button>
+  </form>
+  <div id="auth-status" class="status"></div>
+  <div id="role-choice" hidden class="notice" style="margin-top:14px">
+    <b>This account has more than one IzzyDrop role.</b>
+    <div class="hero-actions" style="margin-top:12px">
+      <a id="go-dropshipper" class="btn" href="app.html">Dropshipper dashboard</a>
+      <a id="go-supplier" class="btn secondary" href="supplier.html">Supplier dashboard</a>
+    </div>
+  </div>
+</div></div></div>
+<script src="config.js"></script><script src="common.js"></script><script src="login.js"></script></body></html>
