@@ -21,6 +21,8 @@
     logout(){localStorage.removeItem(KEY)},
     async refresh(){const s=this.session();if(!s?.refresh_token)return false;const r=await fetch(C.supabaseUrl+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:jsonHeaders(),body:JSON.stringify({refresh_token:s.refresh_token})});if(!r.ok)return false;this.saveSession(await r.json());return true},
     async login(email,password){const r=await fetch(C.supabaseUrl+'/auth/v1/token?grant_type=password',{method:'POST',headers:jsonHeaders(),body:JSON.stringify({email,password})});const d=await readJson(r);if(!r.ok)throw Error(d?.error_description||d?.message||'Login failed');this.saveSession(d);return d},
+    async consumeAuthRedirect(){const raw=location.hash.startsWith('#')?location.hash.slice(1):'';if(!raw)return null;const p=new URLSearchParams(raw);const access_token=p.get('access_token'),refresh_token=p.get('refresh_token'),type=p.get('type');if(!access_token)return null;const ur=await fetch(C.supabaseUrl+'/auth/v1/user',{headers:jsonHeaders(access_token)});const user=await readJson(ur);if(!ur.ok)throw Error(user?.message||'Could not open invite');const session={access_token,refresh_token,token_type:p.get('token_type')||'bearer',expires_in:Number(p.get('expires_in')||3600),user};this.saveSession(session);history.replaceState({},document.title,location.pathname+location.search);return {type,session}},
+    async updatePassword(password){const s=this.session();if(!s?.access_token)throw Error('Your invite session has expired. Please open the invite link again.');const r=await fetch(C.supabaseUrl+'/auth/v1/user',{method:'PUT',headers:jsonHeaders(s.access_token),body:JSON.stringify({password})});const d=await readJson(r);if(!r.ok)throw Error(d?.message||d?.error_description||'Could not set password');s.user=d;this.saveSession(s);return d},
     async signup({email,password,fullName,businessName,type}){const redirectTo=new URL('login.html',location.href).href;const r=await fetch(C.supabaseUrl+'/auth/v1/signup?redirect_to='+encodeURIComponent(redirectTo),{method:'POST',headers:jsonHeaders(),body:JSON.stringify({email,password,data:{full_name:fullName,business_name:businessName,requested_account_type:type}})});const d=await readJson(r);if(!r.ok)throw Error(d?.msg||d?.message||d?.error_description||'Sign up failed');if(d?.access_token)this.saveSession(d);return d},
     request,
     async rpc(name,args={},auth=true){if(auth)return request(`/rest/v1/rpc/${name}`,{method:'POST',body:JSON.stringify(args)});const r=await fetch(C.supabaseUrl+`/rest/v1/rpc/${name}`,{method:'POST',headers:{apikey:C.supabaseKey,'Content-Type':'application/json'},body:JSON.stringify(args)});const d=await readJson(r);if(!r.ok)throw Error(d?.message||d?.error||d?.text||'Request failed');return d},
@@ -28,4 +30,23 @@
     money(n,c='EGP'){try{return new Intl.NumberFormat('en-EG',{style:'currency',currency:c||'EGP'}).format(Number(n||0))}catch{return `${n||0} ${c||'EGP'}`}},
     productUrl(slug){return `${location.origin}${location.pathname.replace(/[^/]*$/,'')}product.html?slug=${encodeURIComponent(slug)}`}
   };
+
+  function installPasswordToggles(){
+    document.querySelectorAll('input[type="password"]').forEach(input=>{
+      if(input.dataset.eyeReady)return;
+      input.dataset.eyeReady='1';
+      const wrap=document.createElement('div');
+      wrap.className='password-field';
+      input.parentNode.insertBefore(wrap,input);
+      wrap.appendChild(input);
+      const btn=document.createElement('button');
+      btn.type='button';
+      btn.className='password-eye';
+      btn.setAttribute('aria-label','Show password');
+      btn.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.7"/></svg>';
+      btn.onclick=()=>{const show=input.type==='password';input.type=show?'text':'password';btn.classList.toggle('on',show);btn.setAttribute('aria-label',show?'Hide password':'Show password')};
+      wrap.appendChild(btn);
+    });
+  }
+  installPasswordToggles();
 })();
