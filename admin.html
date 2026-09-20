@@ -1,9 +1,38 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>IzzyDrop Admin</title><link rel="icon" href="favicon.svg" type="image/svg+xml"><meta name="theme-color" content="#111318"><meta name="description" content="IzzyDrop — Egypt’s independent dropshipping marketplace."><link rel="stylesheet" href="styles.css"></head><body>
 <div class="wrap"><header class="nav"><a class="brand" href="index.html"><span class="brand-mark">IZ</span><span class="brand-word">IzzyDrop</span> <span class="brand-role">Admin</span></a><div class="navlinks"><a class="btn ghost" href="index.html">Marketplace</a><button id="logout" class="btn secondary">Sign out</button></div></header>
-<div class="dash"><aside class="side"><div class="brand"><span class="brand-mark">IZ</span><span class="brand-word">IzzyDrop</span><span class="brand-role">Admin</span></div><nav><button class="on" data-view="suppliers">Suppliers</button><button data-view="products">Products</button><button data-view="orders">Orders</button></nav></aside>
-<main class="main"><div class="workspace-brand">IzzyDrop Admin Control Center</div><header class="dash-head"><div><h1>Admin dashboard</h1><div class="muted">Review suppliers and watch marketplace activity.</div></div></header><div id="status" class="status"></div>
+<div class="dash"><aside class="side"><div class="brand"><span class="brand-mark">IZ</span><span class="brand-word">IzzyDrop</span><span class="brand-role">Admin</span></div><nav><button class="on" data-view="suppliers">Suppliers</button><button data-view="products">Products</button><button data-view="commissions">Commissions</button><button data-view="orders">Orders</button><button data-view="admins">Admins</button></nav></aside>
+<main class="main"><div class="workspace-brand">IzzyDrop Admin Control Center</div><header class="dash-head"><div><h1>Admin dashboard</h1><div class="muted">Review suppliers, control commissions, and manage IzzyDrop access.</div></div></header><div id="status" class="status"></div>
+
 <section id="view-suppliers" class="view"><div class="catalog-head"><div><h2>Supplier applications</h2><p class="muted">Approve trusted suppliers before their products enter the marketplace.</p></div></div><div id="suppliers" class="list"></div></section>
+
 <section id="view-products" class="view" hidden><h2>Products</h2><div id="products" class="list"></div></section>
+
+<section id="view-commissions" class="view" hidden>
+  <div class="catalog-head"><div><h2>Commissions</h2><p class="muted">Choose a supplier, set its default IzzyDrop commission, then override individual products when needed.</p></div></div>
+  <div class="card admin-card">
+    <label class="field-label" for="commission-supplier">Supplier</label>
+    <select id="commission-supplier"></select>
+    <div class="commission-summary"><span>Marketplace default</span><strong id="global-commission">—</strong></div>
+    <form id="supplier-commission-form" class="form compact-form">
+      <label class="field-label" for="supplier-commission">Supplier default commission (%)</label>
+      <div class="inline-control"><input id="supplier-commission" type="number" min="0" max="100" step="0.01" placeholder="Use marketplace default"><button class="btn" type="submit">Save supplier rate</button></div>
+      <small class="muted">Leave blank to inherit the marketplace default.</small>
+    </form>
+  </div>
+  <div id="commission-products" class="list commission-list"></div>
+</section>
+
 <section id="view-orders" class="view" hidden><h2>Orders</h2><div id="orders" class="list"></div></section>
+
+<section id="view-admins" class="view" hidden>
+  <div class="catalog-head"><div><h2>Admin access</h2><p class="muted">Invite a trusted person by email. IzzyDrop sends them a secure link to create their password and open the admin dashboard.</p></div></div>
+  <div class="card admin-card">
+    <form id="admin-invite-form" class="form">
+      <label class="field-label" for="admin-email">Email address</label>
+      <div class="inline-control"><input id="admin-email" type="email" placeholder="name@company.com" required><button id="admin-invite-btn" class="btn" type="submit">Send admin invite</button></div>
+    </form>
+    <div id="admin-invite-status" class="status"></div>
+  </div>
+</section>
 </main></div></div>
 <script src="config.js"></script><script src="common.js"></script><script src="admin.js"></script></body></html>
