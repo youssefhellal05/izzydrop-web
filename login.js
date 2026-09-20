@@ -1,5 +1,6 @@
 (()=>{
   const $=s=>document.querySelector(s);
+
   async function route(){
     const s=IZZY.session();
     if(!s?.user?.id)return;
@@ -23,21 +24,30 @@
     $('#auth-status').textContent='Account found, but no IzzyDrop role is attached yet.';
     $('#auth-status').className='status bad';
   }
-  document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
-    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));t.classList.add('on');
-    $('#login-form').hidden=t.dataset.mode!=='login';$('#signup-form').hidden=t.dataset.mode!=='signup';
-    $('#auth-status').textContent='';$('#role-choice').hidden=true;
-  });
+
+  function setMode(mode){
+    document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.dataset.mode===mode));
+    $('#login-form').hidden=mode!=='login';
+    $('#signup-form').hidden=mode!=='signup';
+    $('#invite-password-form').hidden=true;
+    $('#auth-status').textContent='';
+    $('#role-choice').hidden=true;
+  }
+
+  document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>setMode(t.dataset.mode));
+
   const requestedType=new URLSearchParams(location.search).get('type');
   if(requestedType==='supplier'||requestedType==='dropshipper'){
-    document.querySelector('[data-mode="signup"]').click();
+    setMode('signup');
     $('#signup-type').value=requestedType;
   }
+
   $('#login-form').onsubmit=async e=>{
     e.preventDefault();const st=$('#auth-status');st.textContent='Logging in…';st.className='status';
     try{await IZZY.login($('#login-email').value.trim(),$('#login-password').value);await route()}
     catch(err){st.textContent=err.message;st.className='status bad'}
   };
+
   $('#signup-form').onsubmit=async e=>{
     e.preventDefault();const st=$('#auth-status');st.textContent='Creating account…';st.className='status';
     try{
@@ -53,5 +63,33 @@
       else st.textContent='Account created. Confirm your email, then come back here and log in.';
     }catch(err){st.textContent=err.message;st.className='status bad'}
   };
-  if(IZZY.session()?.access_token)route().catch(()=>{});
+
+  $('#invite-password-form').onsubmit=async e=>{
+    e.preventDefault();
+    const st=$('#auth-status'),p=$('#invite-password').value,c=$('#invite-password-confirm').value;
+    st.className='status';
+    if(p!==c){st.textContent='Passwords do not match.';st.className='status bad';return}
+    if(p.length<8){st.textContent='Use at least 8 characters.';st.className='status bad';return}
+    st.textContent='Finishing your IzzyDrop admin account…';
+    try{await IZZY.updatePassword(p);st.textContent='Admin account ready.';await route()}
+    catch(err){st.textContent=err.message;st.className='status bad'}
+  };
+
+  (async()=>{
+    try{
+      const event=await IZZY.consumeAuthRedirect();
+      if(event?.type==='invite'){
+        document.querySelector('.tabs').hidden=true;
+        $('#login-form').hidden=true;
+        $('#signup-form').hidden=true;
+        $('#invite-password-form').hidden=false;
+        $('#auth-status').textContent='Secure your invited admin account with a password.';
+        return;
+      }
+      if(IZZY.session()?.access_token)await route();
+    }catch(err){
+      $('#auth-status').textContent=err.message;
+      $('#auth-status').className='status bad';
+    }
+  })();
 })();
