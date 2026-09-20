@@ -21,3 +21,22 @@
 .product-card{position:relative}
 .product-card:after{content:"IZZYDROP";position:absolute;right:12px;top:12px;padding:5px 7px;border-radius:999px;background:rgba(17,19,24,.86);color:#fff;font-size:8px;font-weight:900;letter-spacing:.13em}
 @media(max-width:560px){.footer{align-items:flex-start;flex-direction:column}.brand-word{font-size:21px}.brand-mark{width:29px;height:29px}}
+
+.password-field{position:relative;width:100%}
+.password-field input{padding-right:48px!important}
+.password-eye{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:34px;height:34px;border:0;border-radius:9px;background:transparent;color:#69727e;display:grid;place-items:center;cursor:pointer}
+.password-eye:hover{background:#eef1f4;color:#111318}
+.password-eye svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8}
+.password-eye.on{background:#eef1f4;color:#111318}
+.admin-card{margin-bottom:16px}
+.field-label{display:block;font-size:12px;font-weight:850;letter-spacing:.05em;color:#59616c;margin-bottom:7px}
+.admin-card select,.inline-control input{width:100%;padding:13px 14px;border:1px solid #d8dde4;border-radius:11px;background:#fff;outline:none}
+.inline-control{display:flex;gap:10px;align-items:center}
+.inline-control input{flex:1}
+.compact-form{margin-top:18px}
+.commission-summary{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding:12px 14px;border-radius:12px;background:#f2f4f6}
+.commission-list{margin-top:16px}
+.commission-row{display:grid;gap:14px}
+.commission-product{display:flex;align-items:center;justify-content:space-between;gap:14px}
+@media(max-width:850px){.side nav{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:560px){.inline-control,.commission-product{align-items:stretch;flex-direction:column}.inline-control .btn{width:100%}.side nav{grid-template-columns:repeat(2,1fr)}}
