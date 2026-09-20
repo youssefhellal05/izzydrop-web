@@ -25,6 +25,29 @@
     async updatePassword(password){const s=this.session();if(!s?.access_token)throw Error('Your invite session has expired. Please open the invite link again.');const r=await fetch(C.supabaseUrl+'/auth/v1/user',{method:'PUT',headers:jsonHeaders(s.access_token),body:JSON.stringify({password})});const d=await readJson(r);if(!r.ok)throw Error(d?.message||d?.error_description||'Could not set password');s.user=d;this.saveSession(s);return d},
     async signup({email,password,fullName,businessName,type}){const redirectTo=new URL('login.html',location.href).href;const r=await fetch(C.supabaseUrl+'/auth/v1/signup?redirect_to='+encodeURIComponent(redirectTo),{method:'POST',headers:jsonHeaders(),body:JSON.stringify({email,password,data:{full_name:fullName,business_name:businessName,requested_account_type:type}})});const d=await readJson(r);if(!r.ok)throw Error(d?.msg||d?.message||d?.error_description||'Sign up failed');if(d?.access_token)this.saveSession(d);return d},
     request,
+    async uploadProductImage(path,file){
+      const s=this.session();if(!s?.access_token)throw Error('Please log in.');
+      const clean=String(path).split('/').map(encodeURIComponent).join('/');
+      let res=await fetch(C.supabaseUrl+'/storage/v1/object/product-images/'+clean,{
+        method:'POST',
+        headers:{apikey:C.supabaseKey,Authorization:`Bearer ${s.access_token}`,'Content-Type':file.type||'application/octet-stream','x-upsert':'false'},
+        body:file
+      });
+      if(res.status===401&&s.refresh_token){
+        const ok=await this.refresh();
+        if(ok){const ns=this.session();res=await fetch(C.supabaseUrl+'/storage/v1/object/product-images/'+clean,{method:'POST',headers:{apikey:C.supabaseKey,Authorization:`Bearer ${ns.access_token}`,'Content-Type':file.type||'application/octet-stream','x-upsert':'false'},body:file})}
+      }
+      const d=await readJson(res);if(!res.ok)throw Error(d?.message||d?.error||'Image upload failed');
+      return C.supabaseUrl+'/storage/v1/object/public/product-images/'+clean;
+    },
+    async deleteProductImage(path){
+      const s=this.session();if(!s?.access_token)return;
+      await fetch(C.supabaseUrl+'/storage/v1/object/product-images',{
+        method:'DELETE',
+        headers:jsonHeaders(s.access_token),
+        body:JSON.stringify({prefixes:[String(path)]})
+      }).catch(()=>{});
+    },
     async rpc(name,args={},auth=true){if(auth)return request(`/rest/v1/rpc/${name}`,{method:'POST',body:JSON.stringify(args)});const r=await fetch(C.supabaseUrl+`/rest/v1/rpc/${name}`,{method:'POST',headers:{apikey:C.supabaseKey,'Content-Type':'application/json'},body:JSON.stringify(args)});const d=await readJson(r);if(!r.ok)throw Error(d?.message||d?.error||d?.text||'Request failed');return d},
     esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))},
     money(n,c='EGP'){try{return new Intl.NumberFormat('en-EG',{style:'currency',currency:c||'EGP'}).format(Number(n||0))}catch{return `${n||0} ${c||'EGP'}`}},
