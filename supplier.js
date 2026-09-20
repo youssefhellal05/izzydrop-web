@@ -21,7 +21,7 @@ $('#add-form').onsubmit=async e=>{
   e.preventDefault();
   const btn=$('#add-product-btn');btn.disabled=true;btn.textContent='Adding product…';
   try{
-    const name=$('#p-name').value.trim(),sku=$('#p-sku').value.trim(),cost=Number($('#p-cost').value),retail=Number($('#p-retail').value),stock=Number($('#p-stock').value),description=$('#p-description').value.trim();
+    const name=$('#p-name').value.trim(),sku=$('#p-sku').value.trim(),cost=Number($('#p-cost').value),retail=Number($('#p-retail').value),stock=Number($('#p-stock').value),description=$('#p-description').value.trim(),photoCount=SELECTED_IMAGES.length;
     const pr=await IZZY.request('/rest/v1/supplier_products',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({supplier_id:SUP.id,name,sku,description:description||null,cost_price:cost,suggested_retail_price:retail,currency:'EGP',status:'draft'})});
     const p=pr?.[0];if(!p?.id)throw Error('Could not create product.');
     await IZZY.request('/rest/v1/product_variants',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({product_id:p.id,variant_name:'Default',sku,cost_price:cost,stock_quantity:stock})});
@@ -33,7 +33,7 @@ $('#add-form').onsubmit=async e=>{
       await IZZY.request('/rest/v1/product_images',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({product_id:p.id,url,position:i})});
     }
     await IZZY.request(`/rest/v1/supplier_products?id=eq.${p.id}`,{method:'PATCH',body:JSON.stringify({status:'active'})});
-    e.target.reset();SELECTED_IMAGES=[];renderSelectedImages();msg(`Product added${IMAGES.length?'':' successfully'}${SELECTED_IMAGES.length?' with photos':''}.`);go('products');await load()
+    e.target.reset();SELECTED_IMAGES=[];renderSelectedImages();msg(photoCount?`Product added with ${photoCount} photo${photoCount===1?'':'s'}.`:'Product added successfully.');go('products');await load()
   }catch(err){msg(err.message,true)}
   finally{btn.disabled=false;btn.textContent='Add product'}
 };
