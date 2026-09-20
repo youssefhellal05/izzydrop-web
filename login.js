@@ -41,6 +41,7 @@
   $('#signup-form').onsubmit=async e=>{
     e.preventDefault();const st=$('#auth-status');st.textContent='Creating account…';st.className='status';
     try{
+      if($('#signup-type').value==='supplier'&&!$('#signup-business').value.trim())throw Error('Business name is required for suppliers.');
       const d=await IZZY.signup({
         email:$('#signup-email').value.trim(),
         password:$('#signup-password').value,
