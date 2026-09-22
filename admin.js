@@ -368,7 +368,7 @@
   function renderAdmins(){
     const me=ADMINS.find(a=>a.user_id===SESSION?.user?.id);
     if(me?.is_super_admin){
-      $('#admin-name').textContent=(me.full_name||'IzzyDrop')+' · Super admin';
+      $('#admin-name').textContent='IzzyDrop · Super admin';
     }
     $('#admin-accounts').innerHTML=ADMINS.map(a=>{
       const self=a.user_id===SESSION?.user?.id;
