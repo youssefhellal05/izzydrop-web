@@ -1,39 +1,196 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>IzzyDrop Admin</title><link rel="icon" href="favicon.svg" type="image/svg+xml"><meta name="theme-color" content="#111318"><script>try{document.documentElement.dataset.theme=localStorage.getItem("izzy_theme")==="dark"?"dark":"light"}catch(e){}</script><meta name="description" content="IzzyDrop — Egypt’s independent dropshipping marketplace."><link rel="stylesheet" href="styles.css?v=20260922-darkmode2"></head><body>
-<div class="wrap"><header class="nav"><a class="brand" href="index.html"><span class="brand-mark">IZ</span><span class="brand-word">IzzyDrop</span> <span class="brand-role">Admin</span></a><div class="navlinks"><a class="btn ghost" href="index.html">Marketplace</a><button id="logout" class="btn secondary">Sign out</button></div></header>
-<div class="dash"><aside class="side"><div class="brand"><span class="brand-mark">IZ</span><span class="brand-word">IzzyDrop</span><span class="brand-role">Admin</span></div><nav><button class="on" data-view="suppliers">Suppliers</button><button data-view="products">Products</button><button data-view="commissions">Commissions</button><button data-view="orders">Orders</button><button data-view="admins">Admins</button><button data-view="settings">Settings</button></nav></aside>
-<main class="main"><div class="workspace-brand">IzzyDrop Admin Control Center</div><header class="dash-head"><div><h1>Admin dashboard</h1><div class="muted">Review suppliers, control commissions, and manage IzzyDrop access.</div></div></header><div id="status" class="status"></div>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>IzzyDrop Admin Control Center</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#111318">
+  <script>try{document.documentElement.dataset.theme=localStorage.getItem("izzy_theme")==="dark"?"dark":"light"}catch(e){}</script>
+  <meta name="description" content="IzzyDrop — Admin Control Center.">
+  <link rel="stylesheet" href="styles.css?v=20260922-admin-polish1">
+</head>
+<body>
+<div class="wrap">
+  <header class="nav">
+    <a class="brand" href="index.html"><span class="brand-mark">IZ</span><span class="brand-word">IzzyDrop</span><span class="brand-role">Admin</span></a>
+    <div class="navlinks"><a class="btn ghost" href="index.html">Public site</a></div>
+  </header>
 
-<section id="view-suppliers" class="view"><div class="catalog-head"><div><h2>Supplier applications</h2><p class="muted">Approve trusted suppliers before their products enter the marketplace.</p></div></div><div id="suppliers" class="list"></div></section>
-
-<section id="view-products" class="view" hidden><h2>Products</h2><div id="products" class="list"></div></section>
-
-<section id="view-commissions" class="view" hidden>
-  <div class="catalog-head"><div><h2>Commissions</h2><p class="muted">Choose a supplier, set its default IzzyDrop commission, then override individual products when needed.</p></div></div>
-  <div class="card admin-card">
-    <label class="field-label" for="commission-supplier">Supplier</label>
-    <select id="commission-supplier"></select>
-    <div class="commission-summary"><span>Marketplace default</span><strong id="global-commission">—</strong></div>
-    <form id="supplier-commission-form" class="form compact-form">
-      <label class="field-label" for="supplier-commission">Supplier default commission (%)</label>
-      <div class="inline-control"><input id="supplier-commission" type="number" min="0" max="100" step="0.01" placeholder="Use marketplace default"><button class="btn" type="submit">Save supplier rate</button></div>
-      <small class="muted">Leave blank to inherit the marketplace default.</small>
-    </form>
+  <div id="admin-gate" class="auth-shell">
+    <div class="auth-card">
+      <div class="premium-chip">IZZYDROP ADMIN</div>
+      <h1>Opening Control Center…</h1>
+      <p id="admin-gate-message" class="muted">Checking your admin access.</p>
+    </div>
   </div>
-  <div id="commission-products" class="list commission-list"></div>
-</section>
 
-<section id="view-orders" class="view" hidden><h2>Orders</h2><div id="orders" class="list"></div></section>
+  <div id="admin-dashboard" hidden>
+    <div class="dash admin-dash">
+      <aside class="side admin-side">
+        <div class="brand side-brand"><span class="brand-mark">IZ</span><span class="brand-word">IzzyDrop</span></div>
+        <nav>
+          <button class="on" data-view="overview"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h6V4H4zM14 20h6V11h-6zM4 20h6v-4H4zM14 8h6V4h-6z"/></svg><span>Overview</span></button>
+          <button data-view="suppliers"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20v-9l8-5 8 5v9M8 20v-6h8v6"/></svg><span>Suppliers</span></button>
+          <button data-view="products"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h8M8 17h5"/></svg><span>Products</span></button>
+          <button data-view="orders"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v14H4zM8 3v6M16 3v6M8 13h8M8 17h5"/></svg><span>Orders</span></button>
+          <button data-view="commissions"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5M8 8h.01M16 16h.01"/><circle cx="8" cy="8" r="2"/><circle cx="16" cy="16" r="2"/></svg><span>Commissions</span></button>
+          <button data-view="admins"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21v-3a5 5 0 0 1 10 0v3M17 8v6M14 11h6"/></svg><span>Admins</span></button>
+          <button data-view="settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM19 12l2-1-2-4-2 1a8 8 0 0 0-2-1l-1-3h-4L9 7a8 8 0 0 0-2 1L5 7l-2 4 2 1v2l-2 1 2 4 2-1a8 8 0 0 0 2 1l1 3h4l1-3a8 8 0 0 0 2-1l2 1 2-4-2-1z"/></svg><span>Settings</span></button>
+        </nav>
+      </aside>
 
-<section id="view-admins" class="view" hidden>
-  <div class="catalog-head"><div><h2>Admin access</h2><p class="muted">Invite a trusted person by email. IzzyDrop sends them a secure link to create their password and open the admin dashboard.</p></div></div>
-  <div class="card admin-card">
-    <form id="admin-invite-form" class="form">
-      <label class="field-label" for="admin-email">Email address</label>
-      <div class="inline-control"><input id="admin-email" type="email" placeholder="name@company.com" required><button id="admin-invite-btn" class="btn" type="submit">Send admin invite</button></div>
-    </form>
-    <div id="admin-invite-status" class="status"></div>
+      <main class="main">
+        <header class="workspace-topbar">
+          <div>
+            <div class="workspace-brand">IzzyDrop Admin Control Center</div>
+            <h1 id="admin-page-title">Overview</h1>
+            <p id="admin-page-subtitle" class="muted">Monitor the marketplace and handle what needs attention.</p>
+          </div>
+          <div class="supplier-top-actions">
+            <div class="notification-wrap">
+              <button id="admin-notification-bell" class="notification-bell" aria-label="Admin notifications" type="button">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16h12l-1.5-2V10a4.5 4.5 0 0 0-9 0v4zM10 19h4"/></svg>
+                <span id="admin-notification-count" class="notification-count" hidden>0</span>
+              </button>
+              <div id="admin-notification-panel" class="notification-panel" hidden>
+                <div class="notification-panel-head"><div><b>Control Center alerts</b><small>Items that need admin attention</small></div></div>
+                <div id="admin-notification-list" class="notification-list"></div>
+              </div>
+            </div>
+            <div class="account-chip admin-account-chip">
+              <span class="account-avatar">A</span>
+              <div><b id="admin-name">Admin</b><small id="admin-email"></small></div>
+            </div>
+          </div>
+        </header>
+
+        <div id="status" class="status"></div>
+
+        <section id="view-overview" class="view">
+          <div class="admin-stat-grid">
+            <button class="card admin-stat-card" data-jump="suppliers" data-supplier-filter="pending"><span>Pending suppliers</span><strong id="stat-pending-suppliers">—</strong><small>Waiting for review</small></button>
+            <button class="card admin-stat-card" data-jump="suppliers" data-supplier-filter="approved"><span>Active suppliers</span><strong id="stat-active-suppliers">—</strong><small>Approved on IzzyDrop</small></button>
+            <button class="card admin-stat-card" data-jump="products" data-product-filter="active"><span>Active products</span><strong id="stat-active-products">—</strong><small>Visible to dropshippers</small></button>
+            <button class="card admin-stat-card" data-jump="orders" data-order-filter="open"><span>Open orders</span><strong id="stat-open-orders">—</strong><small>Pending or processing</small></button>
+          </div>
+
+          <div class="admin-overview-grid">
+            <div class="card admin-attention-card">
+              <div class="section-heading compact-heading"><div><h2>Needs attention</h2><p class="muted">Marketplace issues worth handling next.</p></div></div>
+              <div id="admin-attention-list" class="attention-list"></div>
+            </div>
+            <div class="card marketplace-snapshot-card">
+              <div class="section-heading compact-heading"><div><h2>Marketplace</h2><p class="muted">Current operating snapshot.</p></div></div>
+              <div id="marketplace-snapshot" class="today-summary"></div>
+            </div>
+          </div>
+
+          <div class="card audit-card">
+            <div class="section-heading compact-heading">
+              <div><h2>Recent admin activity</h2><p class="muted">Changes recorded by IzzyDrop’s audit log.</p></div>
+            </div>
+            <div id="audit-activity" class="audit-list"></div>
+          </div>
+        </section>
+
+        <section id="view-suppliers" class="view" hidden>
+          <div class="section-heading"><div><h2>Suppliers</h2><p class="muted">Review applications and manage supplier access.</p></div></div>
+          <div class="admin-toolbar">
+            <div class="search-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="m16 16 4 4"/></svg><input id="supplier-search" class="search" placeholder="Search supplier or owner"></div>
+            <select id="supplier-status-filter" class="control"><option value="">All statuses</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="suspended">Suspended</option></select>
+          </div>
+          <div id="supplier-results-meta" class="results-meta muted"></div>
+          <div class="admin-table-wrap">
+            <div class="admin-supplier-table admin-table-head"><span>Supplier</span><span>Joined</span><span>Products</span><span>Commission</span><span>Status</span><span>Actions</span></div>
+            <div id="suppliers"></div>
+          </div>
+        </section>
+
+        <section id="view-products" class="view" hidden>
+          <div class="section-heading"><div><h2>Products</h2><p class="muted">Inspect and moderate products across the marketplace.</p></div></div>
+          <div class="admin-toolbar admin-product-toolbar">
+            <div class="search-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="m16 16 4 4"/></svg><input id="admin-product-search" class="search" placeholder="Search product, supplier or SKU"></div>
+            <select id="admin-product-status" class="control"><option value="">All statuses</option><option value="active">Active</option><option value="inactive">Inactive</option><option value="draft">Draft</option><option value="pending_review">Pending review</option></select>
+            <select id="admin-product-supplier" class="control"><option value="">All suppliers</option></select>
+          </div>
+          <div id="admin-product-results-meta" class="results-meta muted"></div>
+          <div class="admin-table-wrap">
+            <div class="admin-product-table admin-table-head"><span>Product</span><span>Supplier</span><span>Stock</span><span>Price</span><span>Status</span><span>Added</span><span>Actions</span></div>
+            <div id="products"></div>
+          </div>
+        </section>
+
+        <section id="view-orders" class="view" hidden>
+          <div class="section-heading"><div><h2>Orders</h2><p class="muted">Inspect marketplace orders, fulfillment and tracking.</p></div></div>
+          <div class="admin-toolbar admin-order-toolbar">
+            <div class="search-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="m16 16 4 4"/></svg><input id="admin-order-search" class="search" placeholder="Search order, customer, product or supplier"></div>
+            <select id="admin-order-status" class="control"><option value="">All statuses</option><option value="pending">Pending</option><option value="processing">Processing</option><option value="fulfilled">Fulfilled</option><option value="cancelled">Cancelled</option><option value="refunded">Refunded</option></select>
+            <select id="admin-order-supplier" class="control"><option value="">All suppliers</option></select>
+          </div>
+          <div id="admin-order-results-meta" class="results-meta muted"></div>
+          <div id="orders" class="orders-list admin-orders-list"></div>
+        </section>
+
+        <section id="view-commissions" class="view" hidden>
+          <div class="section-heading"><div><h2>Commissions</h2><p class="muted">Control the marketplace default, supplier overrides, and product overrides.</p></div></div>
+
+          <div class="commission-control-grid">
+            <div class="card commission-global-card">
+              <div class="commission-source-label">MARKETPLACE DEFAULT</div>
+              <div class="commission-big-rate"><strong id="global-commission">—</strong><span>applies when no override exists</span></div>
+              <form id="global-commission-form" class="form compact-form">
+                <label class="field-label">Default commission (%)</label>
+                <div class="inline-control"><input id="global-commission-input" type="number" min="0" max="100" step="0.01" required><button class="btn" type="submit">Save default</button></div>
+              </form>
+            </div>
+
+            <div class="card commission-supplier-card">
+              <label class="field-label" for="commission-supplier">Supplier</label>
+              <select id="commission-supplier" class="control"></select>
+              <form id="supplier-commission-form" class="form compact-form">
+                <label class="field-label" for="supplier-commission">Supplier override (%)</label>
+                <div class="inline-control"><input id="supplier-commission" type="number" min="0" max="100" step="0.01" placeholder="Inherit marketplace default"><button class="btn" type="submit">Save supplier rate</button></div>
+                <small class="muted">Leave blank to inherit the marketplace default.</small>
+              </form>
+              <div id="supplier-effective-commission" class="commission-inheritance"></div>
+            </div>
+          </div>
+          <div id="commission-products" class="commission-product-grid"></div>
+        </section>
+
+        <section id="view-admins" class="view" hidden>
+          <div class="section-heading"><div><h2>Admins</h2><p class="muted">Invite trusted people and review who has Control Center access.</p></div></div>
+          <div class="admin-access-grid">
+            <div class="card admin-invite-card">
+              <div class="form-section-title"><span class="form-section-number">+</span><div><h3>Invite admin</h3><p>Send a secure IzzyDrop invitation by email.</p></div></div>
+              <form id="admin-invite-form" class="form">
+                <label class="field-label" for="admin-email-input">Email address</label>
+                <input id="admin-email-input" type="email" placeholder="name@company.com" required>
+                <button id="admin-invite-btn" class="btn" type="submit">Send admin invite</button>
+              </form>
+              <div id="admin-invite-status" class="status"></div>
+            </div>
+            <div class="card admin-list-card">
+              <div class="section-heading compact-heading"><div><h2>Admin accounts</h2><p class="muted">People with current admin access.</p></div></div>
+              <div id="admin-accounts" class="admin-account-list"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-settings" class="view" hidden><div id="settings-root"></div></section>
+      </main>
+    </div>
   </div>
-</section>
-<section id="view-settings" class="view" hidden><div id="settings-root"></div></section>
-</main></div></div>
-<script src="config.js"></script><script src="common.js?v=20260922-darkmode2"></script><script src="admin.js"></script><script>window.IZZY_SETTINGS_ROLE="admin"</script><script src="settings.js?v=20260922-darkmode2"></script></body></html>
+</div>
+
+<script src="config.js"></script>
+<script src="common.js?v=20260922-admin-polish1"></script>
+<script src="admin.js?v=20260922-admin-polish1"></script>
+<script>window.IZZY_SETTINGS_ROLE="admin"</script>
+<script src="settings.js?v=20260922-admin-polish1"></script>
+</body>
+</html>
