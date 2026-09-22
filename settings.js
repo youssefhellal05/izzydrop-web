@@ -90,6 +90,7 @@
               <button class="btn settings-save" type="submit">Change password</button>
             </form>
             <div class="security-row security-action"><div><b>Two-factor authentication</b><small>Extra login protection for your account.</small></div><span class="tag">Coming later</span></div>
+            ${role==='dropshipper'?'<div class="security-row security-action"><div><b>Sign out</b><small>Sign out of IzzyDrop on this device.</small></div><button id="settings-logout" class="btn secondary" type="button">Sign out</button></div>':''}
             <div class="security-row security-action"><div><b>Sign out everywhere</b><small>End your IzzyDrop sessions on all devices.</small></div><button id="settings-logout-all" class="btn secondary" type="button">Sign out all devices</button></div>
           </div>
         </section>
@@ -192,6 +193,9 @@
     if(p.length<8){status('Use at least 8 characters.',true);return}
     try{await IZZY.updatePassword(p);e.target.reset();status('Password changed successfully.')}catch(err){status(err.message,true)}
   };
+
+  const logoutButton=document.getElementById('settings-logout');
+  if(logoutButton)logoutButton.onclick=()=>{IZZY.logout();location.href='login.html'};
 
   document.getElementById('settings-logout-all').onclick=async()=>{
     if(!confirm('Sign out of IzzyDrop on all devices?'))return;
