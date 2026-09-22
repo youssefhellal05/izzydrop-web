@@ -647,3 +647,8 @@ html[data-theme="dark"] .audit-dot{background:#f4f6f8}
 @media(max-width:480px){
   .admin-stat-grid{grid-template-columns:1fr}
 }
+
+/* Super admin */
+.admin-account-row.is-super-admin{background:linear-gradient(90deg,var(--soft),transparent);border-radius:12px;padding-left:10px;padding-right:10px}
+.super-admin-tag{background:#111318;color:#fff}
+html[data-theme="dark"] .super-admin-tag{background:#f4f6f8;color:#0b0d10}
