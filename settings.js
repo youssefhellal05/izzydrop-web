@@ -17,6 +17,7 @@
         <button class="on" data-settings-tab="account">Account</button>
         ${hasBusiness?'<button data-settings-tab="business">Business</button>':''}
         ${hasNotifications?'<button data-settings-tab="notifications">Notifications</button>':''}
+        <button data-settings-tab="appearance">Appearance</button>
         <button data-settings-tab="security">Security</button>
       </aside>
       <div class="settings-content">
@@ -65,6 +66,20 @@
           </div>
         </section>`:''}
 
+        <section class="settings-panel" data-settings-panel="appearance" hidden>
+          <div class="card settings-card">
+            <div class="settings-title"><div><h3>Appearance</h3><p class="muted">Choose how IzzyDrop looks on this device.</p></div></div>
+            <label class="toggle-row appearance-toggle">
+              <span><b>Dark mode</b><small>Use a darker IzzyDrop interface that is easier on the eyes at night.</small></span>
+              <input id="settings-dark-mode" type="checkbox">
+              <span class="switch"></span>
+            </label>
+            <div class="theme-preview">
+              <div class="theme-preview-card"><span class="theme-preview-dot"></span><b>IzzyDrop</b><small>Marketplace workspace</small></div>
+            </div>
+          </div>
+        </section>
+
         <section class="settings-panel" data-settings-panel="security" hidden>
           <div class="card settings-card">
             <div class="settings-title"><div><h3>Security</h3><p class="muted">Protect access to your IzzyDrop account.</p></div></div>
@@ -84,6 +99,11 @@
     </div>`;
 
   IZZY.installPasswordToggles?.();
+  const darkToggle=document.getElementById('settings-dark-mode');
+  if(darkToggle){
+    darkToggle.checked=IZZY.theme()==='dark';
+    darkToggle.onchange=()=>{IZZY.setTheme(darkToggle.checked?'dark':'light')};
+  }
 
   const status=(text,bad=false)=>{const e=document.getElementById('settings-status');e.textContent=text;e.className='status'+(bad?' bad':'')};
   document.querySelectorAll('[data-settings-tab]').forEach(btn=>btn.onclick=()=>{
