@@ -1,6 +1,6 @@
 (()=>{
   const $=s=>document.querySelector(s);
-  let SUPPLIERS=[],PROFILES=[],PRODUCTS=[],VARIANTS=[],IMAGES=[],ORDERS=[],ITEMS=[],DROPSHIPPERS=[],AUDIT=[],ADMINS=[],DEFAULT_COMMISSION=0,SELECTED_SUPPLIER=null,SESSION=null;
+  let SUPPLIERS=[],PROFILES=[],PRODUCTS=[],VARIANTS=[],IMAGES=[],ORDERS=[],ITEMS=[],DROPSHIPPERS=[],AUDIT=[],ADMINS=[],DEFAULT_COMMISSION=0,SELECTED_SUPPLIER=null,SESSION=null,ORDER_OPEN_ONLY=false;
 
   const VIEW_COPY={
     overview:['Overview','Monitor the marketplace and handle what needs attention.'],
@@ -109,8 +109,9 @@
         renderSuppliers();
       }
       if(b.dataset.orderFilter){
-        $('#admin-order-status').value=b.dataset.orderFilter==='open'?'':b.dataset.orderFilter;
-        renderOrders(b.dataset.orderFilter);
+        ORDER_OPEN_ONLY=b.dataset.orderFilter==='open';
+        $('#admin-order-status').value=ORDER_OPEN_ONLY?'':b.dataset.orderFilter;
+        renderOrders();
       }
       go(b.dataset.viewTarget);
     });
@@ -268,7 +269,7 @@
 
   function orderSupplierIds(orderId){return [...new Set(itemsForOrder(orderId).map(i=>i.supplier_id).filter(Boolean))]}
 
-  function filteredOrders(openOverride=null){
+  function filteredOrders(){
     const q=$('#admin-order-search').value.trim().toLowerCase();
     const status=$('#admin-order-status').value;
     const sid=$('#admin-order-supplier').value;
@@ -277,14 +278,14 @@
       const productNames=items.map(i=>productFor(i.supplier_product_id).name).join(' ');
       const supplierNames=items.map(i=>supplierFor(i.supplier_id).business_name).join(' ');
       const hay=[o.external_order_ref,o.shopify_order_name,o.customer_name,o.customer_phone,productNames,supplierNames].filter(Boolean).join(' ').toLowerCase();
-      const statusOk=openOverride==='open'?['pending','processing'].includes(o.status):(!status||o.status===status);
+      const statusOk=ORDER_OPEN_ONLY?['pending','processing'].includes(o.status):(!status||o.status===status);
       const supplierOk=!sid||items.some(i=>i.supplier_id===sid);
       return (!q||hay.includes(q))&&statusOk&&supplierOk;
     });
   }
 
-  function renderOrders(openOverride=null){
-    const rows=filteredOrders(openOverride);
+  function renderOrders(){
+    const rows=filteredOrders();
     $('#admin-order-results-meta').textContent=`${rows.length} order${rows.length===1?'':'s'} shown`;
     $('#orders').innerHTML=rows.map(o=>{
       const items=itemsForOrder(o.id);
@@ -433,7 +434,7 @@
   $('#admin-product-status').onchange=renderProducts;
   $('#admin-product-supplier').onchange=renderProducts;
   $('#admin-order-search').oninput=()=>renderOrders();
-  $('#admin-order-status').onchange=()=>renderOrders();
+  $('#admin-order-status').onchange=()=>{ORDER_OPEN_ONLY=false;renderOrders()};
   $('#admin-order-supplier').onchange=()=>renderOrders();
 
   $('#commission-supplier').onchange=e=>{SELECTED_SUPPLIER=e.target.value;renderCommissions()};
@@ -473,11 +474,11 @@
     finally{btn.disabled=false}
   };
 
-  document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>go(b.dataset.view));
+  document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{if(b.dataset.view==='orders'){ORDER_OPEN_ONLY=false;renderOrders()}go(b.dataset.view)});
   document.querySelectorAll('[data-jump]').forEach(b=>b.onclick=()=>{
     if(b.dataset.supplierFilter){$('#supplier-status-filter').value=b.dataset.supplierFilter;renderSuppliers()}
     if(b.dataset.productFilter){$('#admin-product-status').value=b.dataset.productFilter;renderProducts()}
-    if(b.dataset.orderFilter){renderOrders(b.dataset.orderFilter)}
+    if(b.dataset.orderFilter){ORDER_OPEN_ONLY=b.dataset.orderFilter==='open';if(!ORDER_OPEN_ONLY)$('#admin-order-status').value=b.dataset.orderFilter;renderOrders()}
     go(b.dataset.jump);
   });
 
