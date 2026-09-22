@@ -175,3 +175,148 @@ html[data-theme="dark"] .product-card:after{background:rgba(244,246,248,.9);colo
 .theme-preview-card small{grid-area:sub;color:var(--muted)}
 .appearance-toggle{margin-top:12px}
 html,body,.card,.panel,.choice,.side,.list-row,.auth-card,.modal-card,.btn,input,textarea,select,.settings-menu,.tag,.notice{transition:background-color .18s ease,color .18s ease,border-color .18s ease}
+
+/* Dropshipper workspace polish */
+.dropshipper-dash{grid-template-columns:210px minmax(0,1fr);gap:24px}
+.dropshipper-side{padding:16px}
+.side-brand{margin:2px 4px 18px}
+.dropshipper-side nav{display:grid;gap:5px}
+.dropshipper-side nav button{display:flex;align-items:center;gap:11px;color:#59616c}
+.dropshipper-side nav button svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.dropshipper-side nav button:first-child svg{fill:currentColor;stroke:none}
+.dropshipper-side nav button.on{background:#111318;color:#fff}
+.workspace-topbar{display:flex;justify-content:space-between;gap:20px;align-items:flex-end;padding:2px 0 18px;border-bottom:1px solid var(--line);margin-bottom:18px}
+.workspace-topbar h1{font-size:38px;line-height:1;margin:4px 0 7px;letter-spacing:-1.5px}
+.workspace-topbar p{margin:0}
+.account-chip{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--line);background:var(--card);border-radius:14px;min-width:190px}
+.account-avatar{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:var(--brand);color:#fff;font-size:12px;font-weight:950}
+.account-chip div{display:grid;gap:2px;min-width:0}
+.account-chip small{display:block;color:var(--muted);font-size:11px;max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dropshipper-toolbar{display:grid;grid-template-columns:minmax(260px,1fr) 170px 190px auto;gap:10px;align-items:center;margin-bottom:10px}
+.search-wrap{position:relative}
+.search-wrap svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:18px;height:18px;fill:none;stroke:#7b8490;stroke-width:1.8}
+.search-wrap .search{width:100%;padding-left:40px}
+.control{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--text)}
+.stock-toggle{display:flex;align-items:center;gap:8px;padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card);font-size:13px;font-weight:750;white-space:nowrap}
+.stock-toggle input{accent-color:#111318}
+.results-meta{font-size:12px;margin:6px 0 14px}
+.dropshipper-product-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.dropshipper-product-card{display:flex;flex-direction:column;min-width:0}
+.dropshipper-product-card .product-image{height:220px}
+.dropshipper-product-card .product-body{display:flex;flex-direction:column;flex:1}
+.product-card-topline{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.product-category{font-size:11px;color:var(--muted);font-weight:750;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.product-title-link h3{font-size:19px;margin:12px 0 4px;line-height:1.25}
+.supplier-line{font-size:12px!important;margin:0 0 9px!important;color:var(--muted)!important}
+.product-description{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:43px;font-size:13px;line-height:1.55!important;margin:0!important}
+.product-price-block{display:flex;justify-content:space-between;align-items:end;gap:12px;margin-top:auto;padding-top:16px}
+.product-price-block div{display:grid;gap:3px}
+.product-price-block small{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:850}
+.product-price-block strong{font-size:20px}
+.product-card-actions{display:grid;grid-template-columns:1fr 1.2fr;gap:8px;margin-top:14px}
+.product-card-actions .btn{padding:11px 10px;font-size:12px}
+.my-products-grid{display:grid;gap:14px}
+.linked-product-card{padding:18px}
+.linked-product-main{display:grid;grid-template-columns:110px minmax(0,1fr);gap:16px;align-items:center}
+.linked-thumb{width:110px;height:110px;border-radius:15px;overflow:hidden;background:var(--soft);display:grid;place-items:center;font-weight:950;color:#9aa3ad}
+.linked-thumb img{width:100%;height:100%;object-fit:cover}
+.linked-info{min-width:0}
+.linked-title-row h3{margin:0 0 4px}
+.linked-price-grid{display:grid;grid-template-columns:1fr 1.4fr 1fr;gap:12px;margin-top:15px}
+.linked-price-grid>div,.linked-price-grid>label{padding:11px 12px;border-radius:12px;background:var(--soft);display:grid;gap:4px}
+.linked-price-grid small{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:850}
+.price-editor{display:flex;align-items:center;gap:7px}
+.price-editor input{min-width:0;width:100%;border:0;background:transparent;color:var(--text);font-weight:900;font-size:16px;outline:none;padding:0}
+.price-editor span{font-size:11px;color:var(--muted);font-weight:800}
+.positive{color:var(--ok)}
+.negative{color:var(--bad)}
+.linked-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+.linked-actions .btn{padding:9px 12px;font-size:12px}
+.text-danger{border:0;background:transparent;color:var(--bad);font-weight:850;cursor:pointer;padding:8px 6px;margin-left:auto}
+.section-heading{display:flex;justify-content:space-between;gap:16px;align-items:end;margin-bottom:16px}
+.section-heading h2{font-size:30px;margin:0 0 4px;letter-spacing:-1px}
+.section-heading p{margin:0}
+.order-create-card{margin-bottom:18px}
+.order-create-card h3{margin:0 0 4px}
+.order-create-card p{margin:0}
+.order-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.order-form-grid .span-2{grid-column:1/-1}
+.order-filterbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.filter-chip{border:1px solid var(--line);background:var(--card);color:var(--muted);border-radius:999px;padding:8px 12px;font-size:12px;font-weight:850;cursor:pointer}
+.filter-chip.on{background:#111318;color:#fff;border-color:#111318}
+.orders-list{display:grid;gap:12px}
+.order-card{padding:17px}
+.order-card-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}
+.order-card-head>div{display:grid;gap:3px}
+.order-id{font-weight:900;font-size:15px}
+.order-card-head small{color:var(--muted);font-size:11px}
+.order-summary-grid{display:grid;grid-template-columns:1.1fr 1.6fr .8fr;gap:12px;margin:14px 0}
+.order-summary-grid>div{display:grid;gap:3px;padding:11px 12px;background:var(--soft);border-radius:12px}
+.order-summary-grid small,.order-details-grid small{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:850}
+.order-summary-grid span{font-size:12px;color:var(--muted)}
+.order-details{border-top:1px solid var(--line);padding-top:12px}
+.order-details summary{cursor:pointer;font-size:12px;font-weight:850;color:var(--muted)}
+.order-details-grid{display:grid;grid-template-columns:1.5fr 1fr .7fr;gap:12px;padding-top:12px}
+.order-details-grid p{margin:4px 0 0;font-size:13px;line-height:1.5}
+.empty-state{grid-column:1/-1;display:grid;justify-items:center;text-align:center;padding:44px 24px;border:1px dashed var(--line);border-radius:18px;background:var(--card)}
+.empty-state h3{margin:8px 0 4px;font-size:20px}
+.empty-state p{margin:0 0 16px;color:var(--muted);max-width:430px}
+.empty-icon{display:grid;place-items:center;width:46px;height:46px;border-radius:14px;background:var(--soft);font-size:24px;font-weight:500;color:var(--muted)}
+.skeleton-card{padding:0;overflow:hidden}
+.skeleton{position:relative;overflow:hidden;background:#e8ebef}
+.skeleton:after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);animation:izzyShimmer 1.25s infinite}
+.skeleton-image{height:210px}
+.skeleton-body{padding:16px;display:grid;gap:10px}
+.skeleton-line{height:14px;border-radius:999px}
+.skeleton-line.short{width:36%}
+.skeleton-line.medium{width:68%}
+.skeleton-button{height:38px;border-radius:10px;margin-top:8px}
+@keyframes izzyShimmer{100%{transform:translateX(100%)}}
+
+html[data-theme="dark"] .dropshipper-side nav button.on,
+html[data-theme="dark"] .filter-chip.on{background:#f4f6f8;color:#0b0d10;border-color:#f4f6f8}
+html[data-theme="dark"] .account-chip,
+html[data-theme="dark"] .stock-toggle,
+html[data-theme="dark"] .control,
+html[data-theme="dark"] .filter-chip,
+html[data-theme="dark"] .empty-state{background:var(--card);border-color:var(--line);color:var(--text)}
+html[data-theme="dark"] .account-avatar{background:#f4f6f8;color:#0b0d10}
+html[data-theme="dark"] .linked-price-grid>div,
+html[data-theme="dark"] .linked-price-grid>label,
+html[data-theme="dark"] .order-summary-grid>div{background:#181d24}
+html[data-theme="dark"] .stock-toggle input{accent-color:#f4f6f8}
+html[data-theme="dark"] .skeleton{background:#1a2027}
+html[data-theme="dark"] .skeleton:after{background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent)}
+
+@media(max-width:1050px){
+  .dropshipper-toolbar{grid-template-columns:1fr 1fr}
+  .search-wrap{grid-column:1/-1}
+  .dropshipper-product-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:850px){
+  .dropshipper-dash{grid-template-columns:1fr}
+  .dropshipper-side{position:static}
+  .dropshipper-side nav{grid-template-columns:repeat(4,1fr)}
+  .dropshipper-side nav button{justify-content:center;text-align:center}
+  .workspace-topbar{align-items:flex-start}
+  .linked-price-grid,.order-summary-grid,.order-details-grid{grid-template-columns:1fr}
+}
+@media(max-width:620px){
+  .workspace-topbar{flex-direction:column}
+  .account-chip{width:100%}
+  .dropshipper-toolbar{grid-template-columns:1fr}
+  .search-wrap{grid-column:auto}
+  .dropshipper-product-grid{grid-template-columns:1fr}
+  .dropshipper-product-card .product-image{height:250px}
+  .linked-product-main{grid-template-columns:78px minmax(0,1fr);align-items:start}
+  .linked-thumb{width:78px;height:78px}
+  .linked-price-grid{grid-column:1/-1}
+  .linked-actions{align-items:stretch}
+  .linked-actions .btn,.linked-actions a{flex:1}
+  .text-danger{width:100%;margin-left:0;text-align:center}
+  .order-form-grid{grid-template-columns:1fr}
+  .order-form-grid .span-2{grid-column:auto}
+  .order-heading{align-items:stretch;flex-direction:column}
+  .dropshipper-side nav button{font-size:11px;gap:6px;padding:9px 6px}
+  .dropshipper-side nav button svg{width:16px;height:16px}
+}
