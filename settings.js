@@ -90,7 +90,7 @@
               <button class="btn settings-save" type="submit">Change password</button>
             </form>
             <div class="security-row security-action"><div><b>Two-factor authentication</b><small>Extra login protection for your account.</small></div><span class="tag">Coming later</span></div>
-            ${role==='dropshipper'?'<div class="security-row security-action"><div><b>Sign out</b><small>Sign out of IzzyDrop on this device.</small></div><button id="settings-logout" class="btn secondary" type="button">Sign out</button></div>':''}
+            ${role!=='admin'?'<div class="security-row security-action"><div><b>Sign out</b><small>Sign out of IzzyDrop on this device.</small></div><button id="settings-logout" class="btn secondary" type="button">Sign out</button></div>':''}
             <div class="security-row security-action"><div><b>Sign out everywhere</b><small>End your IzzyDrop sessions on all devices.</small></div><button id="settings-logout-all" class="btn secondary" type="button">Sign out all devices</button></div>
           </div>
         </section>
