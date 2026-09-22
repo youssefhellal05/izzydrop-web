@@ -1,6 +1,9 @@
 (()=>{
   const C=window.IZZY_CONFIG;
   const KEY='izzy_session';
+  const THEME_KEY='izzy_theme';
+  const savedTheme=localStorage.getItem(THEME_KEY)==='dark'?'dark':'light';
+  document.documentElement.dataset.theme=savedTheme;
   const jsonHeaders=(token)=>({apikey:C.supabaseKey,'Content-Type':'application/json',...(token?{Authorization:`Bearer ${token}`}:{})});
   async function readJson(r){const t=await r.text();if(!t)return null;try{return JSON.parse(t)}catch{return {text:t}}}
   async function request(path,opt={}){
@@ -16,6 +19,8 @@
   }
   window.IZZY={
     config:C,
+    theme(){return document.documentElement.dataset.theme||'light'},
+    setTheme(theme){const next=theme==='dark'?'dark':'light';localStorage.setItem(THEME_KEY,next);document.documentElement.dataset.theme=next;const meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.setAttribute('content',next==='dark'?'#0b0d10':'#111318');return next},
     session(){try{return JSON.parse(localStorage.getItem(KEY)||'null')}catch{return null}},
     saveSession(s){localStorage.setItem(KEY,JSON.stringify(s))},
     logout(){localStorage.removeItem(KEY)},
