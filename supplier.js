@@ -262,13 +262,18 @@
   }
 
   async function load(showMessage=false){
-    const [products,variants,orders,items]=await Promise.all([
+    const [supplierRows,products,variants,orders,items]=await Promise.all([
+      IZZY.request(`/rest/v1/suppliers?select=id,business_name,status,low_stock_threshold,notification_preferences&id=eq.${encodeURIComponent(SUP.id)}&limit=1`),
       IZZY.request(`/rest/v1/supplier_products?select=*&supplier_id=eq.${encodeURIComponent(SUP.id)}&order=created_at.desc`),
       IZZY.request('/rest/v1/product_variants?select=*&order=created_at.asc'),
       IZZY.request('/rest/v1/orders?select=*&order=created_at.desc&limit=150'),
       IZZY.request(`/rest/v1/order_items?select=*&supplier_id=eq.${encodeURIComponent(SUP.id)}&order=created_at.desc&limit=250`)
     ]);
 
+    if(supplierRows?.[0]){
+      SUP={...SUP,...supplierRows[0]};
+      $('#business').textContent=SUP.business_name||'Supplier';
+    }
     PRODUCTS=products||[];
     VARIANTS=variants||[];
     ORDERS=orders||[];
