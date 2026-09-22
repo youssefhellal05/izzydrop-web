@@ -320,3 +320,45 @@ html[data-theme="dark"] .skeleton:after{background:linear-gradient(90deg,transpa
   .dropshipper-side nav button{font-size:11px;gap:6px;padding:9px 6px}
   .dropshipper-side nav button svg{width:16px;height:16px}
 }
+
+/* Product detail polish */
+.product-back{display:inline-flex;margin-bottom:16px;color:var(--muted);font-size:13px;font-weight:800}
+.product-detail-polished{align-items:start}
+.product-gallery-wrap{display:grid;gap:10px}
+.product-main-gallery{min-height:500px;border:1px solid var(--line);background:var(--card)}
+.product-main-gallery img{object-fit:contain;background:var(--card)}
+.product-thumbnails{display:flex;gap:8px;overflow:auto;padding-bottom:2px}
+.product-thumb{width:72px;height:72px;padding:0;border:2px solid transparent;border-radius:11px;overflow:hidden;background:var(--card);cursor:pointer;flex:none}
+.product-thumb.on{border-color:var(--text)}
+.product-thumb img{width:100%;height:100%;object-fit:cover}
+.product-detail-copy{position:sticky;top:20px}
+.product-detail-badges{display:flex;gap:8px;flex-wrap:wrap}
+.product-supplier-name{margin:0 0 6px;color:var(--muted)}
+.product-detail-price{margin:18px 0 2px!important}
+.product-detail-description{font-size:15px;line-height:1.7;margin:22px 0}
+.product-facts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:18px 0}
+.product-facts>div{display:grid;gap:4px;padding:12px;background:var(--soft);border-radius:12px;min-width:0}
+.product-facts small{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:850}
+.product-facts b{overflow:hidden;text-overflow:ellipsis}
+.variant-section{margin-top:24px}
+.variant-section h3{margin:0 0 10px}
+.variant-list .variant{align-items:center;gap:14px}
+.variant-list .variant>div{display:grid;gap:3px}
+.variant-list .variant small{color:var(--muted);font-size:11px}
+.product-detail-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:22px}
+.product-detail-actions .btn{min-width:150px}
+html[data-theme="dark"] .product-main-gallery,
+html[data-theme="dark"] .product-main-gallery img,
+html[data-theme="dark"] .product-thumb{background:#11161c;border-color:var(--line)}
+html[data-theme="dark"] .product-thumb.on{border-color:#f4f6f8}
+
+@media(max-width:850px){
+  .product-detail-copy{position:static}
+  .product-main-gallery{min-height:400px}
+}
+@media(max-width:560px){
+  .product-main-gallery{min-height:330px}
+  .product-facts{grid-template-columns:1fr}
+  .product-detail-actions{display:grid}
+  .product-detail-actions .btn{width:100%}
+}
