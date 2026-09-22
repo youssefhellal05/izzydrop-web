@@ -1,40 +1,164 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Log in / Sign up · IzzyDrop</title><link rel="icon" href="favicon.svg" type="image/svg+xml"><meta name="theme-color" content="#111318"><script>try{document.documentElement.dataset.theme=localStorage.getItem("izzy_theme")==="dark"?"dark":"light"}catch(e){}</script><meta name="description" content="IzzyDrop — Egypt’s independent dropshipping marketplace."><link rel="stylesheet" href="styles.css"></head><body>
-<div class="wrap"><header class="nav"><a class="brand" href="index.html"><span class="brand-mark">IZ</span><span class="brand-word">IzzyDrop</span></a><div class="navlinks"><a class="btn ghost" href="index.html#catalog">Explore products</a></div></header>
-<div class="auth-shell"><div class="auth-card">
-  <div class="premium-chip">IZZYDROP ACCOUNT</div><div class="eyebrow">One account. One login.</div>
-  <h1>Welcome to IzzyDrop.</h1>
-  <p class="muted">Dropshippers and suppliers use the same login. We’ll open the right dashboard automatically.</p>
-  <div class="tabs"><button class="tab on" data-mode="login">Log in</button><button class="tab" data-mode="signup">Sign up</button></div>
-  <form id="login-form" class="form">
-    <input id="login-email" type="email" placeholder="Email" required>
-    <input id="login-password" type="password" placeholder="Password" required>
-    <button class="btn">Log in</button>
-  </form>
-  <form id="signup-form" class="form" hidden>
-    <input id="signup-name" placeholder="Your name" required>
-    <input id="signup-business" placeholder="Business / store name">
-    <select id="signup-type" required>
-      <option value="">I am a…</option>
-      <option value="dropshipper">Dropshipper</option>
-      <option value="supplier">Supplier</option>
-    </select>
-    <input id="signup-email" type="email" placeholder="Email" required>
-    <input id="signup-password" type="password" minlength="6" placeholder="Password" required>
-    <button class="btn">Sign up</button>
-  </form>
-  <form id="invite-password-form" class="form" hidden>
-    <div class="notice ok"><b>Admin invitation accepted.</b><br>Create your IzzyDrop password to finish setting up your admin account.</div>
-    <input id="invite-password" type="password" minlength="8" placeholder="Create password" required>
-    <input id="invite-password-confirm" type="password" minlength="8" placeholder="Confirm password" required>
-    <button class="btn">Finish admin setup</button>
-  </form>
-  <div id="auth-status" class="status"></div>
-  <div id="role-choice" hidden class="notice" style="margin-top:14px">
-    <b>This account has more than one IzzyDrop role.</b>
-    <div class="hero-actions" style="margin-top:12px">
-      <a id="go-dropshipper" class="btn" href="app.html">Dropshipper dashboard</a>
-      <a id="go-supplier" class="btn secondary" href="supplier.html">Supplier dashboard</a><a id="go-admin" class="btn secondary" href="admin.html" hidden>Admin dashboard</a>
-    </div>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Welcome to IzzyDrop</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#111318">
+  <script>try{document.documentElement.dataset.theme=localStorage.getItem("izzy_theme")==="dark"?"dark":"light"}catch(e){}</script>
+  <meta name="description" content="Log in or create your IzzyDrop account.">
+  <link rel="stylesheet" href="styles.css?v=20260922-auth-polish1">
+</head>
+<body class="auth-page">
+  <div class="auth-page-wrap">
+    <header class="auth-nav">
+      <a class="brand" href="index.html"><span class="brand-mark">IZ</span><span class="brand-word">IzzyDrop</span></a>
+      <a class="auth-back-link" href="index.html">← Back to IzzyDrop</a>
+    </header>
+
+    <main class="auth-stage">
+      <section class="auth-story">
+        <div class="premium-chip">IZZYDROP</div>
+        <h1>One account.<br>Everything IzzyDrop.</h1>
+        <p>Sign in once. We detect your access and open the right workspace automatically.</p>
+
+        <div class="auth-story-points">
+          <div class="auth-story-point">
+            <span>01</span>
+            <div><b>Dropshippers</b><small>Discover products, link them to your store, and manage orders.</small></div>
+          </div>
+          <div class="auth-story-point">
+            <span>02</span>
+            <div><b>Suppliers</b><small>Manage products, inventory, variants, and fulfillment.</small></div>
+          </div>
+          <div class="auth-story-point">
+            <span>03</span>
+            <div><b>Admins</b><small>Admin access is invitation-only and never available through public signup.</small></div>
+          </div>
+        </div>
+
+        <div class="auth-trust">
+          <span class="auth-trust-dot"></span>
+          <span>Built for Egyptian dropshipping.</span>
+        </div>
+      </section>
+
+      <section class="auth-panel">
+        <div class="auth-card auth-card-premium">
+          <div id="auth-standard">
+            <div class="auth-card-heading">
+              <div>
+                <div class="eyebrow">IZZYDROP ACCOUNT</div>
+                <h2 id="auth-title">Welcome back</h2>
+                <p id="auth-description" class="muted">Log in and we’ll take you to the right workspace.</p>
+              </div>
+            </div>
+
+            <div class="auth-switch" role="tablist" aria-label="Account access">
+              <button class="auth-switch-btn on" type="button" data-mode="login">Log in</button>
+              <button class="auth-switch-btn" type="button" data-mode="signup">Create account</button>
+            </div>
+
+            <form id="login-form" class="form auth-form">
+              <div class="auth-field">
+                <label for="login-email">Email</label>
+                <input id="login-email" type="email" autocomplete="email" placeholder="you@example.com" required>
+              </div>
+              <div class="auth-field">
+                <label for="login-password">Password</label>
+                <input id="login-password" type="password" autocomplete="current-password" placeholder="Your password" required>
+              </div>
+              <button id="login-submit" class="btn auth-primary" type="submit">Log in to IzzyDrop</button>
+            </form>
+
+            <form id="signup-form" class="form auth-form" hidden>
+              <div class="signup-role-block">
+                <span class="auth-label">What will you use IzzyDrop as?</span>
+                <div class="signup-role-grid">
+                  <button type="button" class="signup-role-card" data-signup-role="dropshipper">
+                    <span class="signup-role-icon">D</span>
+                    <span><b>Dropshipper</b><small>Find products and sell them online.</small></span>
+                    <span class="role-check">✓</span>
+                  </button>
+                  <button type="button" class="signup-role-card" data-signup-role="supplier">
+                    <span class="signup-role-icon">S</span>
+                    <span><b>Supplier</b><small>List products and fulfill orders.</small></span>
+                    <span class="role-check">✓</span>
+                  </button>
+                </div>
+                <input id="signup-type" type="hidden" required>
+              </div>
+
+              <div class="auth-field">
+                <label for="signup-name">Full name</label>
+                <input id="signup-name" autocomplete="name" placeholder="Your name" required>
+              </div>
+
+              <div id="signup-business-field" class="auth-field">
+                <label id="signup-business-label" for="signup-business">Store / business name <span class="muted">(optional)</span></label>
+                <input id="signup-business" autocomplete="organization" placeholder="Your store or business">
+                <small id="signup-business-help">You can change this later in Settings.</small>
+              </div>
+
+              <div class="auth-field">
+                <label for="signup-email">Email</label>
+                <input id="signup-email" type="email" autocomplete="email" placeholder="you@example.com" required>
+              </div>
+
+              <div class="auth-field">
+                <label for="signup-password">Password</label>
+                <input id="signup-password" type="password" minlength="8" autocomplete="new-password" placeholder="At least 8 characters" required>
+                <small>Use at least 8 characters.</small>
+              </div>
+
+              <button id="signup-submit" class="btn auth-primary" type="submit" disabled>Choose an account type</button>
+              <p class="auth-fineprint">By creating an account, you agree to use IzzyDrop responsibly and provide accurate account information.</p>
+            </form>
+
+            <div id="auth-status" class="status auth-status" aria-live="polite"></div>
+
+            <div id="role-choice" hidden class="role-choice-card">
+              <div>
+                <b>This account has more than one workspace.</b>
+                <p class="muted">Choose where you want to go.</p>
+              </div>
+              <div class="role-choice-actions">
+                <a id="go-dropshipper" class="btn" href="app.html">Dropshipper</a>
+                <a id="go-supplier" class="btn secondary" href="supplier.html">Supplier</a>
+                <a id="go-admin" class="btn secondary" href="admin.html" hidden>Admin</a>
+              </div>
+            </div>
+          </div>
+
+          <form id="invite-password-form" class="form auth-form invite-setup" hidden>
+            <div class="premium-chip">ADMIN INVITATION</div>
+            <h2>Finish your admin account</h2>
+            <p class="muted">Create a password to secure your invited IzzyDrop admin access.</p>
+            <div class="notice ok"><b>Invitation accepted.</b><br>Your admin access is ready to secure.</div>
+            <div class="auth-field">
+              <label for="invite-password">Create password</label>
+              <input id="invite-password" type="password" minlength="8" autocomplete="new-password" placeholder="At least 8 characters" required>
+            </div>
+            <div class="auth-field">
+              <label for="invite-password-confirm">Confirm password</label>
+              <input id="invite-password-confirm" type="password" minlength="8" autocomplete="new-password" placeholder="Repeat password" required>
+            </div>
+            <button class="btn auth-primary" type="submit">Finish admin setup</button>
+            <div id="invite-status" class="status auth-status" aria-live="polite"></div>
+          </form>
+        </div>
+
+        <p class="auth-security-note">IzzyDrop will never ask you for your password outside this secure sign-in page.</p>
+      </section>
+    </main>
   </div>
-</div></div></div>
-<script src="config.js"></script><script src="common.js"></script><script src="login.js"></script></body></html>
+
+  <script src="config.js"></script>
+  <script src="common.js?v=20260922-auth-polish1"></script>
+  <script src="login.js?v=20260922-auth-polish1"></script>
+</body>
+</html>
