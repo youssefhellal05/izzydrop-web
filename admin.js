@@ -366,12 +366,23 @@
   }
 
   function renderAdmins(){
+    const me=ADMINS.find(a=>a.user_id===SESSION?.user?.id);
+    if(me?.is_super_admin){
+      $('#admin-name').textContent=(me.full_name||'IzzyDrop')+' · Super admin';
+    }
     $('#admin-accounts').innerHTML=ADMINS.map(a=>{
       const self=a.user_id===SESSION?.user?.id;
-      return `<div class="admin-account-row">
+      const access=a.is_super_admin
+        ? '<span class="tag super-admin-tag">Super admin</span>'
+        : self
+          ? '<span class="tag ok">You</span>'
+          : a.can_revoke
+            ? `<button class="text-danger revoke-admin" data-id="${a.user_id}" data-name="${IZZY.esc(a.full_name||a.email||'this admin')}">Revoke</button>`
+            : '<span class="tag">Admin</span>';
+      return `<div class="admin-account-row ${a.is_super_admin?'is-super-admin':''}">
         <span class="entity-avatar">${IZZY.esc((a.full_name||a.email||'A')[0].toUpperCase())}</span>
-        <div><b>${IZZY.esc(a.full_name||a.email||'Admin')}</b><small>${IZZY.esc(a.email||'')} · Added ${fmtDate(a.granted_at||a.created_at)}</small>${a.last_sign_in_at?`<small>Last sign in ${fmtDateTime(a.last_sign_in_at)}</small>`:''}</div>
-        ${self?'<span class="tag ok">You</span>':`<button class="text-danger revoke-admin" data-id="${a.user_id}" data-name="${IZZY.esc(a.full_name||a.email||'this admin')}">Revoke</button>`}
+        <div><b>${IZZY.esc(a.full_name||a.email||'Admin')}</b><small>${IZZY.esc(a.email||'')} · Added ${fmtDate(a.granted_at||a.created_at)}</small>${a.last_sign_in_at?`<small>Last sign in ${fmtDateTime(a.last_sign_in_at)}</small>`:''}${a.is_super_admin?'<small>Protected IzzyDrop owner access</small>':''}</div>
+        ${access}
       </div>`;
     }).join('')||'<div class="empty-mini"><b>No admin accounts found.</b><span>Invite a trusted person to add another admin.</span></div>';
     document.querySelectorAll('.revoke-admin').forEach(b=>b.onclick=()=>revokeAdmin(b));
