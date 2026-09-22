@@ -40,6 +40,13 @@
     return o.status==='processing'?'processing':'new';
   }
 
+  function setLoading(){
+    $('#attention-list').innerHTML='<div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line medium" style="margin-top:10px"></div><div class="skeleton skeleton-line short" style="margin-top:10px"></div>';
+    $('#today-summary').innerHTML='<div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line"></div>';
+    $('#products').innerHTML=Array.from({length:4},()=>'<div class="supplier-product-table supplier-product-table-row"><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-button"></div></div>').join('');
+    $('#orders').innerHTML=Array.from({length:3},()=>'<div class="card supplier-order-card"><div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line" style="margin-top:12px"></div><div class="skeleton skeleton-line medium" style="margin-top:10px"></div></div>').join('');
+  }
+
   async function verify(){
     const s=IZZY.session();
     if(!s?.user?.id){location.href='login.html';return false}
@@ -71,6 +78,7 @@
     $('#business').textContent=SUP.business_name||'Supplier';
     $('#supplier-email').textContent=s.user.email||'';
     addDefaultVariant();
+    setLoading();
     await load();
     return true;
   }
