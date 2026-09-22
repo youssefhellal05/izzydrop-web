@@ -1,35 +1,151 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta name="viewport" content="width=device-width,initial-scale=1"><title>IzzyDrop Dropshipper Hub</title><link rel="icon" href="favicon.svg" type="image/svg+xml"><meta name="theme-color" content="#111318"><script>try{document.documentElement.dataset.theme=localStorage.getItem("izzy_theme")==="dark"?"dark":"light"}catch(e){}</script><meta name="description" content="IzzyDrop — Egypt’s independent dropshipping marketplace."><link rel="stylesheet" href="styles.css?v=20260922-darkmode2"></head><body>
-<div class="wrap"><header class="nav"><a class="brand" href="index.html"><span class="brand-mark">IZ</span><span class="brand-word">IzzyDrop</span> <span class="brand-role">Dropshipper</span></a><div class="navlinks"><a class="btn ghost" href="index.html">Marketplace</a></div></header>
-<div id="gate" class="auth-shell"><div class="auth-card"><div class="premium-chip">IZZYDROP DROPSHIPPER</div><h1>Opening your workspace…</h1><p id="gate-message" class="muted">Checking your IzzyDrop dropshipper account.</p></div></div>
-<div id="dashboard" hidden><div class="dash"><aside class="side"><div class="brand"><span class="brand-mark">IZ</span><span class="brand-word">IzzyDrop</span></div><nav><button class="on" data-view="overview">Overview</button><button data-view="products">Products</button><button data-view="linked">My products</button><button data-view="orders">Orders</button><button data-view="settings">Settings</button></nav></aside><main class="main"><div class="workspace-brand">IzzyDrop Dropshipper Workspace</div><header class="dash-head"><div><h1>Dashboard</h1><div id="user-email" class="muted"></div></div></header><div id="dash-status" class="status"></div>
-<section id="view-overview" class="view"><div class="stat-grid"><div class="card stat">Products available<strong id="stat-products">—</strong></div><div class="card stat">My products<strong id="stat-linked">—</strong></div><div class="card stat">Orders<strong id="stat-orders">—</strong></div></div><div class="card"><h2>Freedom first.</h2><p class="muted">Pick products from IzzyDrop and use their public links on any storefront you want. Your website technology is your decision.</p></div></section>
-<section id="view-products" class="view" hidden><div class="catalog-head"><h2>Products</h2><input id="product-search" class="search" placeholder="Search products or SKU"></div><div id="products" class="product-grid"></div></section>
-<section id="view-linked" class="view" hidden><h2>My products</h2><div id="linked" class="list"></div></section>
-<section id="view-orders" class="view" hidden>
-  <div class="catalog-head"><div><h2>Orders</h2><p class="muted">Create an order manually from any website, then the supplier can fulfill it through IzzyDrop.</p></div></div>
-  <div class="card" style="margin-bottom:18px">
-    <h3 style="margin-top:0">Create order</h3>
-    <form id="order-form" class="form">
-      <select id="order-product" required><option value="">Choose one of My products</option></select>
-      <select id="order-variant" required disabled><option value="">Choose variant</option></select>
-      <input id="order-qty" type="number" min="1" value="1" placeholder="Quantity" required>
-      <input id="order-customer-name" placeholder="Customer name" required>
-      <input id="order-customer-phone" placeholder="Customer phone" required>
-      <input id="order-customer-email" type="email" placeholder="Customer email (optional)">
-      <input id="order-address1" placeholder="Street / address" required>
-      <div class="row">
-        <input id="order-city" placeholder="City" required style="flex:1">
-        <input id="order-governorate" placeholder="Governorate" style="flex:1">
-      </div>
-      <input id="order-ref" placeholder="Your order reference (optional)">
-      <button id="order-submit" class="btn" type="submit">Send order to IzzyDrop</button>
-    </form>
-    <div id="order-status" class="status"></div>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>IzzyDrop Dropshipper Hub</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#111318">
+  <script>try{document.documentElement.dataset.theme=localStorage.getItem("izzy_theme")==="dark"?"dark":"light"}catch(e){}</script>
+  <meta name="description" content="IzzyDrop — Egypt’s independent dropshipping marketplace.">
+  <link rel="stylesheet" href="styles.css?v=20260922-dropshipper-polish1">
+</head>
+<body>
+<div class="wrap">
+  <header class="nav">
+    <a class="brand" href="index.html"><span class="brand-mark">IZ</span><span class="brand-word">IzzyDrop</span><span class="brand-role">Dropshipper</span></a>
+    <div class="navlinks"><a class="btn ghost" href="index.html">Public site</a></div>
+  </header>
+
+  <div id="gate" class="auth-shell">
+    <div class="auth-card">
+      <div class="premium-chip">IZZYDROP DROPSHIPPER</div>
+      <h1>Opening your workspace…</h1>
+      <p id="gate-message" class="muted">Checking your IzzyDrop dropshipper account.</p>
+    </div>
   </div>
-  <div id="orders" class="list"></div>
-</section>
-<section id="view-settings" class="view" hidden><div id="settings-root"></div></section>
-</main></div></div>
+
+  <div id="dashboard" hidden>
+    <div class="dash dropshipper-dash">
+      <aside class="side dropshipper-side">
+        <div class="brand side-brand"><span class="brand-mark">IZ</span><span class="brand-word">IzzyDrop</span></div>
+        <nav>
+          <button class="on" data-view="products">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg>
+            <span>Products</span>
+          </button>
+          <button data-view="linked">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12v16l-6-3-6 3z"/></svg>
+            <span>My products</span>
+          </button>
+          <button data-view="orders">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v14H4zM8 3v6M16 3v6M8 13h8M8 17h5"/></svg>
+            <span>Orders</span>
+          </button>
+          <button data-view="settings">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM19 12l2-1-2-4-2 1a8 8 0 0 0-2-1l-1-3h-4L9 7a8 8 0 0 0-2 1L5 7l-2 4 2 1v2l-2 1 2 4 2-1a8 8 0 0 0 2 1l1 3h4l1-3a8 8 0 0 0 2-1l2 1 2-4-2-1z"/></svg>
+            <span>Settings</span>
+          </button>
+        </nav>
+      </aside>
+
+      <main class="main">
+        <header class="workspace-topbar">
+          <div>
+            <div class="workspace-brand">IzzyDrop Dropshipper Workspace</div>
+            <h1 id="page-title">Products</h1>
+            <p id="page-subtitle" class="muted">Browse products and add the ones you want to sell.</p>
+          </div>
+          <div class="account-chip">
+            <span class="account-avatar">D</span>
+            <div><b>Dropshipper</b><small id="user-email"></small></div>
+          </div>
+        </header>
+        <div id="dash-status" class="status"></div>
+
+        <section id="view-products" class="view">
+          <div class="dropshipper-toolbar">
+            <div class="search-wrap">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="m16 16 4 4"/></svg>
+              <input id="product-search" class="search" placeholder="Search products, suppliers or SKU">
+            </div>
+            <select id="product-category" class="control"><option value="">All categories</option></select>
+            <select id="product-sort" class="control">
+              <option value="newest">Newest</option>
+              <option value="price-low">Price: low to high</option>
+              <option value="price-high">Price: high to low</option>
+              <option value="stock-high">Stock: high to low</option>
+            </select>
+            <label class="stock-toggle"><input id="in-stock-only" type="checkbox"><span>In stock only</span></label>
+          </div>
+          <div id="product-results-meta" class="results-meta muted"></div>
+          <div id="products" class="product-grid dropshipper-product-grid"></div>
+        </section>
+
+        <section id="view-linked" class="view" hidden>
+          <div class="section-heading">
+            <div><h2>My products</h2><p class="muted">Manage the products you have chosen to sell.</p></div>
+          </div>
+          <div id="linked" class="my-products-grid"></div>
+        </section>
+
+        <section id="view-orders" class="view" hidden>
+          <div class="section-heading order-heading">
+            <div><h2>Orders</h2><p class="muted">Create orders and track fulfillment from your suppliers.</p></div>
+            <button id="toggle-order-form" class="btn">Create order</button>
+          </div>
+
+          <div id="order-create-card" class="card order-create-card" hidden>
+            <div class="row"><div><h3>Create order</h3><p class="muted">Enter the customer delivery details and send the order to IzzyDrop.</p></div><button id="close-order-form" class="btn secondary" type="button">Close</button></div>
+            <form id="order-form" class="form order-form-grid">
+              <select id="order-product" required><option value="">Choose one of My products</option></select>
+              <select id="order-variant" required disabled><option value="">Choose variant</option></select>
+              <input id="order-qty" type="number" min="1" value="1" placeholder="Quantity" required>
+              <input id="order-customer-name" placeholder="Customer name" required>
+              <input id="order-customer-phone" placeholder="Customer phone" required>
+              <input id="order-customer-email" type="email" placeholder="Customer email (optional)">
+              <input id="order-address1" class="span-2" placeholder="Street / address" required>
+              <input id="order-city" placeholder="City" required>
+              <input id="order-governorate" placeholder="Governorate">
+              <input id="order-ref" class="span-2" placeholder="Your order reference (optional)">
+              <button id="order-submit" class="btn span-2" type="submit">Send order to IzzyDrop</button>
+            </form>
+            <div id="order-status" class="status"></div>
+          </div>
+
+          <div class="order-filterbar" id="order-filters">
+            <button class="filter-chip on" data-order-filter="all">All</button>
+            <button class="filter-chip" data-order-filter="pending">Pending</button>
+            <button class="filter-chip" data-order-filter="processing">Processing</button>
+            <button class="filter-chip" data-order-filter="fulfilled">Fulfilled</button>
+            <button class="filter-chip" data-order-filter="cancelled">Cancelled</button>
+            <button class="filter-chip" data-order-filter="refunded">Refunded</button>
+          </div>
+          <div id="orders" class="orders-list"></div>
+        </section>
+
+        <section id="view-settings" class="view" hidden><div id="settings-root"></div></section>
+      </main>
+    </div>
+  </div>
 </div>
-<div id="link-modal" class="modal" hidden><div class="modal-card"><div class="row"><h2 style="margin:0">Link to your web</h2><button id="close-modal" class="btn secondary">Close</button></div><p class="muted">Use this public IzzyDrop product page anywhere. You can link to it directly or use the product data in your own code.</p><div class="linkbox"><input id="product-link" readonly><button id="copy-link" class="btn">Copy link</button></div><div id="copy-status" class="status"></div></div></div>
-<script src="config.js"></script><script src="common.js?v=20260922-darkmode2"></script><script src="app.js?v=20260922-signout-security"></script><script>window.IZZY_SETTINGS_ROLE="dropshipper"</script><script src="settings.js?v=20260922-signout-security"></script></body></html>
+
+<div id="link-modal" class="modal" hidden>
+  <div class="modal-card">
+    <div class="row"><div><div class="premium-chip">IZZYDROP PRODUCT</div><h2>Link to your web</h2></div><button id="close-modal" class="btn secondary">Close</button></div>
+    <p class="muted">Use this public product page anywhere, or copy the product information into your own storefront.</p>
+    <div class="linkbox"><input id="product-link" readonly><button id="copy-link" class="btn">Copy link</button></div>
+    <div id="copy-status" class="status"></div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="common.js?v=20260922-dropshipper-polish1"></script>
+<script src="app.js?v=20260922-dropshipper-polish1"></script>
+<script>window.IZZY_SETTINGS_ROLE="dropshipper"</script>
+<script src="settings.js?v=20260922-signout-security"></script>
+</body>
+</html>
