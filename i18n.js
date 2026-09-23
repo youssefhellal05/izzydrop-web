@@ -427,7 +427,7 @@
 
   function ensureToggle(){
     if(document.querySelector('[data-language-toggle]'))return;
-    const host=document.querySelector('.navlinks')||document.querySelector('.auth-nav')||document.querySelector('.supplier-top-actions');
+    const host=document.querySelector('.auth-nav-actions')||document.querySelector('.navlinks')||document.querySelector('.supplier-top-actions');
     if(!host)return;
     const btn=document.createElement('button');
     btn.type='button';
