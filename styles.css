@@ -829,3 +829,7 @@ html[dir="rtl"] .admin-order-item{direction:rtl}
 html[data-theme="dark"] .settings-language-choice{background:#181d24}
 html[data-theme="dark"] .settings-language-btn.on{background:#252b33;color:#fff;box-shadow:none}
 @media(max-width:560px){.settings-language-choice{width:100%}.settings-language-btn{flex:1}}
+
+.auth-nav-actions{display:flex;align-items:center;gap:10px}
+html[dir="rtl"] .auth-nav-actions{direction:rtl}
+@media(max-width:560px){.auth-nav-actions{gap:6px}.auth-nav-actions .language-toggle{padding:8px 9px}}
