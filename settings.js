@@ -74,6 +74,13 @@
               <input id="settings-dark-mode" type="checkbox">
               <span class="switch"></span>
             </label>
+            <div class="security-row settings-language-row">
+              <div><b>Language</b><small>Choose the IzzyDrop interface language on this device.</small></div>
+              <div class="settings-language-choice">
+                <button type="button" class="settings-language-btn" data-settings-language="en">English</button>
+                <button type="button" class="settings-language-btn" data-settings-language="ar">العربية</button>
+              </div>
+            </div>
             <div class="theme-preview">
               <div class="theme-preview-card"><span class="theme-preview-dot"></span><b>IzzyDrop</b><small>Marketplace workspace</small></div>
             </div>
@@ -105,6 +112,11 @@
     darkToggle.checked=IZZY.theme()==='dark';
     darkToggle.onchange=()=>{IZZY.setTheme(darkToggle.checked?'dark':'light')};
   }
+  const currentLanguage=window.IZZY_I18N?.lang?.()||'en';
+  document.querySelectorAll('[data-settings-language]').forEach(btn=>{
+    btn.classList.toggle('on',btn.dataset.settingsLanguage===currentLanguage);
+    btn.onclick=()=>window.IZZY_I18N?.set?.(btn.dataset.settingsLanguage);
+  });
 
   const status=(text,bad=false)=>{const e=document.getElementById('settings-status');e.textContent=text;e.className='status'+(bad?' bad':'')};
   document.querySelectorAll('[data-settings-tab]').forEach(btn=>btn.onclick=()=>{
