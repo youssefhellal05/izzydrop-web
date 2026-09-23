@@ -1,9 +1,10 @@
 (()=>{
   const $=s=>document.querySelector(s);
-  let PRODUCTS=[],LINKS=[],INTEGRATIONS=[],INTEGRATION_VARIANTS=[],ORDERS=[],ITEMS=[],SESSION=null,DROPSHIPPER=null,ORDER_FILTER='all',CURRENT_WEB_TOKEN=null;
+  let PRODUCTS=[],LINKS=[],INTEGRATIONS=[],INTEGRATION_VARIANTS=[],ORDERS=[],ITEMS=[],REQUESTS=[],ALERTS=[],COD={},SESSION=null,DROPSHIPPER=null,ORDER_FILTER='all',CURRENT_WEB_TOKEN=null;
 
   const VIEW_COPY={
-    products:['Products','Browse products and add the ones you want to sell.'],
+    products:['Products','Browse products with live profit, supplier and trend intelligence.'],
+    requests:['Find a product','Ask IzzyDrop suppliers to source a product you want to sell.'],
     linked:['My products','Manage pricing, product links and the products you have chosen.'],
     orders:['Orders','Create orders and track fulfillment from your suppliers.'],
     settings:['Settings','Manage your IzzyDrop account, appearance and security.']
@@ -49,10 +50,11 @@
     const q=$('#product-search').value.trim().toLowerCase();
     const category=$('#product-category').value;
     const inStock=$('#in-stock-only').checked;
+    const trending=$('#trending-only')?.checked;
     const sort=$('#product-sort').value;
     let a=PRODUCTS.filter(p=>{
       const hay=[p.name,p.name_en,p.name_ar,p.description,p.description_en,p.description_ar,p.sku,p.supplier_name,p.category_name].filter(Boolean).join(' ').toLowerCase();
-      return (!q||hay.includes(q))&&(!category||String(p.category_name||'')===category)&&(!inStock||Number(p.stock_quantity)>0);
+      return (!q||hay.includes(q))&&(!category||String(p.category_name||'')===category)&&(!inStock||Number(p.stock_quantity)>0)&&(!trending||p.trending===true);
     });
     if(sort==='price-low')a.sort((a,b)=>Number(a.suggested_retail_price||0)-Number(b.suggested_retail_price||0));
     else if(sort==='price-high')a.sort((a,b)=>Number(b.suggested_retail_price||0)-Number(a.suggested_retail_price||0));
@@ -89,13 +91,26 @@
           <a class="product-title-link" href="${productDetailsUrl(p)}"><h3>${IZZY.esc(name)}</h3></a>
           <p class="supplier-line">Sold by <b>${IZZY.esc(p.supplier_name||'IzzyDrop supplier')}</b></p>
           <p class="product-description">${IZZY.esc(desc||(ar()?'جاهز لمتجرك.':'Ready for your store.'))}</p>
+          <div class="product-intelligence-row">
+            <span class="intel-pill">${p.supplier_score==null?'New supplier':`IzzyScore ${Number(p.supplier_score).toFixed(1)}/10`}</span>
+            ${p.trending?'<span class="intel-pill hot">🔥 Trending</span>':''}
+            <span class="intel-pill">${Number(p.orders_7d||0)} orders / 7d</span>
+            <span class="intel-pill">${Number(p.active_store_count||0)} stores</span>
+          </div>
+          <div class="profit-box" data-profit-box="${p.product_id}" data-cost="${Number(p.supplier_cost||0)}" data-shipping="${Number(p.estimated_shipping_cost||0)}">
+            <div><small>Supplier cost</small><b>${IZZY.money(p.supplier_cost,p.currency)}</b></div>
+            <div><small>Est. shipping</small><b>${IZZY.money(p.estimated_shipping_cost,p.currency)}</b></div>
+            <label><small>Your selling price</small><input class="profit-price" data-profit-id="${p.product_id}" type="number" min="0" step="1" value="${Number(p.suggested_retail_price||0)}"></label>
+            <div><small>Est. profit</small><b class="profit-value" data-profit-value="${p.product_id}">—</b><span class="profit-margin" data-profit-margin="${p.product_id}"></span></div>
+          </div>
           <div class="product-price-block">
             <div><small>Suggested selling price</small><strong>${IZZY.money(p.suggested_retail_price,p.currency)}</strong></div>
             <span class="sku">${IZZY.esc(p.sku||'')}</span>
           </div>
           <div class="product-card-actions">
             <a class="btn secondary details-btn" href="${productDetailsUrl(p)}">View details</a>
-            <button class="btn link-btn" data-id="${p.product_id}" data-slug="${IZZY.esc(p.public_slug)}" data-linked="${isLinked?'1':'0'}">Add to your web</button>
+            <button class="btn sample-btn" data-id="${p.product_id}">Order sample</button>
+            <button class="btn link-btn" data-id="${p.product_id}" data-slug="${IZZY.esc(p.public_slug)}" data-linked="${isLinked?'1':'0'}">${isLinked?'Add to your web':'Add to My Products'}</button>
           </div>
         </div>
       </article>`;
@@ -107,6 +122,20 @@
     </div>`;
 
     document.querySelectorAll('.link-btn').forEach(b=>b.onclick=()=>linkProduct(b));
+    document.querySelectorAll('.sample-btn').forEach(b=>b.onclick=()=>orderSample(b.dataset.id,b));
+    document.querySelectorAll('.profit-price').forEach(input=>{
+      const update=()=>{
+        const p=PRODUCTS.find(x=>x.product_id===input.dataset.profitId);
+        if(!p)return;
+        const price=Number(input.value||0),cost=Number(p.supplier_cost||0),shipping=Number(p.estimated_shipping_cost||0);
+        const profit=price-cost-shipping,margin=price>0?(profit/price)*100:0;
+        const value=document.querySelector(`[data-profit-value="${p.product_id}"]`);
+        const pct=document.querySelector(`[data-profit-margin="${p.product_id}"]`);
+        if(value){value.textContent=IZZY.money(profit,p.currency);value.classList.toggle('negative',profit<0);value.classList.toggle('positive',profit>=0)}
+        if(pct)pct.textContent=`${margin.toFixed(1)}% margin`;
+      };
+      input.oninput=update;update();
+    });
     const clear=$('#clear-product-filters');
     if(clear)clear.onclick=()=>{
       $('#product-search').value='';
@@ -309,24 +338,96 @@
   }
 
   async function linkProduct(b){
-    openWebSetup(b.dataset.id);
+    if(b.dataset.linked==='1'){openWebSetup(b.dataset.id);return}
+    const p=PRODUCTS.find(x=>x.product_id===b.dataset.id);
+    if(!p)return;
+    b.disabled=true;b.textContent='Adding…';
+    try{
+      await IZZY.request('/rest/v1/dropshipper_product_links',{
+        method:'POST',
+        headers:{Prefer:'return=minimal'},
+        body:JSON.stringify({
+          dropshipper_id:DROPSHIPPER.id,
+          supplier_product_id:p.product_id,
+          retail_price:Number(p.suggested_retail_price||0),
+          status:'active',
+          last_seen_cost:Number(p.supplier_cost||0),
+          last_seen_stock:Number(p.stock_quantity||0)
+        })
+      });
+      status('Product added to My Products. You can sell it manually or connect it to any website.');
+      await load(false);
+    }catch(e){status(e.message,true);b.disabled=false;b.textContent='Add to My Products'}
+  }
+
+  async function orderSample(productId,btn){
+    const p=PRODUCTS.find(x=>x.product_id===productId);
+    if(!p)return;
+    const address=prompt('Sample delivery address:');
+    if(address===null)return;
+    const city=prompt('City / governorate:');
+    if(city===null)return;
+    btn.disabled=true;btn.textContent='Requesting…';
+    try{
+      const variants=await IZZY.rpc('marketplace_variants',{_product_id:productId});
+      const variant=(variants||[]).find(v=>Number(v.stock_quantity)>0)||(variants||[])[0]||null;
+      const id=await IZZY.rpc('order_product_sample',{_product_id:productId,_variant_id:variant?.id||null,_shipping_address:{address1:address,city}});
+      status('Sample requested ✓ '+String(id).slice(0,8));
+    }catch(e){status(e.message,true)}
+    finally{btn.disabled=false;btn.textContent='Order sample'}
+  }
+
+  function renderCod(){
+    const el=$('#cod-summary');if(!el)return;
+    el.innerHTML=[
+      ['COD orders',COD.total||0],
+      ['Delivered',COD.delivered||0],
+      ['In progress',Number(COD.processing||0)+Number(COD.pending||0)],
+      ['Cancelled',COD.cancelled||0],
+      ['Success rate',`${Number(COD.success_rate||0).toFixed(1)}%`],
+      ['Delivered value',IZZY.money(COD.delivered_value||0,'EGP')]
+    ].map(([k,v])=>`<div class="card cod-stat"><small>${k}</small><strong>${v}</strong></div>`).join('');
+  }
+
+  function renderRequests(){
+    const el=$('#product-requests');if(!el)return;
+    el.innerHTML=(REQUESTS||[]).map(r=>`<article class="card order-card">
+      <div class="order-card-head"><div><span class="order-id">${IZZY.esc(r.title)}</span><small>${new Date(r.created_at).toLocaleString()}</small></div><span class="tag ${r.status==='matched'?'ok':'warn'}">${IZZY.esc(r.status)}</span></div>
+      <div class="order-summary-grid"><div><small>Target cost</small><b>${r.target_cost==null?'—':IZZY.money(r.target_cost,'EGP')}</b></div><div><small>Source</small><b>${r.source_url?'<a href="'+IZZY.esc(r.source_url)+'" target="_blank" rel="noopener">Open link</a>':'—'}</b></div><div><small>Notes</small><span>${IZZY.esc(r.notes||'—')}</span></div></div>
+    </article>`).join('')||'<div class="empty-state"><div class="empty-icon">⌕</div><h3>No sourcing requests yet</h3><p>Send a product link or description and IzzyDrop suppliers can match it.</p></div>';
+  }
+
+  function renderAlerts(){
+    const el=$('#inventory-alerts');if(!el)return;
+    const unread=(ALERTS||[]).filter(a=>!a.read_at);
+    el.innerHTML=unread.slice(0,8).map(a=>`<div class="notice alert-notice"><b>${IZZY.esc(a.title)}</b><span>${IZZY.esc(a.message)}</span><button class="auth-text-button mark-alert" data-id="${a.id}">Mark read</button></div>`).join('');
+    document.querySelectorAll('.mark-alert').forEach(b=>b.onclick=async()=>{
+      await IZZY.request(`/rest/v1/dropshipper_alerts?id=eq.${encodeURIComponent(b.dataset.id)}`,{method:'PATCH',body:JSON.stringify({read_at:new Date().toISOString()})});
+      await load(false);
+    });
   }
 
   async function load(showMessage=false){
     try{
-      [PRODUCTS,LINKS,INTEGRATIONS,INTEGRATION_VARIANTS,ORDERS,ITEMS]=await Promise.all([
-        IZZY.rpc('marketplace_catalog_v2'),
+      [PRODUCTS,LINKS,INTEGRATIONS,INTEGRATION_VARIANTS,ORDERS,ITEMS,REQUESTS,ALERTS,COD]=await Promise.all([
+        IZZY.rpc('marketplace_catalog_v3'),
         IZZY.request('/rest/v1/dropshipper_product_links?select=*&order=created_at.desc'),
         IZZY.request('/rest/v1/storefront_integrations?select=*&order=created_at.desc'),
         IZZY.request('/rest/v1/storefront_integration_variants?select=*&order=created_at.asc'),
         IZZY.request('/rest/v1/orders?select=*&order=created_at.desc&limit=100'),
-        IZZY.request('/rest/v1/order_items?select=id,order_id,supplier_product_id,variant_id,quantity,retail_price_at_purchase,fulfillment_status,tracking_number,shipping_carrier,created_at&order=created_at.desc&limit=200')
+        IZZY.request('/rest/v1/order_items?select=id,order_id,supplier_product_id,variant_id,quantity,retail_price_at_purchase,fulfillment_status,tracking_number,shipping_carrier,created_at&order=created_at.desc&limit=200'),
+        IZZY.request('/rest/v1/product_requests?select=*&order=created_at.desc&limit=50'),
+        IZZY.request('/rest/v1/dropshipper_alerts?select=*&order=created_at.desc&limit=50'),
+        IZZY.rpc('dropshipper_cod_metrics')
       ]);
       populateCategories();
       renderProducts();
       renderLinked();
       renderOrders();
       renderOrderProducts();
+      renderCod();
+      renderRequests();
+      renderAlerts();
       if(showMessage)status('Everything is up to date.');
     }catch(e){status(e.message,true)}
   }
@@ -354,6 +455,7 @@
   $('#product-category').onchange=renderProducts;
   $('#product-sort').onchange=renderProducts;
   $('#in-stock-only').onchange=renderProducts;
+  $('#trending-only').onchange=renderProducts;
   document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>go(b.dataset.view));
   $('#close-modal').onclick=()=>$('#link-modal').hidden=true;
   $('#link-modal').onclick=e=>{if(e.target===$('#link-modal'))$('#link-modal').hidden=true};
@@ -459,6 +561,24 @@
     document.querySelectorAll('[data-order-filter]').forEach(x=>x.classList.toggle('on',x===b));
     renderOrders();
   });
+
+  $('#product-request-form').onsubmit=async e=>{
+    e.preventDefault();
+    const btn=$('#request-submit'),st=$('#request-status');
+    btn.disabled=true;btn.textContent='Sending…';st.textContent='Sending request…';st.className='status';
+    try{
+      const id=await IZZY.rpc('create_product_request',{
+        _title:$('#request-title').value.trim(),
+        _source_url:$('#request-url').value.trim()||null,
+        _image_url:$('#request-image').value.trim()||null,
+        _notes:$('#request-notes').value.trim()||null,
+        _target_cost:$('#request-target-cost').value===''?null:Number($('#request-target-cost').value)
+      });
+      st.textContent='Sourcing request sent ✓ '+String(id).slice(0,8);
+      e.target.reset();await load(false);
+    }catch(err){st.textContent=err.message;st.className='status bad'}
+    finally{btn.disabled=false;btn.textContent='Send sourcing request'}
+  };
 
   $('#order-product').onchange=loadOrderVariants;
   $('#order-form').onsubmit=async e=>{
