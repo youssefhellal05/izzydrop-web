@@ -44,7 +44,13 @@
 
   function setNewContentLang(lang,userAction=true){
     NEW_CONTENT_LANG=lang;
-    if(userAction)NEW_SOURCE_LANGUAGE=lang;
+    if(userAction){
+      const enHas=!!$('#p-name-en')?.value?.trim();
+      const arHas=!!$('#p-name-ar')?.value?.trim();
+      if(!enHas&&!arHas)NEW_SOURCE_LANGUAGE=lang;
+      else if(lang==='en'&&enHas&&!arHas)NEW_SOURCE_LANGUAGE='en';
+      else if(lang==='ar'&&arHas&&!enHas)NEW_SOURCE_LANGUAGE='ar';
+    }
     document.querySelectorAll('[data-new-content-lang]').forEach(b=>b.classList.toggle('on',b.dataset.newContentLang===lang));
     document.querySelectorAll('[data-new-content-panel]').forEach(p=>p.hidden=p.dataset.newContentPanel!==lang);
     const btn=$('#p-translate-btn');
@@ -73,6 +79,8 @@
     const sourceName=$('#p-name-'+from).value.trim();
     const sourceDescription=$('#p-description-'+from).value.trim();
     const st=$('#p-translation-status'),btn=$('#p-translate-btn');
+    const targetHas=$('#p-name-'+to).value.trim()||$('#p-description-'+to).value.trim();
+    if(targetHas&&!confirm(to==='ar'?'Replace the existing Arabic translation?':'Replace the existing English translation?'))return;
     if(!sourceName){st.textContent=from==='en'?'Enter the English product name first.':'أدخل اسم المنتج بالعربية أولًا.';st.className='status bad';return}
     btn.disabled=true;
     btn.textContent=from==='en'?'Translating to Arabic…':'Translating to English…';
@@ -95,6 +103,8 @@
     const sourceName=$('#edit-product-name-'+from).value.trim();
     const sourceDescription=$('#edit-product-description-'+from).value.trim();
     const st=$('#edit-translation-status'),btn=$('#edit-translate-btn');
+    const targetHas=$('#edit-product-name-'+to).value.trim()||$('#edit-product-description-'+to).value.trim();
+    if(targetHas&&!confirm(to==='ar'?'Replace the existing Arabic translation?':'Replace the existing English translation?'))return;
     if(!sourceName){st.textContent=from==='en'?'Enter the English product name first.':'أدخل اسم المنتج بالعربية أولًا.';st.className='status bad';return}
     btn.disabled=true;
     btn.textContent=from==='en'?'Translating to Arabic…':'Translating to English…';
