@@ -58,8 +58,7 @@
           </div>
 
           <div class="product-detail-actions">
-            ${isDropshipper?`<button id="use-product" class="btn" ${totalStock<=0?'disabled':''}>${alreadyLinked?'Get product link':'Link to your web'}</button>`:'<a class="btn" href="login.html?type=dropshipper">Log in to use product</a>'}
-            <button id="copy" class="btn secondary">Copy product link</button>
+            ${isDropshipper?`<button id="use-product" class="btn" ${totalStock<=0?'disabled':''}>Add to your web</button>`:'<a class="btn" href="login.html?type=dropshipper">Log in to add to your web</a>'}
           </div>
           <div id="product-action-status" class="status"></div>
         </section>
@@ -71,30 +70,9 @@
       document.querySelectorAll('.product-thumb').forEach(x=>x.classList.toggle('on',x===btn));
     });
 
-    const copy=document.getElementById('copy');
-    copy.onclick=async()=>{
-      try{await navigator.clipboard.writeText(location.href);copy.textContent='Copied ✓'}
-      catch{copy.textContent='Copy failed'}
-    };
-
     const use=document.getElementById('use-product');
-    if(use)use.onclick=async()=>{
-      use.disabled=true;
-      const action=document.getElementById('product-action-status');
-      action.textContent=alreadyLinked?'Preparing link…':'Linking product…';
-      try{
-        if(!alreadyLinked){
-          await IZZY.rpc('link_product_to_web',{_product_id:p.product_id,_retail_price:null});
-          alreadyLinked=true;
-        }
-        await navigator.clipboard.writeText(IZZY.productUrl(p.slug));
-        use.textContent='Product link copied ✓';
-        action.textContent='Added to My products and copied to your clipboard.';
-      }catch(e){
-        use.disabled=false;
-        action.textContent=e.message;
-        action.className='status bad';
-      }
+    if(use)use.onclick=()=>{
+      location.href='app.html?add='+encodeURIComponent(p.product_id);
     };
   }catch(e){st.textContent=e.message;st.className='status bad'}
 })();
