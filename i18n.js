@@ -336,6 +336,17 @@
     '3. Orders flow automatically':'3. الطلبات تصل تلقائيًا',
     'Customer orders arrive in IzzyDrop, stock is reserved, and supplier fulfillment starts.':'تصل طلبات العملاء إلى IzzyDrop تلقائيًا، ويتم حجز المخزون ويبدأ تنفيذ المورّد.',
     'Choose products, connect them to your website, and receive customer orders directly in IzzyDrop.':'اختر المنتجات واربطها بموقعك واستقبل طلبات العملاء مباشرة داخل IzzyDrop.',
+    'Variants to add':'الخيارات التي ستضيفها',
+    'Choose which supplier variants you want on your website and set your selling price for each one.':'اختر خيارات المورّد التي تريد عرضها على موقعك وحدد سعر بيعك لكل خيار.',
+    'Select all':'تحديد الكل',
+    'Clear all':'إلغاء تحديد الكل',
+    'Use':'استخدام',
+    'Your price':'سعرك',
+    'Loading variants…':'جارٍ تحميل الخيارات…',
+    'No variants are available for this product.':'لا توجد خيارات متاحة لهذا المنتج.',
+    'Choose at least one variant to add to your website.':'اختر خيارًا واحدًا على الأقل لإضافته إلى موقعك.',
+    'Enter a valid selling price for every selected variant.':'أدخل سعر بيع صحيحًا لكل خيار محدد.',
+    'Selling price':'سعر البيع',
     'English':'English',
     'Arabic':'العربية'
   };
