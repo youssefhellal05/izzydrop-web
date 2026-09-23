@@ -1,6 +1,6 @@
 (()=>{
   const $=s=>document.querySelector(s);
-  let SUP=null,PRODUCTS=[],VARIANTS=[],IMAGES=[],ORDERS=[],ITEMS=[],SELECTED_IMAGES=[],ORDER_FILTER='all';
+  let SUP=null,PRODUCTS=[],VARIANTS=[],IMAGES=[],ORDERS=[],ITEMS=[],SELECTED_IMAGES=[],ORDER_FILTER='all',NEW_CONTENT_LANG='en',NEW_SOURCE_LANGUAGE='en',EDIT_CONTENT_LANG='en';
 
   const VIEW_COPY={
     overview:['Overview','See what needs your attention today.'],
@@ -38,6 +38,78 @@
     if(item.fulfillment_status==='cancelled')return 'cancelled';
     const o=orderFor(item.order_id);
     return o.status==='processing'?'processing':'new';
+  }
+  const productName=p=>window.IZZY_I18N?.productName(p)||p?.name||'';
+  const productDescription=p=>window.IZZY_I18N?.productDescription(p)||p?.description||'';
+
+  function setNewContentLang(lang,userAction=true){
+    NEW_CONTENT_LANG=lang;
+    if(userAction)NEW_SOURCE_LANGUAGE=lang;
+    document.querySelectorAll('[data-new-content-lang]').forEach(b=>b.classList.toggle('on',b.dataset.newContentLang===lang));
+    document.querySelectorAll('[data-new-content-panel]').forEach(p=>p.hidden=p.dataset.newContentPanel!==lang);
+    const btn=$('#p-translate-btn');
+    if(btn)btn.textContent=lang==='en'?'Generate Arabic translation':'Generate English translation';
+  }
+
+  function setEditContentLang(lang){
+    EDIT_CONTENT_LANG=lang;
+    document.querySelectorAll('[data-edit-content-lang]').forEach(b=>b.classList.toggle('on',b.dataset.editContentLang===lang));
+    document.querySelectorAll('[data-edit-content-panel]').forEach(p=>p.hidden=p.dataset.editContentPanel!==lang);
+    const btn=$('#edit-translate-btn');
+    if(btn)btn.textContent=lang==='en'?'Generate Arabic translation':'Generate English translation';
+  }
+
+  async function translateText(text,from,to){
+    if(!String(text||'').trim())return '';
+    const data=await IZZY.request('/functions/v1/translate-product',{
+      method:'POST',
+      body:JSON.stringify({text:String(text).trim(),from,to})
+    });
+    return data?.translated_text||'';
+  }
+
+  async function translateNewContent(){
+    const from=NEW_CONTENT_LANG,to=from==='en'?'ar':'en';
+    const sourceName=$('#p-name-'+from).value.trim();
+    const sourceDescription=$('#p-description-'+from).value.trim();
+    const st=$('#p-translation-status'),btn=$('#p-translate-btn');
+    if(!sourceName){st.textContent=from==='en'?'Enter the English product name first.':'أدخل اسم المنتج بالعربية أولًا.';st.className='status bad';return}
+    btn.disabled=true;
+    btn.textContent=from==='en'?'Translating to Arabic…':'Translating to English…';
+    st.textContent='Generating a draft translation…';st.className='status';
+    try{
+      const [name,description]=await Promise.all([
+        translateText(sourceName,from,to),
+        sourceDescription?translateText(sourceDescription,from,to):Promise.resolve('')
+      ]);
+      $('#p-name-'+to).value=name;
+      $('#p-description-'+to).value=description;
+      setNewContentLang(to,false);
+      st.textContent=to==='ar'?'تم إنشاء الترجمة العربية. راجعها وعدّلها قبل حفظ المنتج.':'English translation generated. Review and edit it before saving.';
+    }catch(e){st.textContent=e.message||'Translation failed.';st.className='status bad'}
+    finally{btn.disabled=false;btn.textContent=NEW_CONTENT_LANG==='en'?'Generate Arabic translation':'Generate English translation'}
+  }
+
+  async function translateEditContent(){
+    const from=EDIT_CONTENT_LANG,to=from==='en'?'ar':'en';
+    const sourceName=$('#edit-product-name-'+from).value.trim();
+    const sourceDescription=$('#edit-product-description-'+from).value.trim();
+    const st=$('#edit-translation-status'),btn=$('#edit-translate-btn');
+    if(!sourceName){st.textContent=from==='en'?'Enter the English product name first.':'أدخل اسم المنتج بالعربية أولًا.';st.className='status bad';return}
+    btn.disabled=true;
+    btn.textContent=from==='en'?'Translating to Arabic…':'Translating to English…';
+    st.textContent='Generating a draft translation…';st.className='status';
+    try{
+      const [name,description]=await Promise.all([
+        translateText(sourceName,from,to),
+        sourceDescription?translateText(sourceDescription,from,to):Promise.resolve('')
+      ]);
+      $('#edit-product-name-'+to).value=name;
+      $('#edit-product-description-'+to).value=description;
+      setEditContentLang(to);
+      st.textContent=to==='ar'?'تم إنشاء الترجمة العربية. راجعها وعدّلها قبل الحفظ.':'English translation generated. Review and edit it before saving.';
+    }catch(e){st.textContent=e.message||'Translation failed.';st.className='status bad'}
+    finally{btn.disabled=false;btn.textContent=EDIT_CONTENT_LANG==='en'?'Generate Arabic translation':'Generate English translation'}
   }
 
   function setLoading(){
@@ -149,7 +221,7 @@
       notes.push({
         kind:'order',
         title:'New order',
-        text:`${p.name||'Product'} × ${Number(i.quantity||1)} for ${o.customer_name||'customer'}`,
+        text:`${productName(p)||'Product'} × ${Number(i.quantity||1)} for ${o.customer_name||'customer'}`,
         view:'orders',
         filter:'new'
       });
@@ -158,7 +230,7 @@
       notes.push({
         kind:'stock',
         title:'Low stock',
-        text:`${p.name} has ${totalStock(p.id)} total units left`,
+        text:`${productName(p)} has ${totalStock(p.id)} total units left`,
         view:'products'
       });
     });
@@ -181,7 +253,7 @@
     const q=$('#supplier-product-search').value.trim().toLowerCase();
     const status=$('#supplier-product-status').value;
     return PRODUCTS.filter(p=>{
-      const hay=[p.name,p.sku,p.description].filter(Boolean).join(' ').toLowerCase();
+      const hay=[p.name,p.name_en,p.name_ar,p.sku,p.description,p.description_en,p.description_ar].filter(Boolean).join(' ').toLowerCase();
       return (!q||hay.includes(q))&&(!status||p.status===status);
     });
   }
@@ -196,7 +268,7 @@
       return `<div class="supplier-product-table supplier-product-table-row">
         <div class="supplier-table-product">
           <div class="supplier-product-thumb">${img?.url?`<img src="${IZZY.esc(img.url)}" alt="">`:'IZ'}</div>
-          <div><b>${IZZY.esc(p.name)}</b><small>${variantsFor(p.id).length} variant${variantsFor(p.id).length===1?'':'s'} · ${imagesFor(p.id).length} photo${imagesFor(p.id).length===1?'':'s'}</small></div>
+          <div><b>${IZZY.esc(productName(p))}</b><small>${variantsFor(p.id).length} variant${variantsFor(p.id).length===1?'':'s'} · ${imagesFor(p.id).length} photo${imagesFor(p.id).length===1?'':'s'}</small></div>
         </div>
         <span class="supplier-table-cell" data-label="SKU">${IZZY.esc(p.sku||'—')}</span>
         <span class="supplier-table-cell ${low?'stock-low':''}" data-label="Stock">${stock}${low?' · Low':''}</span>
@@ -229,7 +301,7 @@
       return `<article class="card supplier-order-card ${state==='new'?'is-new':''}">
         <div class="supplier-order-head">
           <div>
-            <div class="supplier-order-title"><b>${IZZY.esc(p.name||'Product')} × ${Number(i.quantity||1)}</b>${state==='new'?'<span class="new-pill">NEW</span>':''}</div>
+            <div class="supplier-order-title"><b>${IZZY.esc(productName(p)||'Product')} × ${Number(i.quantity||1)}</b>${state==='new'?'<span class="new-pill">NEW</span>':''}</div>
             <small>${IZZY.esc(o.external_order_ref||o.shopify_order_name||('Order '+String(o.id||'').slice(0,8)))} · ${new Date(o.created_at).toLocaleString()}</small>
           </div>
           <span class="tag ${fulfilled?'ok':state==='new'?'warn':cancelled?'bad':''}">${state}</span>
@@ -318,10 +390,13 @@
     const p=productFor(id);
     if(!p)return;
     $('#edit-product-id').value=p.id;
-    $('#edit-product-name').value=p.name||'';
+    $('#edit-product-name-en').value=p.name_en||p.name||'';
+    $('#edit-product-name-ar').value=p.name_ar||'';
+    $('#edit-product-description-en').value=p.description_en||p.description||'';
+    $('#edit-product-description-ar').value=p.description_ar||'';
     $('#edit-product-sku').value=p.sku||'';
-    $('#edit-product-description').value=p.description||'';
     $('#edit-product-cost').value=p.cost_price??0;
+    setEditContentLang(p.content_source_language==='ar'?'ar':'en');
     $('#edit-product-retail').value=p.suggested_retail_price??'';
 
     const vs=variantsFor(id);
@@ -345,14 +420,26 @@
     try{
       await IZZY.request(`/rest/v1/supplier_products?id=eq.${encodeURIComponent(id)}`,{
         method:'PATCH',
-        body:JSON.stringify({
-          name:$('#edit-product-name').value.trim(),
-          sku:$('#edit-product-sku').value.trim(),
-          description:$('#edit-product-description').value.trim()||null,
-          cost_price:Number($('#edit-product-cost').value),
-          suggested_retail_price:$('#edit-product-retail').value===''?null:Number($('#edit-product-retail').value),
-          updated_at:new Date().toISOString()
-        })
+        body:JSON.stringify((()=>{
+          const nameEn=$('#edit-product-name-en').value.trim()||null;
+          const nameAr=$('#edit-product-name-ar').value.trim()||null;
+          const descEn=$('#edit-product-description-en').value.trim()||null;
+          const descAr=$('#edit-product-description-ar').value.trim()||null;
+          const source=p.content_source_language==='ar'?'ar':'en';
+          return {
+            name_en:nameEn,
+            name_ar:nameAr,
+            description_en:descEn,
+            description_ar:descAr,
+            content_source_language:source,
+            name:(source==='ar'?(nameAr||nameEn):(nameEn||nameAr)),
+            description:(source==='ar'?(descAr||descEn):(descEn||descAr)),
+            sku:$('#edit-product-sku').value.trim(),
+            cost_price:Number($('#edit-product-cost').value),
+            suggested_retail_price:$('#edit-product-retail').value===''?null:Number($('#edit-product-retail').value),
+            updated_at:new Date().toISOString()
+          };
+        })())
       });
 
       const rows=[...document.querySelectorAll('.edit-variant-row[data-variant-id]')];
@@ -437,10 +524,19 @@
         weight_grams:row.querySelector('[data-variant-weight]').value===''?null:Number(row.querySelector('[data-variant-weight]').value)
       }));
 
-      const result=await IZZY.rpc('supplier_create_product',{
-        _name:$('#p-name').value.trim(),
+      const nameEn=$('#p-name-en').value.trim()||null;
+      const nameAr=$('#p-name-ar').value.trim()||null;
+      const descEn=$('#p-description-en').value.trim()||null;
+      const descAr=$('#p-description-ar').value.trim()||null;
+      if(!nameEn&&!nameAr)throw Error('Enter the product name in English or Arabic.');
+
+      const result=await IZZY.rpc('supplier_create_product_v2',{
+        _name_en:nameEn,
+        _name_ar:nameAr,
+        _description_en:descEn,
+        _description_ar:descAr,
+        _source_language:NEW_SOURCE_LANGUAGE,
         _sku:$('#p-sku').value.trim()||null,
-        _description:$('#p-description').value.trim()||null,
         _cost:cost,
         _retail:Number($('#p-retail').value),
         _currency:'EGP',
@@ -469,6 +565,8 @@
       }
 
       e.target.reset();
+      NEW_SOURCE_LANGUAGE='en';setNewContentLang('en',false);
+      $('#p-translation-status').textContent='';
       SELECTED_IMAGES=[];renderSelectedImages();
       $('#variant-rows').innerHTML='';addDefaultVariant();
       await load(false);
@@ -479,6 +577,11 @@
   };
 
   $('#add-variant-row').onclick=()=>addVariantRow('');
+  document.querySelectorAll('[data-new-content-lang]').forEach(b=>b.onclick=()=>setNewContentLang(b.dataset.newContentLang,true));
+  document.querySelectorAll('[data-edit-content-lang]').forEach(b=>b.onclick=()=>setEditContentLang(b.dataset.editContentLang));
+  $('#p-translate-btn').onclick=translateNewContent;
+  $('#edit-translate-btn').onclick=translateEditContent;
+  setNewContentLang('en',false);
   $('#supplier-product-search').oninput=renderProducts;
   $('#supplier-product-status').onchange=renderProducts;
 
