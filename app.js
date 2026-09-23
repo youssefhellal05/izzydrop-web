@@ -1,6 +1,6 @@
 (()=>{
   const $=s=>document.querySelector(s);
-  let PRODUCTS=[],LINKS=[],INTEGRATIONS=[],INTEGRATION_VARIANTS=[],ORDERS=[],ITEMS=[],SESSION=null,DROPSHIPPER=null,ORDER_FILTER='all';
+  let PRODUCTS=[],LINKS=[],INTEGRATIONS=[],INTEGRATION_VARIANTS=[],ORDERS=[],ITEMS=[],SESSION=null,DROPSHIPPER=null,ORDER_FILTER='all',CURRENT_WEB_TOKEN=null;
 
   const VIEW_COPY={
     products:['Products','Browse products and add the ones you want to sell.'],
@@ -271,13 +271,16 @@
     $('#copy-status').className='status';
     $('#web-variant-list').innerHTML='<div class="notice">Loading variants…</div>';
 
-    if(integration?.public_token){
-      $('#web-embed-code').value=makeEmbedCode(integration.public_token);
+    CURRENT_WEB_TOKEN=integration?.public_token||null;
+    if(CURRENT_WEB_TOKEN){
+      $('#web-embed-code').value=makeEmbedCode(CURRENT_WEB_TOKEN);
       $('#web-code-section').hidden=false;
+      $('#open-test-store').hidden=false;
       $('#web-setup-submit').textContent='Update web setup';
     }else{
       $('#web-embed-code').value='';
       $('#web-code-section').hidden=true;
+      $('#open-test-store').hidden=true;
       $('#web-setup-submit').textContent='Create automatic web setup';
     }
 
@@ -396,8 +399,10 @@
         _website_url:rawUrl,
         _variants:selected
       });
-      $('#web-embed-code').value=makeEmbedCode(result.public_token);
+      CURRENT_WEB_TOKEN=result.public_token;
+      $('#web-embed-code').value=makeEmbedCode(CURRENT_WEB_TOKEN);
       $('#web-code-section').hidden=false;
+      $('#open-test-store').hidden=false;
       st.textContent='Website connection ready. Paste the embed code once on your product page.';
       st.className='status ok';
       await load(false);
@@ -409,6 +414,20 @@
       btn.disabled=false;
       if(btn.textContent==='Connecting website…')btn.textContent='Create automatic web setup';
     }
+  };
+
+  $('#use-test-store').onclick=()=>{
+    const url=new URL('test-store.html',location.href);
+    $('#web-url').value=url.href;
+    $('#copy-status').textContent='Test store selected. Choose variants and prices, then create the setup.';
+    $('#copy-status').className='status';
+  };
+
+  $('#open-test-store').onclick=()=>{
+    if(!CURRENT_WEB_TOKEN)return;
+    const url=new URL('test-store.html',location.href);
+    url.searchParams.set('token',CURRENT_WEB_TOKEN);
+    window.open(url.href,'_blank','noopener');
   };
 
   $('#select-all-web-variants').onclick=()=>{
