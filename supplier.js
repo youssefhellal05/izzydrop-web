@@ -539,6 +539,8 @@
       const descEn=$('#p-description-en').value.trim()||null;
       const descAr=$('#p-description-ar').value.trim()||null;
       if(!nameEn&&!nameAr)throw Error('Enter the product name in English or Arabic.');
+      if(!nameEn||!nameAr)throw Error('Add both English and Arabic product names. Use Generate translation if you need it.');
+      if((descEn&&!descAr)||(descAr&&!descEn))throw Error('Add both English and Arabic descriptions, or leave both descriptions empty.');
 
       const result=await IZZY.rpc('supplier_create_product_v2',{
         _name_en:nameEn,
