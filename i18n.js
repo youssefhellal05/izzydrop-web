@@ -244,6 +244,27 @@
     'Generating a draft translation…':'جارٍ إنشاء مسودة الترجمة…',
     'English translation generated. Review and edit it before saving.':'تم إنشاء الترجمة الإنجليزية. راجعها وعدّلها قبل الحفظ.',
     'Enter the English product name first.':'أدخل اسم المنتج بالإنجليزية أولًا.',
+    'active':'نشط',
+    'inactive':'متوقف',
+    'draft':'مسودة',
+    'pending_review':'قيد المراجعة',
+    'pending':'قيد الانتظار',
+    'processing':'قيد التنفيذ',
+    'fulfilled':'تم التنفيذ',
+    'cancelled':'ملغي',
+    'refunded':'مسترد',
+    'approved':'مقبول',
+    'rejected':'مرفوض',
+    'suspended':'معلّق',
+    'paused':'متوقف',
+    'new':'جديد',
+    'unfulfilled':'غير منفذ',
+    'partially_fulfilled':'منفذ جزئيًا',
+    'Linked':'مرتبط',
+    'Suggested':'المقترح',
+    'Vs suggested':'مقارنة بالمقترح',
+    'Carrier':'شركة الشحن',
+    'Default':'افتراضي',
     'English':'English',
     'Arabic':'العربية'
   };
@@ -370,6 +391,10 @@
         const p=root.getAttribute('placeholder');
         if(placeholderAr[p])root.setAttribute('placeholder',placeholderAr[p]);
       }
+      if(lang==='ar'&&root.hasAttribute('data-label')){
+        const label=root.getAttribute('data-label');
+        if(exactAr[label])root.setAttribute('data-label',exactAr[label]);
+      }
       if(lang==='ar'&&root.tagName==='OPTION'){
         const val=root.textContent.trim();
         if(exactAr[val])root.textContent=exactAr[val];
@@ -382,6 +407,10 @@
       root.querySelectorAll?.('[placeholder]').forEach(el=>{
         const p=el.getAttribute('placeholder');
         if(placeholderAr[p])el.setAttribute('placeholder',placeholderAr[p]);
+      });
+      root.querySelectorAll?.('[data-label]').forEach(el=>{
+        const label=el.getAttribute('data-label');
+        if(exactAr[label])el.setAttribute('data-label',exactAr[label]);
       });
       root.querySelectorAll?.('option').forEach(el=>{
         const v=el.textContent.trim();
