@@ -934,3 +934,14 @@ html[dir="rtl"] .web-variant-head,html[dir="rtl"] .web-variant-row{direction:rtl
 .compact-heading{margin-top:22px}
 .quote-form{margin-top:14px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 @media(max-width:900px){.cod-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.profit-box{grid-template-columns:1fr}.quote-form{grid-template-columns:1fr}.quote-form .span-2{grid-column:auto}}
+
+
+/* Supplier bulk product controls */
+.supplier-bulkbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:12px 0 14px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--panel-2)}
+.bulk-select-all{display:flex;align-items:center;gap:8px;font-weight:700}
+.bulk-actions{display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap}
+.supplier-product-table-row{position:relative}
+.supplier-product-select{display:flex;align-items:center;justify-content:center}
+.supplier-product-select input{width:18px;height:18px}
+.supplier-product-table-row.is-selected{outline:2px solid var(--accent, currentColor);outline-offset:-2px}
+@media(max-width:760px){.bulk-actions{margin-left:0;width:100%}.bulk-actions .btn{flex:1}}
