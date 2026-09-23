@@ -4,7 +4,7 @@
 
   const VIEW_COPY={
     overview:['Overview','See what needs your attention today.'],
-    products:['Products','Manage prices, inventory, variants and marketplace status.'],
+    products:['My Products','View and edit every product you have listed on IzzyDrop.'],
     requests:['Sourcing requests','Quote products dropshippers are actively looking for.'],
     orders:['Orders','Fulfill customer orders and add tracking when they ship.'],
     add:['Add product','Create a complete product listing for dropshippers.'],
@@ -287,6 +287,7 @@
         <span class="supplier-table-cell" data-label="Suggested retail">${IZZY.money(p.suggested_retail_price,p.currency)}</span>
         <span class="supplier-table-cell" data-label="Status"><span class="tag ${p.status==='active'?'ok':p.status==='inactive'?'warn':''}">${p.status==='inactive'?'paused':IZZY.esc(p.status)}</span></span>
         <div class="supplier-table-actions">
+          ${p.public_slug?'<a class="btn secondary" href="product.html?slug='+encodeURIComponent(p.public_slug)+'" target="_blank" rel="noopener">View</a>':''}
           <button class="btn secondary edit-product-btn" data-id="${p.id}">Edit</button>
           <button class="btn secondary toggle-product-btn" data-id="${p.id}" data-next="${p.status==='active'?'inactive':'active'}">${p.status==='active'?'Pause':'Activate'}</button>
         </div>
@@ -457,6 +458,8 @@
     $('#edit-product-description-ar').value=p.description_ar||'';
     $('#edit-product-sku').value=p.sku||'';
     $('#edit-product-cost').value=p.cost_price??0;
+    $('#edit-product-shipping').value=p.estimated_shipping_cost??0;
+    $('#edit-product-market-status').value=p.status||'active';
     setEditContentLang(p.content_source_language==='ar'?'ar':'en');
     $('#edit-product-retail').value=p.suggested_retail_price??'';
 
@@ -497,7 +500,9 @@
             description:(source==='ar'?(descAr||descEn):(descEn||descAr)),
             sku:$('#edit-product-sku').value.trim(),
             cost_price:Number($('#edit-product-cost').value),
+            estimated_shipping_cost:Number($('#edit-product-shipping').value||0),
             suggested_retail_price:$('#edit-product-retail').value===''?null:Number($('#edit-product-retail').value),
+            status:$('#edit-product-market-status').value,
             updated_at:new Date().toISOString()
           };
         })())
