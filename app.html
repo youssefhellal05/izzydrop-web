@@ -11,7 +11,7 @@
   <meta name="theme-color" content="#111318">
   <script>try{document.documentElement.dataset.theme=localStorage.getItem("izzy_theme")==="dark"?"dark":"light"}catch(e){}</script>
   <meta name="description" content="IzzyDrop — Egypt’s independent dropshipping marketplace.">
-  <link rel="stylesheet" href="styles.css?v=20260923-webauto4">
+  <link rel="stylesheet" href="styles.css?v=20260923-teststore1">
 </head>
 <body>
 <div class="wrap">
@@ -144,7 +144,10 @@
     <form id="web-setup-form" class="form web-setup-form">
       <input id="web-product-id" type="hidden">
       <div class="field web-url-field">
-        <label class="field-label" for="web-url">Your website URL</label>
+        <div class="web-field-head">
+          <label class="field-label" for="web-url">Your website URL</label>
+          <button id="use-test-store" class="auth-text-button" type="button">Use IzzyDrop test store</button>
+        </div>
         <input id="web-url" type="url" placeholder="https://yourstore.com" required>
         <small>For security, automatic orders will only be accepted from this website.</small>
       </div>
@@ -171,7 +174,10 @@
       <div class="web-connected-strip"><span class="web-live-dot"></span><div><b>Automatic orders enabled</b><small>Paste this once on the product page of your website.</small></div></div>
       <label class="field-label" for="web-embed-code">Website embed code</label>
       <textarea id="web-embed-code" rows="5" readonly></textarea>
-      <button id="copy-web-code" class="btn secondary" type="button">Copy embed code</button>
+      <div class="web-code-actions">
+        <button id="copy-web-code" class="btn secondary" type="button">Copy embed code</button>
+        <button id="open-test-store" class="btn" type="button" hidden>Open test store</button>
+      </div>
       <p class="muted web-code-help">This widget keeps price, stock and variants connected to IzzyDrop. Customer orders are created automatically — no manual order entry required.</p>
     </div>
 
@@ -180,9 +186,9 @@
 </div>
 
 <script src="config.js"></script>
-<script src="common.js?v=20260923-webauto4"></script><script src="i18n.js?v=20260923-webauto4"></script>
-<script src="app.js?v=20260923-webauto4"></script>
+<script src="common.js?v=20260923-teststore1"></script><script src="i18n.js?v=20260923-teststore1"></script>
+<script src="app.js?v=20260923-teststore1"></script>
 <script>window.IZZY_SETTINGS_ROLE="dropshipper"</script>
-<script src="settings.js?v=20260923-webauto4"></script>
+<script src="settings.js?v=20260923-teststore1"></script>
 </body>
 </html>
