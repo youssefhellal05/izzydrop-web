@@ -75,6 +75,25 @@
     }
   }
 
+  function showRecoveryRequest(){
+    $('#auth-standard').hidden=true;
+    $('#invite-password-form').hidden=true;
+    $('#recovery-password-form').hidden=true;
+    $('#password-recovery-request').hidden=false;
+    const loginEmail=$('#login-email')?.value?.trim();
+    if(loginEmail)$('#recovery-email').value=loginEmail;
+    $('#recovery-request-status').textContent='';
+    $('#recovery-request-status').className='status auth-status';
+  }
+
+  function showStandardLogin(){
+    $('#password-recovery-request').hidden=true;
+    $('#recovery-password-form').hidden=true;
+    $('#invite-password-form').hidden=true;
+    $('#auth-standard').hidden=false;
+    setMode('login');
+  }
+
   function setMode(mode){
     document.querySelectorAll('.auth-switch-btn').forEach(x=>x.classList.toggle('on',x.dataset.mode===mode));
     $('#login-form').hidden=mode!=='login';
@@ -90,6 +109,65 @@
 
   document.querySelectorAll('.auth-switch-btn').forEach(t=>t.onclick=()=>setMode(t.dataset.mode));
   document.querySelectorAll('[data-signup-role]').forEach(btn=>btn.onclick=()=>updateSignupRole(btn.dataset.signupRole));
+  $('#forgot-password-link').onclick=showRecoveryRequest;
+  $('#back-to-login').onclick=showStandardLogin;
+
+  $('#recovery-request-form').onsubmit=async e=>{
+    e.preventDefault();
+    const st=$('#recovery-request-status'),btn=$('#recovery-request-submit');
+    const email=$('#recovery-email').value.trim();
+    st.className='status auth-status';
+    btn.disabled=true;
+    btn.textContent='Sending…';
+    try{
+      await IZZY.requestPasswordReset(email);
+      st.textContent='If an IzzyDrop account exists for this email, we sent a recovery link. Check your inbox and spam folder.';
+      st.className='status auth-status ok';
+    }catch(err){
+      const raw=String(err.message||'');
+      if(/rate limit|too many|seconds/i.test(raw)){
+        st.textContent='Too many recovery requests. Please wait a little and try again.';
+        st.className='status auth-status bad';
+      }else{
+        st.textContent='We could not send the recovery email right now. Please try again.';
+        st.className='status auth-status bad';
+      }
+    }finally{
+      btn.disabled=false;
+      btn.textContent='Send recovery link';
+    }
+  };
+
+  $('#recovery-password-form').onsubmit=async e=>{
+    e.preventDefault();
+    const st=$('#recovery-password-status'),btn=$('#recovery-password-submit');
+    const p=$('#recovery-password').value,c=$('#recovery-password-confirm').value;
+    st.className='status auth-status';
+    if(p!==c){
+      st.textContent='Passwords do not match.';
+      st.className='status auth-status bad';
+      return;
+    }
+    if(p.length<8){
+      st.textContent='Use at least 8 characters.';
+      st.className='status auth-status bad';
+      return;
+    }
+    btn.disabled=true;
+    btn.textContent='Saving password…';
+    st.textContent='Updating your password…';
+    try{
+      await IZZY.updatePassword(p);
+      st.textContent='Password changed. Opening your IzzyDrop workspace…';
+      st.className='status auth-status ok';
+      await route();
+    }catch(err){
+      st.textContent=err.message||'Could not change password.';
+      st.className='status auth-status bad';
+      btn.disabled=false;
+      btn.textContent='Save new password';
+    }
+  };
 
   const requestedType=new URLSearchParams(location.search).get('type');
   if(requestedType==='supplier'||requestedType==='dropshipper'){
@@ -205,7 +283,18 @@
       const event=await IZZY.consumeAuthRedirect();
       if(event?.type==='invite'){
         $('#auth-standard').hidden=true;
+        $('#password-recovery-request').hidden=true;
+        $('#recovery-password-form').hidden=true;
         $('#invite-password-form').hidden=false;
+        return;
+      }
+
+      if(event?.type==='recovery'){
+        $('#auth-standard').hidden=true;
+        $('#password-recovery-request').hidden=true;
+        $('#invite-password-form').hidden=true;
+        $('#recovery-password-form').hidden=false;
+        $('#recovery-password-status').textContent='';
         return;
       }
 
