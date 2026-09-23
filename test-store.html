@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#111318">
+  <meta name="description" content="IzzyDrop demo storefront for testing automatic product and order integration.">
+  <title>Northline Store · IzzyDrop Test Store</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <style>
+    :root{--bg:#f7f7f5;--text:#131518;--muted:#737980;--line:#e4e6e8;--card:#fff;--soft:#f0f1ef;--ok:#2d7a46}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,Arial,sans-serif}
+    a{color:inherit;text-decoration:none}.wrap{max-width:1180px;margin:auto;padding:0 22px}
+    .nav{height:78px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
+    .brand{display:flex;align-items:center;gap:10px;font-weight:950;letter-spacing:-.4px}.brand-mark{display:grid;place-items:center;width:36px;height:36px;border-radius:12px;background:#111318;color:#fff;font-size:11px}
+    .nav-actions{display:flex;gap:8px;align-items:center}.pill{padding:8px 11px;border:1px solid var(--line);border-radius:999px;font-size:11px;font-weight:800;color:var(--muted);background:#fff}
+    .hero{display:grid;grid-template-columns:1.05fr .95fr;gap:58px;align-items:center;padding:68px 0 52px}
+    .eyebrow{font-size:11px;letter-spacing:.12em;font-weight:900;color:var(--muted)}h1{font-size:64px;line-height:.98;letter-spacing:-3.4px;margin:12px 0 18px;max-width:620px}
+    .hero p{font-size:18px;line-height:1.65;color:var(--muted);max-width:590px;margin:0}
+    .hero-badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:24px}.badge{padding:9px 11px;border-radius:999px;background:#fff;border:1px solid var(--line);font-size:11px;font-weight:800}
+    .visual{min-height:420px;border-radius:28px;background:linear-gradient(145deg,#111318,#363b42);padding:26px;display:grid;align-content:end;position:relative;overflow:hidden;box-shadow:0 28px 60px rgba(17,19,24,.15)}
+    .visual:before,.visual:after{content:"";position:absolute;border-radius:50%;filter:blur(1px)}.visual:before{width:300px;height:300px;background:rgba(255,255,255,.08);right:-80px;top:-50px}.visual:after{width:180px;height:180px;background:rgba(255,255,255,.06);left:-40px;bottom:30px}
+    .visual-card{position:relative;z-index:2;background:rgba(255,255,255,.94);border-radius:18px;padding:18px;max-width:330px}.visual-card small{color:var(--muted);font-weight:800}.visual-card b{display:block;font-size:23px;margin:5px 0}
+    .store-section{padding:34px 0 80px}.section-head{display:flex;justify-content:space-between;gap:16px;align-items:end;margin-bottom:18px}.section-head h2{font-size:32px;letter-spacing:-1.2px;margin:0}.section-head p{margin:4px 0 0;color:var(--muted)}
+    .demo-layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:22px;align-items:start}
+    .product-stage{min-height:420px}.placeholder{display:grid;place-items:center;text-align:center;min-height:420px;border:1px dashed #cfd3d7;border-radius:20px;background:#fff;padding:28px}.placeholder h3{margin:0 0 8px}.placeholder p{max-width:440px;color:var(--muted);line-height:1.55;margin:0}
+    .info-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px;position:sticky;top:18px}.info-card h3{margin:0 0 10px}.steps{display:grid;gap:10px}.step{display:grid;grid-template-columns:28px 1fr;gap:9px;align-items:start;padding:10px 0;border-top:1px solid var(--line)}.step:first-child{border-top:0}.step span{display:grid;place-items:center;width:26px;height:26px;border-radius:8px;background:var(--soft);font-size:10px;font-weight:950}.step b{font-size:12px}.step small{display:block;color:var(--muted);margin-top:3px;line-height:1.45}
+    .live{display:flex;gap:8px;align-items:center;margin-top:14px;padding:10px 11px;border-radius:12px;background:#eef8f1;color:#245d35;font-size:11px;font-weight:850}.dot{width:8px;height:8px;border-radius:50%;background:var(--ok)}
+    .footer{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--muted);font-size:11px;display:flex;justify-content:space-between;gap:18px}
+    @media(max-width:900px){.hero{grid-template-columns:1fr;gap:28px}.visual{min-height:320px}.demo-layout{grid-template-columns:1fr}.info-card{position:static}h1{font-size:52px}}
+    @media(max-width:560px){.wrap{padding:0 14px}.nav{height:68px}.pill{display:none}.hero{padding:42px 0 32px}h1{font-size:40px;letter-spacing:-2.1px}.hero p{font-size:15px}.visual{min-height:250px}.section-head{align-items:start;flex-direction:column}.footer{flex-direction:column}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="nav">
+      <a class="brand" href="test-store.html"><span class="brand-mark">NL</span><span>Northline Store</span></a>
+      <div class="nav-actions"><span class="pill">IzzyDrop test storefront</span><a class="pill" href="app.html">Back to IzzyDrop</a></div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div>
+          <div class="eyebrow">DEMO STOREFRONT</div>
+          <h1>A real place to test IzzyDrop orders.</h1>
+          <p>This is a simple independent online store. Add an IzzyDrop product to it, then place a customer order here and confirm that it appears automatically inside IzzyDrop.</p>
+          <div class="hero-badges"><span class="badge">Independent website</span><span class="badge">Automatic IzzyDrop orders</span><span class="badge">Variant-aware</span><span class="badge">COD ready</span></div>
+        </div>
+        <div class="visual">
+          <div class="visual-card"><small>Test environment</small><b>Northline Essentials</b><small>No Shopify. No WooCommerce. Just a normal website + IzzyDrop.</small></div>
+        </div>
+      </section>
+
+      <section class="store-section">
+        <div class="section-head">
+          <div><h2>Featured product</h2><p>The IzzyDrop product you connect will appear here.</p></div>
+          <span id="connection-label" class="pill">Waiting for product</span>
+        </div>
+
+        <div class="demo-layout">
+          <div id="product-stage" class="product-stage">
+            <div class="placeholder">
+              <div>
+                <h3>No IzzyDrop product connected yet</h3>
+                <p>Go to the IzzyDrop dropshipper dashboard, press <b>Add to your web</b>, choose <b>Use IzzyDrop test store</b>, configure the variants and price, then open this page from the setup.</p>
+              </div>
+            </div>
+          </div>
+
+          <aside class="info-card">
+            <h3>What we are testing</h3>
+            <div class="steps">
+              <div class="step"><span>1</span><div><b>Product loads from IzzyDrop</b><small>Name, price, stock and variants are pulled from the IzzyDrop integration.</small></div></div>
+              <div class="step"><span>2</span><div><b>Customer places an order here</b><small>The customer enters their delivery details directly on this store.</small></div></div>
+              <div class="step"><span>3</span><div><b>IzzyDrop receives it</b><small>The order is created automatically and stock is reserved.</small></div></div>
+              <div class="step"><span>4</span><div><b>Supplier sees fulfillment</b><small>The correct supplier receives the fulfillment request in their dashboard.</small></div></div>
+            </div>
+            <div class="live"><span class="dot"></span><span>Connected to the real IzzyDrop backend</span></div>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer"><span>Northline Store · Demo storefront</span><span>Powered by IzzyDrop</span></footer>
+  </div>
+
+  <script>
+    (()=>{
+      const token=new URLSearchParams(location.search).get('token');
+      if(!token)return;
+      const stage=document.getElementById('product-stage');
+      const label=document.getElementById('connection-label');
+      stage.innerHTML='';
+      const host=document.createElement('div');
+      host.dataset.izzydropToken=token;
+      stage.appendChild(host);
+      label.textContent='IzzyDrop product connected';
+      const s=document.createElement('script');
+      s.src='izzydrop-widget.js?v=20260923-teststore1';
+      s.async=true;
+      document.body.appendChild(s);
+    })();
+  </script>
+</body>
+</html>
