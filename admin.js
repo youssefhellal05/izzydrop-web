@@ -12,6 +12,9 @@
     settings:['Settings','Manage your IzzyDrop account, appearance, and security.']
   };
 
+  const productName=p=>window.IZZY_I18N?.productName(p)||p?.name||'';
+  const productDescription=p=>window.IZZY_I18N?.productDescription(p)||p?.description||'';
+
   const msg=(t,b=false)=>{
     const e=$('#status');
     if(!e)return;
@@ -152,7 +155,7 @@
     const notes=[];
     SUPPLIERS.filter(s=>s.status==='pending').slice(0,5).forEach(s=>notes.push({kind:'supplier',title:'Supplier application',text:`${s.business_name} is waiting for review`,view:'suppliers',supplierFilter:'pending'}));
     ORDERS.filter(o=>['pending','processing'].includes(o.status)).slice(0,5).forEach(o=>notes.push({kind:'order',title:'Open order',text:`${o.external_order_ref||o.shopify_order_name||'Order '+String(o.id).slice(0,8)} · ${o.status}`,view:'orders'}));
-    lowStockProducts().slice(0,5).forEach(p=>notes.push({kind:'stock',title:'Low stock',text:`${p.name} · ${supplierFor(p.supplier_id).business_name||'Supplier'}`,view:'products'}));
+    lowStockProducts().slice(0,5).forEach(p=>notes.push({kind:'stock',title:'Low stock',text:`${productName(p)} · ${supplierFor(p.supplier_id).business_name||'Supplier'}`,view:'products'}));
 
     $('#admin-notification-count').textContent=notes.length;
     $('#admin-notification-count').hidden=!notes.length;
@@ -230,7 +233,7 @@
     const sid=$('#admin-product-supplier').value;
     return PRODUCTS.filter(p=>{
       const s=supplierFor(p.supplier_id);
-      const hay=[p.name,p.sku,p.description,s.business_name].filter(Boolean).join(' ').toLowerCase();
+      const hay=[p.name,p.name_en,p.name_ar,p.sku,p.description,p.description_en,p.description_ar,s.business_name].filter(Boolean).join(' ').toLowerCase();
       return (!q||hay.includes(q))&&(!status||p.status===status)&&(!sid||p.supplier_id===sid);
     });
   }
@@ -243,7 +246,7 @@
       const canModerate=['active','inactive'].includes(p.status);
       const action=canModerate?`<button class="btn secondary moderate-product" data-id="${p.id}" data-next="${p.status==='active'?'inactive':'active'}">${p.status==='active'?'Deactivate':'Activate'}</button>`:'';
       return `<div class="admin-product-table admin-table-row">
-        <div class="admin-product-cell"><div class="admin-product-thumb">${img?.url?`<img src="${IZZY.esc(img.url)}" alt="">`:'IZ'}</div><div><b>${IZZY.esc(p.name)}</b><small>${IZZY.esc(p.sku||'')}</small></div></div>
+        <div class="admin-product-cell"><div class="admin-product-thumb">${img?.url?`<img src="${IZZY.esc(img.url)}" alt="">`:'IZ'}</div><div><b>${IZZY.esc(productName(p))}</b><small>${IZZY.esc(p.sku||'')}</small></div></div>
         <span data-label="Supplier">${IZZY.esc(s.business_name||'—')}</span>
         <span data-label="Stock" class="${stock===0?'stock-low':''}">${stock}</span>
         <span data-label="Price">${IZZY.money(p.suggested_retail_price,p.currency)}</span>
@@ -293,7 +296,7 @@
       const dp=profileFor(d?.profile_id);
       const itemHtml=items.map(i=>{
         const p=productFor(i.supplier_product_id),s=supplierFor(i.supplier_id);
-        return `<div class="admin-order-item"><div><b>${IZZY.esc(p.name||'Product')} × ${Number(i.quantity||1)}</b><small>${IZZY.esc(s.business_name||'Supplier')}</small></div><div><span class="tag ${i.fulfillment_status==='fulfilled'?'ok':i.fulfillment_status==='cancelled'?'bad':''}">${IZZY.esc(i.fulfillment_status)}</span>${i.tracking_number?`<small>${IZZY.esc(i.shipping_carrier||'Carrier')} · ${IZZY.esc(i.tracking_number)}</small>`:''}</div></div>`;
+        return `<div class="admin-order-item"><div><b>${IZZY.esc(productName(p)||'Product')} × ${Number(i.quantity||1)}</b><small>${IZZY.esc(s.business_name||'Supplier')}</small></div><div><span class="tag ${i.fulfillment_status==='fulfilled'?'ok':i.fulfillment_status==='cancelled'?'bad':''}">${IZZY.esc(i.fulfillment_status)}</span>${i.tracking_number?`<small>${IZZY.esc(i.shipping_carrier||'Carrier')} · ${IZZY.esc(i.tracking_number)}</small>`:''}</div></div>`;
       }).join('')||'<div class="notice">No order items found.</div>';
 
       return `<article class="card admin-order-card">
@@ -343,7 +346,7 @@
       const effective=effectiveRate(p,supplier);
       const source=p.commission_rate_override!=null?'Product override':supplier?.commission_rate_override!=null?'Supplier override':'Marketplace default';
       return `<div class="card commission-product-card">
-        <div class="commission-product-head"><div><b>${IZZY.esc(p.name)}</b><small>${IZZY.esc(p.sku||'')}</small></div><span class="tag ${p.commission_rate_override!=null?'ok':''}">${IZZY.esc(source)}</span></div>
+        <div class="commission-product-head"><div><b>${IZZY.esc(productName(p))}</b><small>${IZZY.esc(p.sku||'')}</small></div><span class="tag ${p.commission_rate_override!=null?'ok':''}">${IZZY.esc(source)}</span></div>
         <div class="commission-effective-row"><span>Effective commission</span><strong>${effective}%</strong></div>
         <div class="inline-control"><input class="product-commission-input" data-id="${p.id}" type="number" min="0" max="100" step="0.01" value="${p.commission_rate_override??''}" placeholder="Inherit ${inherited}%"><button class="btn secondary product-commission-save" data-id="${p.id}">Save</button></div>
       </div>`;
