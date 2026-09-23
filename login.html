@@ -11,7 +11,7 @@
   <meta name="theme-color" content="#111318">
   <script>try{document.documentElement.dataset.theme=localStorage.getItem("izzy_theme")==="dark"?"dark":"light"}catch(e){}</script>
   <meta name="description" content="Log in or create your IzzyDrop account.">
-  <link rel="stylesheet" href="styles.css?v=20260923-bilingual4">
+  <link rel="stylesheet" href="styles.css?v=20260923-recovery1">
 </head>
 <body class="auth-page">
   <div class="auth-page-wrap">
@@ -69,7 +69,10 @@
                 <input id="login-email" type="email" autocomplete="email" placeholder="you@example.com" required>
               </div>
               <div class="auth-field">
-                <label for="login-password">Password</label>
+                <div class="auth-field-head">
+                  <label for="login-password">Password</label>
+                  <button id="forgot-password-link" class="auth-text-button" type="button">Forgot password?</button>
+                </div>
                 <input id="login-password" type="password" autocomplete="current-password" placeholder="Your password" required>
               </div>
               <button id="login-submit" class="btn auth-primary" type="submit">Log in to IzzyDrop</button>
@@ -134,6 +137,42 @@
             </div>
           </div>
 
+          <div id="password-recovery-request" class="recovery-shell" hidden>
+            <div class="auth-card-heading">
+              <div>
+                <div class="eyebrow">ACCOUNT RECOVERY</div>
+                <h2>Reset your password</h2>
+                <p class="muted">Enter your email and we’ll send you a secure IzzyDrop recovery link.</p>
+              </div>
+            </div>
+            <form id="recovery-request-form" class="form auth-form">
+              <div class="auth-field">
+                <label for="recovery-email">Email</label>
+                <input id="recovery-email" type="email" autocomplete="email" placeholder="you@example.com" required>
+              </div>
+              <button id="recovery-request-submit" class="btn auth-primary" type="submit">Send recovery link</button>
+              <button id="back-to-login" class="btn secondary auth-secondary-full" type="button">Back to log in</button>
+            </form>
+            <div id="recovery-request-status" class="status auth-status" aria-live="polite"></div>
+          </div>
+
+          <form id="recovery-password-form" class="form auth-form invite-setup" hidden>
+            <div class="premium-chip">ACCOUNT RECOVERY</div>
+            <h2>Create a new password</h2>
+            <p class="muted">Choose a new password for your IzzyDrop account.</p>
+            <div class="notice ok"><b>Recovery link verified.</b><br>You can now create a new password.</div>
+            <div class="auth-field">
+              <label for="recovery-password">New password</label>
+              <input id="recovery-password" type="password" minlength="8" autocomplete="new-password" placeholder="At least 8 characters" required>
+            </div>
+            <div class="auth-field">
+              <label for="recovery-password-confirm">Confirm new password</label>
+              <input id="recovery-password-confirm" type="password" minlength="8" autocomplete="new-password" placeholder="Repeat password" required>
+            </div>
+            <button id="recovery-password-submit" class="btn auth-primary" type="submit">Save new password</button>
+            <div id="recovery-password-status" class="status auth-status" aria-live="polite"></div>
+          </form>
+
           <form id="invite-password-form" class="form auth-form invite-setup" hidden>
             <div class="premium-chip">ADMIN INVITATION</div>
             <h2>Finish your admin account</h2>
@@ -158,7 +197,7 @@
   </div>
 
   <script src="config.js"></script>
-  <script src="common.js?v=20260923-bilingual4"></script><script src="i18n.js?v=20260923-bilingual4"></script>
-  <script src="login.js?v=20260923-bilingual4"></script>
+  <script src="common.js?v=20260923-recovery1"></script><script src="i18n.js?v=20260923-recovery1"></script>
+  <script src="login.js?v=20260923-recovery1"></script>
 </body>
 </html>
