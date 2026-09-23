@@ -565,7 +565,7 @@
       }
 
       e.target.reset();
-      NEW_SOURCE_LANGUAGE='en';setNewContentLang('en',false);
+      const resetLang=window.IZZY_I18N?.isArabic?.()?'ar':'en';NEW_SOURCE_LANGUAGE=resetLang;setNewContentLang(resetLang,false);
       $('#p-translation-status').textContent='';
       SELECTED_IMAGES=[];renderSelectedImages();
       $('#variant-rows').innerHTML='';addDefaultVariant();
@@ -581,7 +581,7 @@
   document.querySelectorAll('[data-edit-content-lang]').forEach(b=>b.onclick=()=>setEditContentLang(b.dataset.editContentLang));
   $('#p-translate-btn').onclick=translateNewContent;
   $('#edit-translate-btn').onclick=translateEditContent;
-  setNewContentLang('en',false);
+  const initialContentLang=window.IZZY_I18N?.isArabic?.()?'ar':'en';NEW_SOURCE_LANGUAGE=initialContentLang;setNewContentLang(initialContentLang,false);
   $('#supplier-product-search').oninput=renderProducts;
   $('#supplier-product-status').onchange=renderProducts;
 
