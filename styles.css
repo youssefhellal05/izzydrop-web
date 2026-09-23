@@ -833,3 +833,15 @@ html[data-theme="dark"] .settings-language-btn.on{background:#252b33;color:#fff;
 .auth-nav-actions{display:flex;align-items:center;gap:10px}
 html[dir="rtl"] .auth-nav-actions{direction:rtl}
 @media(max-width:560px){.auth-nav-actions{gap:6px}.auth-nav-actions .language-toggle{padding:8px 9px}}
+
+/* Password recovery */
+.auth-field-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.auth-field-head label{margin:0}
+.auth-text-button{border:0;background:transparent;color:var(--muted);padding:0;font-size:11px;font-weight:850;cursor:pointer}
+.auth-text-button:hover{color:var(--text);text-decoration:underline}
+.auth-secondary-full{width:100%;min-height:44px}
+.recovery-shell{width:100%}
+.recovery-shell .auth-card-heading{margin-bottom:4px}
+#recovery-password-form .notice{margin-top:6px}
+html[dir="rtl"] .auth-field-head{direction:rtl}
+html[dir="rtl"] .auth-text-button{text-align:left}
