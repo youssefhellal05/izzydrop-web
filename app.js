@@ -1,6 +1,6 @@
 (()=>{
   const $=s=>document.querySelector(s);
-  let PRODUCTS=[],LINKS=[],ORDERS=[],ITEMS=[],SESSION=null,DROPSHIPPER=null,ORDER_FILTER='all';
+  let PRODUCTS=[],LINKS=[],INTEGRATIONS=[],ORDERS=[],ITEMS=[],SESSION=null,DROPSHIPPER=null,ORDER_FILTER='all';
 
   const VIEW_COPY={
     products:['Products','Browse products and add the ones you want to sell.'],
@@ -95,7 +95,7 @@
           </div>
           <div class="product-card-actions">
             <a class="btn secondary details-btn" href="${productDetailsUrl(p)}">View details</a>
-            <button class="btn link-btn" data-id="${p.product_id}" data-slug="${IZZY.esc(p.public_slug)}" data-linked="${isLinked?'1':'0'}">${isLinked?'Get link':'Link to your web'}</button>
+            <button class="btn link-btn" data-id="${p.product_id}" data-slug="${IZZY.esc(p.public_slug)}" data-linked="${isLinked?'1':'0'}">Add to your web</button>
           </div>
         </div>
       </article>`;
@@ -121,13 +121,14 @@
     const selling=Number(l.retail_price??p.suggested_retail_price??0);
     const suggested=Number(p.suggested_retail_price||0);
     const difference=selling-suggested;
+    const integration=INTEGRATIONS.find(x=>x.link_id===l.id);
     return `<article class="card linked-product-card">
       <div class="linked-product-main">
         <a class="linked-thumb" href="${p.public_slug?productDetailsUrl(p):'#'}">
           ${p.primary_image_url?`<img src="${IZZY.esc(p.primary_image_url)}" alt="">`:'IZ'}
         </a>
         <div class="linked-info">
-          <div class="row linked-title-row"><div><h3>${IZZY.esc(productName(p)||'Product')}</h3><small>${IZZY.esc(p.supplier_name||'IzzyDrop supplier')} · ${Number(p.stock_quantity||0)} in stock</small></div><span class="tag ok">Linked</span></div>
+          <div class="row linked-title-row"><div><h3>${IZZY.esc(productName(p)||'Product')}</h3><small>${IZZY.esc(p.supplier_name||'IzzyDrop supplier')} · ${Number(p.stock_quantity||0)} in stock</small></div><span class="tag ${integration?.enabled?'ok':''}">${integration?.enabled?'Web connected':'My product'}</span></div>
           <div class="linked-price-grid">
             <div><small>Suggested</small><b>${IZZY.money(suggested,p.currency)}</b></div>
             <label><small>Your selling price</small><div class="price-editor"><input class="linked-price-input" data-link-id="${l.id}" type="number" min="0" step="0.01" value="${selling}"><span>${IZZY.esc(p.currency||'EGP')}</span></div></label>
@@ -137,7 +138,7 @@
       </div>
       <div class="linked-actions">
         <button class="btn save-linked-price" data-link-id="${l.id}">Save price</button>
-        <button class="btn secondary copy-linked" data-slug="${IZZY.esc(p.public_slug||'')}">Copy link</button>
+        <button class="btn secondary web-setup-linked" data-id="${IZZY.esc(p.product_id||'')}">Add to your web</button>
         <a class="btn secondary" href="${p.public_slug?productDetailsUrl(p):'#'}">Details</a>
         <button class="text-danger remove-linked" data-link-id="${l.id}" data-product-name="${IZZY.esc(productName(p)||(ar()?'هذا المنتج':'this product'))}">Remove</button>
       </div>
@@ -154,7 +155,7 @@
     </div>`;
 
     document.querySelectorAll('.save-linked-price').forEach(b=>b.onclick=()=>saveLinkedPrice(b));
-    document.querySelectorAll('.copy-linked').forEach(b=>b.onclick=()=>openLink(b.dataset.slug));
+    document.querySelectorAll('.web-setup-linked').forEach(b=>b.onclick=()=>openWebSetup(b.dataset.id));
     document.querySelectorAll('.remove-linked').forEach(b=>b.onclick=()=>removeLinked(b));
     const browse=$('#browse-products-empty');
     if(browse)browse.onclick=()=>go('products');
@@ -248,32 +249,51 @@
     }catch(e){$('#order-status').textContent=e.message;$('#order-status').className='status bad'}
   }
 
-  function openLink(slug){
-    if(!slug){status('This product link is not available yet.',true);return}
-    const u=IZZY.productUrl(slug);
-    $('#product-link').value=u;
+  function integrationForProduct(productId){
+    const link=LINKS.find(x=>x.supplier_product_id===productId);
+    if(!link)return null;
+    return INTEGRATIONS.find(x=>x.link_id===link.id)||null;
+  }
+
+  function makeEmbedCode(token){
+    return `<div data-izzydrop-token="${token}"></div>\n<script src="https://youssefhellal05.github.io/izzydrop-web/izzydrop-widget.js" async><\/script>`;
+  }
+
+  function openWebSetup(productId){
+    const p=PRODUCTS.find(x=>x.product_id===productId);
+    if(!p){status('This product is not available.',true);return}
+    const link=LINKS.find(x=>x.supplier_product_id===productId);
+    const integration=link?INTEGRATIONS.find(x=>x.link_id===link.id):null;
+
+    $('#web-product-id').value=productId;
+    $('#web-url').value=integration?.website_url||'';
+    $('#web-price').value=Number(link?.retail_price??p.suggested_retail_price??0);
     $('#copy-status').textContent='';
+    $('#copy-status').className='status';
+
+    if(integration?.public_token){
+      $('#web-embed-code').value=makeEmbedCode(integration.public_token);
+      $('#web-code-section').hidden=false;
+      $('#web-setup-submit').textContent='Update web setup';
+    }else{
+      $('#web-embed-code').value='';
+      $('#web-code-section').hidden=true;
+      $('#web-setup-submit').textContent='Create automatic web setup';
+    }
+
     $('#link-modal').hidden=false;
   }
 
   async function linkProduct(b){
-    const already=b.dataset.linked==='1';
-    if(already){openLink(b.dataset.slug);return}
-    b.disabled=true;b.textContent='Linking…';
-    try{
-      await IZZY.rpc('link_product_to_web',{_product_id:b.dataset.id,_retail_price:null});
-      await load(false);
-      openLink(b.dataset.slug);
-      status('Product added to My products.');
-    }catch(e){status(e.message,true)}
-    finally{b.disabled=false}
+    openWebSetup(b.dataset.id);
   }
 
   async function load(showMessage=false){
     try{
-      [PRODUCTS,LINKS,ORDERS,ITEMS]=await Promise.all([
+      [PRODUCTS,LINKS,INTEGRATIONS,ORDERS,ITEMS]=await Promise.all([
         IZZY.rpc('marketplace_catalog_v2'),
         IZZY.request('/rest/v1/dropshipper_product_links?select=*&order=created_at.desc'),
+        IZZY.request('/rest/v1/storefront_integrations?select=*&order=created_at.desc'),
         IZZY.request('/rest/v1/orders?select=*&order=created_at.desc&limit=100'),
         IZZY.request('/rest/v1/order_items?select=id,order_id,supplier_product_id,variant_id,quantity,retail_price_at_purchase,fulfillment_status,tracking_number,shipping_carrier,created_at&order=created_at.desc&limit=200')
       ]);
@@ -298,6 +318,11 @@
     setLoading();
     go('products');
     await load();
+    const addProduct=new URLSearchParams(location.search).get('add');
+    if(addProduct&&PRODUCTS.some(p=>p.product_id===addProduct)){
+      history.replaceState({},document.title,location.pathname);
+      openWebSetup(addProduct);
+    }
   }
 
   $('#product-search').oninput=renderProducts;
@@ -307,9 +332,65 @@
   document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>go(b.dataset.view));
   $('#close-modal').onclick=()=>$('#link-modal').hidden=true;
   $('#link-modal').onclick=e=>{if(e.target===$('#link-modal'))$('#link-modal').hidden=true};
-  $('#copy-link').onclick=async()=>{
-    try{await navigator.clipboard.writeText($('#product-link').value);$('#copy-status').textContent='Copied.'}
-    catch{$('#product-link').select();document.execCommand('copy');$('#copy-status').textContent='Copied.'}
+
+  $('#web-setup-form').onsubmit=async e=>{
+    e.preventDefault();
+    const btn=$('#web-setup-submit'),st=$('#copy-status');
+    const productId=$('#web-product-id').value;
+    const rawUrl=$('#web-url').value.trim();
+    const price=Number($('#web-price').value);
+
+    try{
+      const u=new URL(rawUrl);
+      if(!['http:','https:'].includes(u.protocol))throw Error('Website URL must begin with http:// or https://');
+    }catch{
+      st.textContent='Enter a valid website URL, for example https://yourstore.com';
+      st.className='status bad';
+      return;
+    }
+
+    if(!Number.isFinite(price)||price<0){
+      st.textContent='Enter a valid selling price.';
+      st.className='status bad';
+      return;
+    }
+
+    btn.disabled=true;btn.textContent='Connecting website…';
+    st.textContent='Creating automatic order connection…';st.className='status';
+    try{
+      const result=await IZZY.rpc('configure_storefront_integration',{
+        _product_id:productId,
+        _website_url:rawUrl,
+        _retail_price:price
+      });
+      $('#web-embed-code').value=makeEmbedCode(result.public_token);
+      $('#web-code-section').hidden=false;
+      st.textContent='Website connection ready. Paste the embed code once on your product page.';
+      st.className='status ok';
+      await load(false);
+      btn.textContent='Update web setup';
+    }catch(err){
+      st.textContent=err.message;
+      st.className='status bad';
+    }finally{
+      btn.disabled=false;
+      if(btn.textContent==='Connecting website…')btn.textContent='Create automatic web setup';
+    }
+  };
+
+  $('#copy-web-code').onclick=async()=>{
+    const code=$('#web-embed-code').value;
+    const st=$('#copy-status');
+    try{
+      await navigator.clipboard.writeText(code);
+      st.textContent='Embed code copied. Paste it on the product page of your website.';
+      st.className='status ok';
+    }catch{
+      $('#web-embed-code').select();
+      document.execCommand('copy');
+      st.textContent='Embed code copied.';
+      st.className='status ok';
+    }
   };
 
   $('#toggle-order-form').onclick=()=>{$('#order-create-card').hidden=false;$('#toggle-order-form').hidden=true};
