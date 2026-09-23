@@ -39,7 +39,7 @@
           </button>
           <button data-view="products">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h8M8 17h5"/></svg>
-            <span>Products</span>
+            <span>My Products</span>
           </button>
           <button data-view="requests">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h5"/></svg>
@@ -117,7 +117,7 @@
 
         <section id="view-products" class="view" hidden>
           <div class="section-heading product-management-heading">
-            <div><h2>Products</h2><p class="muted">Manage prices, inventory, variants and marketplace status.</p></div>
+            <div><h2>My Products</h2><p class="muted">View and edit every product you have listed on IzzyDrop.</p></div>
             <button class="btn" data-jump="add">Add product</button>
           </div>
           <div class="supplier-product-toolbar">
@@ -270,6 +270,17 @@
       <div id="edit-translation-status" class="status translation-status"></div>
 
       <label class="field-label">SKU</label><input id="edit-product-sku" required>
+      <div class="form-two-col">
+        <div class="field"><label class="field-label">Marketplace status</label>
+          <select id="edit-product-market-status">
+            <option value="active">Active</option>
+            <option value="inactive">Paused</option>
+            <option value="draft">Draft</option>
+            <option value="pending_review">Pending review</option>
+          </select>
+        </div>
+        <div class="field"><label class="field-label">Estimated shipping cost (EGP)</label><input id="edit-product-shipping" type="number" step="0.01" min="0"></div>
+      </div>
       <div class="form-two-col">
         <div class="field"><label class="field-label">Your cost (EGP)</label><input id="edit-product-cost" type="number" step="0.01" min="0" required></div>
         <div class="field"><label class="field-label">Suggested retail (EGP)</label><input id="edit-product-retail" type="number" step="0.01" min="0"></div>
