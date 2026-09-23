@@ -347,6 +347,9 @@
     'Choose at least one variant to add to your website.':'اختر خيارًا واحدًا على الأقل لإضافته إلى موقعك.',
     'Enter a valid selling price for every selected variant.':'أدخل سعر بيع صحيحًا لكل خيار محدد.',
     'Selling price':'سعر البيع',
+    'Use IzzyDrop test store':'استخدم متجر IzzyDrop التجريبي',
+    'Open test store':'فتح المتجر التجريبي',
+    'Test store selected. Choose variants and prices, then create the setup.':'تم اختيار متجر IzzyDrop التجريبي. اختر الخيارات والأسعار ثم أنشئ الربط.',
     'English':'English',
     'Arabic':'العربية'
   };
