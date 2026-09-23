@@ -96,6 +96,7 @@
               <label class="field-label">Confirm new password</label><input id="settings-password-confirm" type="password" minlength="8" autocomplete="new-password" placeholder="Repeat new password" required>
               <button class="btn settings-save" type="submit">Change password</button>
             </form>
+            <div class="security-row security-action"><div><b>Reset password by email</b><small>Send a secure recovery link to your signed-in email address.</small></div><button id="settings-send-recovery" class="btn secondary" type="button">Send reset email</button></div>
             <div class="security-row security-action"><div><b>Two-factor authentication</b><small>Extra login protection for your account.</small></div><span class="tag">Coming later</span></div>
             ${true?'<div class="security-row security-action"><div><b>Sign out</b><small>Sign out of IzzyDrop on this device.</small></div><button id="settings-logout" class="btn secondary" type="button">Sign out</button></div>':''}
             <div class="security-row security-action"><div><b>Sign out everywhere</b><small>End your IzzyDrop sessions on all devices.</small></div><button id="settings-logout-all" class="btn secondary" type="button">Sign out all devices</button></div>
@@ -196,6 +197,23 @@
       status('Notification preferences saved.');
       await loadSettings();
     }catch(err){status(err.message,true)}
+  };
+
+  const recoveryButton=document.getElementById('settings-send-recovery');
+  if(recoveryButton)recoveryButton.onclick=async()=>{
+    recoveryButton.disabled=true;
+    recoveryButton.textContent='Sending…';
+    status('Sending a secure recovery link…');
+    try{
+      await IZZY.requestPasswordReset(email);
+      status('If this email belongs to an IzzyDrop account, a recovery link has been sent. Check your inbox and spam folder.');
+    }catch(err){
+      const raw=String(err.message||'');
+      status(/rate limit|too many|seconds/i.test(raw)?'Too many recovery requests. Please wait a little and try again.':'We could not send the recovery email right now. Please try again.',true);
+    }finally{
+      recoveryButton.disabled=false;
+      recoveryButton.textContent='Send reset email';
+    }
   };
 
   document.getElementById('settings-password-form').onsubmit=async e=>{
