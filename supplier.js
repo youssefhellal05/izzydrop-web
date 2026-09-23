@@ -1,10 +1,11 @@
 (()=>{
   const $=s=>document.querySelector(s);
-  let SUP=null,PRODUCTS=[],VARIANTS=[],IMAGES=[],ORDERS=[],ITEMS=[],SELECTED_IMAGES=[],ORDER_FILTER='all',NEW_CONTENT_LANG='en',NEW_SOURCE_LANGUAGE='en',EDIT_CONTENT_LANG='en';
+  let SUP=null,PRODUCTS=[],VARIANTS=[],IMAGES=[],ORDERS=[],ITEMS=[],REQUESTS=[],QUOTES=[],SELECTED_IMAGES=[],ORDER_FILTER='all',NEW_CONTENT_LANG='en',NEW_SOURCE_LANGUAGE='en',EDIT_CONTENT_LANG='en';
 
   const VIEW_COPY={
     overview:['Overview','See what needs your attention today.'],
     products:['Products','Manage prices, inventory, variants and marketplace status.'],
+    requests:['Sourcing requests','Quote products dropshippers are actively looking for.'],
     orders:['Orders','Fulfill customer orders and add tracking when they ship.'],
     add:['Add product','Create a complete product listing for dropshippers.'],
     settings:['Settings','Manage your supplier account, notifications, appearance and security.']
@@ -351,13 +352,60 @@
     }catch(e){msg(e.message,true);btn.disabled=false;btn.textContent='Mark fulfilled'}
   }
 
+  function renderSourcingRequests(){
+    const el=$('#supplier-requests');if(!el)return;
+    const myQuoteByRequest=new Map((QUOTES||[]).map(q=>[q.request_id,q]));
+    const productOptions='<option value="">No linked product yet</option>'+(PRODUCTS||[]).map(p=>`<option value="${p.id}">${IZZY.esc(p.name||p.sku||'Product')}</option>`).join('');
+    el.innerHTML=(REQUESTS||[]).map(r=>{
+      const q=myQuoteByRequest.get(r.id);
+      return `<article class="card order-card">
+        <div class="order-card-head"><div><span class="order-id">${IZZY.esc(r.title)}</span><small>${new Date(r.created_at).toLocaleString()}</small></div><span class="tag ${r.status==='matched'?'ok':'warn'}">${IZZY.esc(r.status)}</span></div>
+        <div class="order-summary-grid">
+          <div><small>Target cost</small><b>${r.target_cost==null?'—':IZZY.money(r.target_cost,'EGP')}</b></div>
+          <div><small>Source</small><b>${r.source_url?'<a href="'+IZZY.esc(r.source_url)+'" target="_blank" rel="noopener">Open link</a>':'—'}</b></div>
+          <div><small>Notes</small><span>${IZZY.esc(r.notes||'—')}</span></div>
+        </div>
+        ${q?`<div class="notice ok"><b>Your quote: ${IZZY.money(q.offered_cost,'EGP')}</b><span>${IZZY.esc(q.message||'')}</span></div>`:
+        `<form class="form quote-form" data-request-id="${r.id}">
+          <input name="offered_cost" type="number" min="0" step="0.01" placeholder="Your cost EGP" required>
+          <input name="available_quantity" type="number" min="0" step="1" placeholder="Available quantity">
+          <input name="lead_time_days" type="number" min="0" step="1" placeholder="Lead time days">
+          <select name="product_id">${productOptions}</select>
+          <input name="message" class="span-2" placeholder="Message / MOQ / notes">
+          <button class="btn span-2" type="submit">Submit quote</button>
+        </form>`}
+      </article>`;
+    }).join('')||'<div class="empty-state"><div class="empty-icon">⌕</div><h3>No sourcing requests right now</h3><p>New requests from dropshippers will appear here.</p></div>';
+
+    document.querySelectorAll('.quote-form').forEach(form=>form.onsubmit=async e=>{
+      e.preventDefault();
+      const btn=form.querySelector('button[type="submit"]');
+      btn.disabled=true;btn.textContent='Sending…';
+      const fd=new FormData(form);
+      try{
+        await IZZY.rpc('submit_product_request_quote',{
+          _request_id:form.dataset.requestId,
+          _offered_cost:Number(fd.get('offered_cost')),
+          _available_quantity:fd.get('available_quantity')===''?null:Number(fd.get('available_quantity')),
+          _lead_time_days:fd.get('lead_time_days')===''?null:Number(fd.get('lead_time_days')),
+          _message:String(fd.get('message')||'').trim()||null,
+          _product_id:String(fd.get('product_id')||'').trim()||null
+        });
+        msg('Quote sent to the dropshipper.');
+        await load(false);
+      }catch(err){msg(err.message,true);btn.disabled=false;btn.textContent='Submit quote'}
+    });
+  }
+
   async function load(showMessage=false){
-    const [supplierRows,products,variants,orders,items]=await Promise.all([
+    const [supplierRows,products,variants,orders,items,requests,quotes]=await Promise.all([
       IZZY.request(`/rest/v1/suppliers?select=id,business_name,status,low_stock_threshold,notification_preferences&id=eq.${encodeURIComponent(SUP.id)}&limit=1`),
       IZZY.request(`/rest/v1/supplier_products?select=*&supplier_id=eq.${encodeURIComponent(SUP.id)}&order=created_at.desc`),
       IZZY.request('/rest/v1/product_variants?select=*&order=created_at.asc'),
       IZZY.request('/rest/v1/orders?select=*&order=created_at.desc&limit=150'),
-      IZZY.request(`/rest/v1/order_items?select=*&supplier_id=eq.${encodeURIComponent(SUP.id)}&order=created_at.desc&limit=250`)
+      IZZY.request(`/rest/v1/order_items?select=*&supplier_id=eq.${encodeURIComponent(SUP.id)}&order=created_at.desc&limit=250`),
+      IZZY.request('/rest/v1/product_requests?select=*&status=in.(open,matched)&order=created_at.desc&limit=100'),
+      IZZY.request(`/rest/v1/product_request_quotes?select=*&supplier_id=eq.${encodeURIComponent(SUP.id)}&order=created_at.desc&limit=100`)
     ]);
 
     if(supplierRows?.[0]){
@@ -368,6 +416,8 @@
     VARIANTS=variants||[];
     ORDERS=orders||[];
     ITEMS=items||[];
+    REQUESTS=requests||[];
+    QUOTES=quotes||[];
 
     if(PRODUCTS.length){
       const ids=PRODUCTS.map(p=>p.id).join(',');
@@ -377,6 +427,7 @@
     renderOverview();
     renderNotifications();
     renderProducts();
+    renderSourcingRequests();
     renderOrders();
     if(showMessage)msg('Supplier workspace updated.');
   }
