@@ -743,3 +743,81 @@ html[data-theme="dark"] .role-choice-card{background:#181d24}
   .role-choice-actions{display:grid}
   .role-choice-actions .btn{width:100%}
 }
+
+/* Bilingual product content */
+.content-language-toolbar,.edit-language-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:4px 0 14px}
+.content-language-tabs{display:inline-flex;gap:5px;padding:4px;background:var(--soft);border-radius:11px}
+.content-language-tab{border:0;background:transparent;color:var(--muted);border-radius:8px;padding:8px 12px;font-size:12px;font-weight:850;cursor:pointer}
+.content-language-tab.on{background:var(--card);color:var(--text);box-shadow:0 2px 8px rgba(17,19,24,.08)}
+.translate-content-btn{white-space:nowrap;font-size:12px;padding:10px 12px}
+.translation-review-note{font-size:11px;color:var(--muted);text-align:end}
+.localized-content-panel{padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--soft)}
+.localized-content-panel .form{margin-top:0}
+.localized-content-panel[dir="rtl"] input,.localized-content-panel[dir="rtl"] textarea,
+[data-edit-content-panel="ar"] input,[data-edit-content-panel="ar"] textarea{text-align:right;direction:rtl}
+.product-meta-fields{margin-top:14px}
+.translation-status{margin:8px 0 0}
+.edit-language-head{margin-top:4px}
+[data-edit-content-panel]{display:grid;gap:8px;padding:12px;border:1px solid var(--line);border-radius:13px;background:var(--soft)}
+[data-edit-content-panel] .field-label{margin:0}
+html[data-theme="dark"] .content-language-tabs,
+html[data-theme="dark"] .localized-content-panel,
+html[data-theme="dark"] [data-edit-content-panel]{background:#181d24}
+html[data-theme="dark"] .content-language-tab.on{background:#252b33;color:#fff;box-shadow:none}
+
+/* Language switch + RTL */
+.language-toggle{border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:11px;padding:9px 12px;font-size:12px;font-weight:850;cursor:pointer;transition:.16s}
+.language-toggle:hover{transform:translateY(-1px)}
+html[data-theme="dark"] .language-toggle{background:var(--card);border-color:var(--line);color:var(--text)}
+html[dir="rtl"] body{font-family:Tahoma,Arial,"Segoe UI",sans-serif}
+html[dir="rtl"] .nav,
+html[dir="rtl"] .auth-nav,
+html[dir="rtl"] .workspace-topbar,
+html[dir="rtl"] .section-heading,
+html[dir="rtl"] .catalog-head,
+html[dir="rtl"] .dash-head,
+html[dir="rtl"] .row{direction:rtl}
+html[dir="rtl"] .side button,
+html[dir="rtl"] .settings-menu button{text-align:right}
+html[dir="rtl"] .side button svg{transform:scaleX(-1)}
+html[dir="rtl"] .search-wrap svg{left:auto;right:13px}
+html[dir="rtl"] .search-wrap .search{padding-left:14px;padding-right:40px;text-align:right}
+html[dir="rtl"] input:not([type="email"]):not([type="number"]):not([readonly]),
+html[dir="rtl"] textarea,
+html[dir="rtl"] select{text-align:right}
+html[dir="rtl"] input[type="email"],
+html[dir="rtl"] input[type="number"],
+html[dir="rtl"] input[readonly],
+html[dir="rtl"] .sku{direction:ltr;text-align:left}
+html[dir="rtl"] .product-card-topline,
+html[dir="rtl"] .product-price-block,
+html[dir="rtl"] .linked-title-row,
+html[dir="rtl"] .supplier-order-head,
+html[dir="rtl"] .admin-order-head,
+html[dir="rtl"] .commission-product-head,
+html[dir="rtl"] .security-row{direction:rtl}
+html[dir="rtl"] .product-back{direction:rtl}
+html[dir="rtl"] .text-danger{margin-left:0;margin-right:auto}
+html[dir="rtl"] .notification-panel{right:auto;left:0}
+html[dir="rtl"] .password-eye{right:auto;left:8px}
+html[dir="rtl"] .password-field input{padding-right:14px!important;padding-left:48px!important}
+html[dir="rtl"] .auth-story,
+html[dir="rtl"] .auth-card,
+html[dir="rtl"] .detail,
+html[dir="rtl"] .settings-card{text-align:right}
+html[dir="rtl"] .auth-story-point{grid-template-columns:minmax(0,1fr) 44px}
+html[dir="rtl"] .auth-story-point>span{grid-column:2}
+html[dir="rtl"] .auth-story-point>div{grid-column:1;grid-row:1}
+html[dir="rtl"] .brand{direction:ltr}
+html[dir="rtl"] .product-main-gallery,
+html[dir="rtl"] .product-thumbnails{direction:ltr}
+html[dir="rtl"] .variant,
+html[dir="rtl"] .admin-order-item{direction:rtl}
+
+@media(max-width:680px){
+  .content-language-toolbar,.edit-language-head{align-items:stretch;flex-direction:column}
+  .content-language-tabs{width:100%}
+  .content-language-tab{flex:1}
+  .translate-content-btn{width:100%}
+  .translation-review-note{text-align:center}
+}
