@@ -133,6 +133,15 @@
               <option value="pending_review">Pending review</option>
             </select>
           </div>
+          <div class="supplier-bulkbar">
+            <label class="bulk-select-all"><input id="select-all-products" type="checkbox"><span>Select all shown</span></label>
+            <span id="bulk-selection-count" class="muted">0 selected</span>
+            <div class="bulk-actions">
+              <button id="bulk-activate-products" class="btn secondary" type="button" disabled>Activate selected</button>
+              <button id="bulk-pause-products" class="btn secondary" type="button" disabled>Pause selected</button>
+              <button id="bulk-clear-products" class="auth-text-button" type="button" disabled>Clear</button>
+            </div>
+          </div>
           <div id="supplier-products-meta" class="results-meta muted"></div>
           <div class="supplier-table-wrap">
             <div class="supplier-product-table supplier-product-table-head">
