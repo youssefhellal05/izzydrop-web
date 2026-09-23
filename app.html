@@ -37,6 +37,10 @@
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg>
             <span>Products</span>
           </button>
+          <button data-view="requests">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h5"/></svg>
+            <span>Find a product</span>
+          </button>
           <button data-view="linked">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12v16l-6-3-6 3z"/></svg>
             <span>My products</span>
@@ -80,15 +84,36 @@
               <option value="stock-high">Stock: high to low</option>
             </select>
             <label class="stock-toggle"><input id="in-stock-only" type="checkbox"><span>In stock only</span></label>
+            <label class="stock-toggle"><input id="trending-only" type="checkbox"><span>Trending only 🔥</span></label>
           </div>
           <div id="product-results-meta" class="results-meta muted"></div>
           <div id="products" class="product-grid dropshipper-product-grid"></div>
+        </section>
+
+        <section id="view-requests" class="view" hidden>
+          <div class="section-heading">
+            <div><h2>Find this product</h2><p class="muted">Send IzzyDrop a product you want sourced from Egyptian suppliers.</p></div>
+          </div>
+          <div class="card intelligence-card">
+            <form id="product-request-form" class="form order-form-grid">
+              <input id="request-title" class="span-2" placeholder="What product are you looking for?" required>
+              <input id="request-url" type="url" placeholder="Product/source link (optional)">
+              <input id="request-image" type="url" placeholder="Image URL (optional)">
+              <input id="request-target-cost" type="number" min="0" step="0.01" placeholder="Target cost EGP (optional)">
+              <input id="request-notes" placeholder="Notes, quantity, colors, specs…">
+              <button id="request-submit" class="btn span-2" type="submit">Send sourcing request</button>
+            </form>
+            <div id="request-status" class="status"></div>
+          </div>
+          <div class="section-heading compact-heading"><div><h3>Your requests</h3><p class="muted">Supplier matches and offers will appear here.</p></div></div>
+          <div id="product-requests" class="orders-list"></div>
         </section>
 
         <section id="view-linked" class="view" hidden>
           <div class="section-heading">
             <div><h2>My products</h2><p class="muted">Manage the products you have chosen to sell.</p></div>
           </div>
+          <div id="inventory-alerts" class="alerts-stack"></div>
           <div id="linked" class="my-products-grid"></div>
         </section>
 
@@ -116,6 +141,7 @@
             <div id="order-status" class="status"></div>
           </div>
 
+          <div id="cod-summary" class="cod-summary-grid"></div>
           <div class="order-filterbar" id="order-filters">
             <button class="filter-chip on" data-order-filter="all">All</button>
             <button class="filter-chip" data-order-filter="pending">Pending</button>
