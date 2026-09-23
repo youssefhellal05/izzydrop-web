@@ -878,3 +878,28 @@ html[dir="rtl"] #web-embed-code{direction:ltr;text-align:left}
   .web-setup-form .field:first-of-type,.web-setup-form .field:nth-of-type(2),.web-setup-form>button{grid-column:1}
   .web-automation-flow{grid-template-columns:1fr}
 }
+
+.web-setup-form{grid-template-columns:1fr}
+.web-setup-form .web-url-field,.web-setup-form>button{grid-column:1}
+.web-variant-setup{display:grid;gap:8px}
+.web-variant-setup>.row{align-items:center}
+.web-variant-setup>.row>div{display:grid;gap:3px}
+.web-variant-setup>.row small{color:var(--muted);font-size:11px}
+.web-variant-head,.web-variant-row{display:grid;grid-template-columns:54px minmax(180px,1fr) 90px 150px;gap:10px;align-items:center}
+.web-variant-head{padding:0 10px;color:var(--muted);font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.05em}
+.web-variant-list{display:grid;border:1px solid var(--line);border-radius:13px;overflow:hidden}
+.web-variant-row{padding:10px;background:var(--card);border-bottom:1px solid var(--line);cursor:pointer}
+.web-variant-row:last-child{border-bottom:0}
+.web-variant-row>span:first-child{display:grid;place-items:center}
+.web-variant-row input[type="checkbox"]{width:18px;height:18px}
+.web-variant-name{display:grid;gap:2px;min-width:0}
+.web-variant-name b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.web-variant-name small{font-size:10px;color:var(--muted)}
+.web-variant-price{margin:0!important;padding:9px 10px!important}
+html[data-theme="dark"] .web-variant-row{background:var(--card)}
+html[dir="rtl"] .web-variant-head,html[dir="rtl"] .web-variant-row{direction:rtl}
+@media(max-width:620px){
+  .web-variant-head{display:none}
+  .web-variant-row{grid-template-columns:38px minmax(0,1fr) 68px}
+  .web-variant-row>span:last-child{grid-column:2/-1}
+}
