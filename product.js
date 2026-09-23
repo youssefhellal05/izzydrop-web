@@ -7,7 +7,10 @@
   try{
     const p=await IZZY.rpc('public_product',{_slug:slug},false);
     if(!p){st.textContent='This product is not available.';st.className='status bad';return}
-    document.title=`${p.name} · IzzyDrop`;
+    const displayName=window.IZZY_I18N?.productName(p)||p.name||'';
+    const displayDescription=window.IZZY_I18N?.productDescription(p)||p.description||'';
+    const isAr=window.IZZY_I18N?.isArabic?.()===true;
+    document.title=`${displayName} · IzzyDrop`;
     st.textContent='';
 
     const images=(p.images||[]).filter(x=>x?.url);
@@ -27,21 +30,21 @@
 
     const main=images[0]?.url;
     box.innerHTML=`
-      ${from==='app'?'<a class="product-back" href="app.html">← Back to products</a>':''}
+      ${from==='app'?`<a class="product-back" href="app.html">${isAr?'العودة إلى المنتجات →':'← Back to products'}</a>`:''}
       <div class="product-detail product-detail-polished">
         <div class="product-gallery-wrap">
           <div class="gallery product-main-gallery" id="main-gallery">
-            ${main?`<img id="main-product-image" src="${IZZY.esc(main)}" alt="${IZZY.esc(p.name)}">`:'<div class="brand" style="font-size:56px;color:#9ba3ad">IZ</div>'}
+            ${main?`<img id="main-product-image" src="${IZZY.esc(main)}" alt="${IZZY.esc(displayName)}">`:'<div class="brand" style="font-size:56px;color:#9ba3ad">IZ</div>'}
           </div>
           ${images.length>1?`<div class="product-thumbnails">${images.map((img,i)=>`<button class="product-thumb ${i===0?'on':''}" data-image="${IZZY.esc(img.url)}"><img src="${IZZY.esc(img.url)}" alt=""></button>`).join('')}</div>`:''}
         </div>
         <section class="detail product-detail-copy">
           <div class="product-detail-badges"><span class="tag ok">IzzyDrop Verified Supplier</span><span class="tag ${totalStock>0?'ok':'warn'}">${totalStock>0?`${totalStock} in stock`:'Out of stock'}</span></div>
-          <h1>${IZZY.esc(p.name)}</h1>
+          <h1>${IZZY.esc(displayName)}</h1>
           <p class="product-supplier-name">Sold by <b>${IZZY.esc(p.supplier||'IzzyDrop supplier')}</b></p>
           <div class="price product-detail-price">${IZZY.money(p.suggested_retail_price,p.currency)}</div>
           <small class="muted">Suggested selling price</small>
-          <p class="muted product-detail-description">${IZZY.esc(p.description||'No product description has been added yet.')}</p>
+          <p class="muted product-detail-description">${IZZY.esc(displayDescription||(isAr?'لا يوجد وصف للمنتج بعد.':'No product description has been added yet.'))}</p>
 
           <div class="product-facts">
             <div><small>SKU</small><b>${IZZY.esc(p.sku||'—')}</b></div>
