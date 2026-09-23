@@ -235,6 +235,8 @@
     'Extra login protection for your account.':'حماية إضافية لتسجيل الدخول إلى حسابك.',
     'Sign out of IzzyDrop on this device.':'سجّل الخروج من IzzyDrop على هذا الجهاز.',
     'End your IzzyDrop sessions on all devices.':'أنهِ جلسات IzzyDrop على جميع الأجهزة.',
+    'Language':'اللغة',
+    'Choose the IzzyDrop interface language on this device.':'اختر لغة واجهة IzzyDrop على هذا الجهاز.',
     'English':'English',
     'Arabic':'العربية'
   };
