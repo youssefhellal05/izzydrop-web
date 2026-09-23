@@ -237,6 +237,13 @@
     'End your IzzyDrop sessions on all devices.':'أنهِ جلسات IzzyDrop على جميع الأجهزة.',
     'Language':'اللغة',
     'Choose the IzzyDrop interface language on this device.':'اختر لغة واجهة IzzyDrop على هذا الجهاز.',
+    'Generate Arabic translation':'إنشاء الترجمة العربية',
+    'Generate English translation':'إنشاء الترجمة الإنجليزية',
+    'Translating to Arabic…':'جارٍ الترجمة إلى العربية…',
+    'Translating to English…':'جارٍ الترجمة إلى الإنجليزية…',
+    'Generating a draft translation…':'جارٍ إنشاء مسودة الترجمة…',
+    'English translation generated. Review and edit it before saving.':'تم إنشاء الترجمة الإنجليزية. راجعها وعدّلها قبل الحفظ.',
+    'Enter the English product name first.':'أدخل اسم المنتج بالإنجليزية أولًا.',
     'English':'English',
     'Arabic':'العربية'
   };
@@ -340,7 +347,13 @@
       return;
     }
     const stock=trimmed.match(/^(\d+) in stock$/i);
-    if(stock) node.nodeValue=raw.replace(trimmed,`${stock[1]} متوفر`);
+    if(stock){node.nodeValue=raw.replace(trimmed,`${stock[1]} متوفر`);return}
+    const shown=trimmed.match(/^(\d+) products? shown$/i);
+    if(shown){node.nodeValue=raw.replace(trimmed,`${shown[1]} منتج معروض`);return}
+    const available=trimmed.match(/^(\d+) products? available$/i);
+    if(available){node.nodeValue=raw.replace(trimmed,`${available[1]} منتج متاح`);return}
+    const total=trimmed.match(/^(\d+) total products?$/i);
+    if(total){node.nodeValue=raw.replace(trimmed,`${total[1]} إجمالي المنتجات`);return}
   }
 
   function scan(root=document.body){
