@@ -331,6 +331,11 @@
     'Connecting website…':'جارٍ ربط الموقع…',
     'Creating automatic order connection…':'جارٍ إنشاء ربط الطلبات التلقائي…',
     'Log in to add to your web':'سجّل الدخول لإضافته إلى موقعك',
+    '2. Add it to your web':'2. أضفه إلى موقعك',
+    'Connect the product to your website with IzzyDrop web automation.':'اربط المنتج بموقعك باستخدام أتمتة IzzyDrop للموقع.',
+    '3. Orders flow automatically':'3. الطلبات تصل تلقائيًا',
+    'Customer orders arrive in IzzyDrop, stock is reserved, and supplier fulfillment starts.':'تصل طلبات العملاء إلى IzzyDrop تلقائيًا، ويتم حجز المخزون ويبدأ تنفيذ المورّد.',
+    'Choose products, connect them to your website, and receive customer orders directly in IzzyDrop.':'اختر المنتجات واربطها بموقعك واستقبل طلبات العملاء مباشرة داخل IzzyDrop.',
     'English':'English',
     'Arabic':'العربية'
   };
