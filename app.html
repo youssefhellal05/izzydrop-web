@@ -143,15 +143,21 @@
 
     <form id="web-setup-form" class="form web-setup-form">
       <input id="web-product-id" type="hidden">
-      <div class="field">
+      <div class="field web-url-field">
         <label class="field-label" for="web-url">Your website URL</label>
         <input id="web-url" type="url" placeholder="https://yourstore.com" required>
         <small>For security, automatic orders will only be accepted from this website.</small>
       </div>
-      <div class="field">
-        <label class="field-label" for="web-price">Your selling price (EGP)</label>
-        <input id="web-price" type="number" min="0" step="0.01" required>
+
+      <div class="web-variant-setup">
+        <div class="row">
+          <div><b>Variants to add</b><small>Choose which supplier variants you want on your website and set your selling price for each one.</small></div>
+          <button id="select-all-web-variants" class="btn secondary" type="button">Select all</button>
+        </div>
+        <div class="web-variant-head"><span>Use</span><span>Variant</span><span>Stock</span><span>Your price</span></div>
+        <div id="web-variant-list" class="web-variant-list"><div class="notice">Loading variants…</div></div>
       </div>
+
       <button id="web-setup-submit" class="btn" type="submit">Create automatic web setup</button>
     </form>
 
