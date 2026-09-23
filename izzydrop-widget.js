@@ -100,14 +100,14 @@
             <h3>${esc(name)}</h3>
             ${desc?`<p>${esc(desc)}</p>`:''}
             <div class="iz-meta">
-              <div class="iz-price">${money(p.retail_price,p.currency)}</div>
+              <div class="iz-price">${variants.length>1?(ar?'ابتداءً من ':'From '):''}${money(p.retail_price,p.currency)}</div>
               <div class="iz-supplier">${L.supplier}<br><b>${esc(p.supplier_name||'IzzyDrop')}</b></div>
             </div>
             <button class="iz-primary iz-open" ${inStock<=0?'disabled':''}>${L.order}</button>
             <div class="iz-form" hidden>
               <select class="iz-variant" required>
                 <option value="">${L.variant}</option>
-                ${variants.map(v=>`<option value="${esc(v.id)}" ${Number(v.stock_quantity||0)<=0?'disabled':''}>${esc(v.name||v.sku||'Default')} · ${Number(v.stock_quantity||0)} ${L.stock}</option>`).join('')}
+                ${variants.map(v=>`<option value="${esc(v.id)}" data-price="${Number(v.retail_price||0)}" ${Number(v.stock_quantity||0)<=0?'disabled':''}>${esc(v.name||v.sku||'Default')} · ${money(v.retail_price,p.currency)} · ${Number(v.stock_quantity||0)} ${L.stock}</option>`).join('')}
               </select>
               <div class="iz-grid">
                 <input class="iz-name" placeholder="${L.name}" autocomplete="name">
@@ -130,6 +130,13 @@
           </div>
         </div>`;
 
+      const priceEl=shadow.querySelector('.iz-price');
+      const variantSelect=shadow.querySelector('.iz-variant');
+      variantSelect?.addEventListener('change',()=>{
+        const option=variantSelect.selectedOptions?.[0];
+        if(option?.dataset?.price)priceEl.textContent=money(Number(option.dataset.price),p.currency);
+        else priceEl.textContent=(variants.length>1?(ar?'ابتداءً من ':'From '):'')+money(p.retail_price,p.currency);
+      });
       const open=shadow.querySelector('.iz-open');
       const form=shadow.querySelector('.iz-form');
       const close=shadow.querySelector('.iz-close');
