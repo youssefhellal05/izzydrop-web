@@ -11,7 +11,7 @@
   <meta name="theme-color" content="#111318">
   <script>try{document.documentElement.dataset.theme=localStorage.getItem("izzy_theme")==="dark"?"dark":"light"}catch(e){}</script>
   <meta name="description" content="IzzyDrop — Egypt’s independent dropshipping marketplace.">
-  <link rel="stylesheet" href="styles.css?v=20260922-supplier-polish3">
+  <link rel="stylesheet" href="styles.css?v=20260923-bilingual1">
 </head>
 <body>
 <div class="wrap">
@@ -158,12 +158,38 @@
           </div>
           <form id="add-form" class="supplier-product-form">
             <div class="card form-section">
-              <div class="form-section-title"><span class="form-section-number">1</span><div><h3>Basic information</h3><p>Give dropshippers enough information to understand the product.</p></div></div>
-              <div class="form form-two-col">
-                <div class="field span-2"><label class="field-label" for="p-name">Product name</label><input id="p-name" placeholder="e.g. Wireless earbuds" required></div>
+              <div class="form-section-title form-section-title-row">
+                <div class="form-section-title-left"><span class="form-section-number">1</span><div><h3>Basic information</h3><p>Write the product once, then let IzzyDrop generate the other language for you to review.</p></div></div>
+                <button id="p-translate-btn" type="button" class="btn secondary translate-content-btn">Generate Arabic translation</button>
+              </div>
+
+              <div class="content-language-toolbar">
+                <div class="content-language-tabs" role="tablist" aria-label="Product content language">
+                  <button type="button" class="content-language-tab on" data-new-content-lang="en">English</button>
+                  <button type="button" class="content-language-tab" data-new-content-lang="ar">العربية</button>
+                </div>
+                <span class="translation-review-note">Translation is a draft — review it before saving.</span>
+              </div>
+
+              <div id="p-content-en" class="localized-content-panel" data-new-content-panel="en">
+                <div class="form">
+                  <div class="field"><label class="field-label" for="p-name-en">Product name</label><input id="p-name-en" placeholder="e.g. Wireless earbuds"></div>
+                  <div class="field"><label class="field-label" for="p-description-en">Description</label><textarea id="p-description-en" rows="5" placeholder="What is the product, what makes it useful, and what should a dropshipper know?"></textarea></div>
+                </div>
+              </div>
+
+              <div id="p-content-ar" class="localized-content-panel" data-new-content-panel="ar" dir="rtl" hidden>
+                <div class="form">
+                  <div class="field"><label class="field-label" for="p-name-ar">اسم المنتج</label><input id="p-name-ar" placeholder="مثال: سماعات لاسلكية"></div>
+                  <div class="field"><label class="field-label" for="p-description-ar">الوصف</label><textarea id="p-description-ar" rows="5" placeholder="ما هو المنتج؟ وما أهم مميزاته؟ وما الذي يجب أن يعرفه الدروبشيبر؟"></textarea></div>
+                </div>
+              </div>
+
+              <div id="p-translation-status" class="status translation-status"></div>
+
+              <div class="form form-two-col product-meta-fields">
                 <div class="field"><label class="field-label" for="p-sku">SKU <span class="muted">(optional)</span></label><input id="p-sku" placeholder="Leave blank for IzzyDrop to create one"><small>IzzyDrop will generate an SKU automatically if you leave this blank.</small></div>
                 <div class="field"><label class="field-label">Currency</label><input value="EGP" disabled></div>
-                <div class="field span-2"><label class="field-label" for="p-description">Description</label><textarea id="p-description" rows="5" placeholder="What is the product, what makes it useful, and what should a dropshipper know?"></textarea></div>
               </div>
             </div>
 
@@ -213,9 +239,26 @@
     <div class="row"><div><div class="premium-chip">SUPPLIER PRODUCT</div><h2>Edit product</h2></div><button id="close-product-edit" class="btn secondary" type="button">Close</button></div>
     <form id="edit-product-form" class="form">
       <input id="edit-product-id" type="hidden">
-      <label class="field-label">Product name</label><input id="edit-product-name" required>
+
+      <div class="edit-language-head">
+        <div class="content-language-tabs" role="tablist" aria-label="Product content language">
+          <button type="button" class="content-language-tab on" data-edit-content-lang="en">English</button>
+          <button type="button" class="content-language-tab" data-edit-content-lang="ar">العربية</button>
+        </div>
+        <button id="edit-translate-btn" type="button" class="btn secondary translate-content-btn">Generate Arabic translation</button>
+      </div>
+
+      <div data-edit-content-panel="en">
+        <label class="field-label">Product name</label><input id="edit-product-name-en">
+        <label class="field-label">Description</label><textarea id="edit-product-description-en" rows="4"></textarea>
+      </div>
+      <div data-edit-content-panel="ar" dir="rtl" hidden>
+        <label class="field-label">اسم المنتج</label><input id="edit-product-name-ar">
+        <label class="field-label">الوصف</label><textarea id="edit-product-description-ar" rows="4"></textarea>
+      </div>
+      <div id="edit-translation-status" class="status translation-status"></div>
+
       <label class="field-label">SKU</label><input id="edit-product-sku" required>
-      <label class="field-label">Description</label><textarea id="edit-product-description" rows="4"></textarea>
       <div class="form-two-col">
         <div class="field"><label class="field-label">Your cost (EGP)</label><input id="edit-product-cost" type="number" step="0.01" min="0" required></div>
         <div class="field"><label class="field-label">Suggested retail (EGP)</label><input id="edit-product-retail" type="number" step="0.01" min="0"></div>
@@ -231,9 +274,10 @@
 </div>
 
 <script src="config.js"></script>
-<script src="common.js?v=20260922-supplier-polish3"></script>
-<script src="supplier.js?v=20260922-supplier-polish3"></script>
+<script src="common.js?v=20260923-bilingual1"></script>
+<script src="i18n.js?v=20260923-bilingual1"></script>
+<script src="supplier.js?v=20260923-bilingual1"></script>
 <script>window.IZZY_SETTINGS_ROLE="supplier"</script>
-<script src="settings.js?v=20260922-supplier-polish3"></script>
+<script src="settings.js?v=20260923-bilingual1"></script>
 </body>
 </html>
