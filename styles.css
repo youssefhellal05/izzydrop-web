@@ -903,3 +903,13 @@ html[dir="rtl"] .web-variant-head,html[dir="rtl"] .web-variant-row{direction:rtl
   .web-variant-row{grid-template-columns:38px minmax(0,1fr) 68px}
   .web-variant-row>span:last-child{grid-column:2/-1}
 }
+
+/* Test storefront controls */
+.web-field-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.web-field-head .field-label{margin:0}
+.web-code-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.web-code-actions .btn{width:100%}
+@media(max-width:560px){
+  .web-field-head{align-items:flex-start;flex-direction:column;gap:5px}
+  .web-code-actions{grid-template-columns:1fr}
+}
