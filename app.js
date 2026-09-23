@@ -9,6 +9,10 @@
     settings:['Settings','Manage your IzzyDrop account, appearance and security.']
   };
 
+  const productName=p=>window.IZZY_I18N?.productName(p)||p?.name||'';
+  const productDescription=p=>window.IZZY_I18N?.productDescription(p)||p?.description||'';
+  const ar=()=>window.IZZY_I18N?.isArabic?.()===true;
+
   const status=(t,b=false)=>{
     const e=$('#dash-status');
     if(!e)return;
@@ -47,7 +51,7 @@
     const inStock=$('#in-stock-only').checked;
     const sort=$('#product-sort').value;
     let a=PRODUCTS.filter(p=>{
-      const hay=[p.name,p.description,p.sku,p.supplier_name,p.category_name].filter(Boolean).join(' ').toLowerCase();
+      const hay=[p.name,p.name_en,p.name_ar,p.description,p.description_en,p.description_ar,p.sku,p.supplier_name,p.category_name].filter(Boolean).join(' ').toLowerCase();
       return (!q||hay.includes(q))&&(!category||String(p.category_name||'')===category)&&(!inStock||Number(p.stock_quantity)>0);
     });
     if(sort==='price-low')a.sort((a,b)=>Number(a.suggested_retail_price||0)-Number(b.suggested_retail_price||0));
@@ -72,18 +76,19 @@
     $('#products').innerHTML=a.map(p=>{
       const isLinked=linked.has(p.product_id);
       const stock=Number(p.stock_quantity||0);
+      const name=productName(p),desc=productDescription(p);
       return `<article class="card product-card dropshipper-product-card">
         <a class="product-image product-open" href="${productDetailsUrl(p)}">
-          ${p.primary_image_url?`<img src="${IZZY.esc(p.primary_image_url)}" alt="${IZZY.esc(p.name)}">`:'<span>IZ</span>'}
+          ${p.primary_image_url?`<img src="${IZZY.esc(p.primary_image_url)}" alt="${IZZY.esc(name)}">`:'<span>IZ</span>'}
         </a>
         <div class="product-body">
           <div class="product-card-topline">
             <span class="tag ${stock>0?'ok':'warn'}">${stock>0?`${stock} in stock`:'Out of stock'}</span>
             ${p.category_name?`<span class="product-category">${IZZY.esc(p.category_name)}</span>`:''}
           </div>
-          <a class="product-title-link" href="${productDetailsUrl(p)}"><h3>${IZZY.esc(p.name)}</h3></a>
+          <a class="product-title-link" href="${productDetailsUrl(p)}"><h3>${IZZY.esc(name)}</h3></a>
           <p class="supplier-line">Sold by <b>${IZZY.esc(p.supplier_name||'IzzyDrop supplier')}</b></p>
-          <p class="product-description">${IZZY.esc(p.description||'Ready for your store.')}</p>
+          <p class="product-description">${IZZY.esc(desc||(ar()?'جاهز لمتجرك.':'Ready for your store.'))}</p>
           <div class="product-price-block">
             <div><small>Suggested selling price</small><strong>${IZZY.money(p.suggested_retail_price,p.currency)}</strong></div>
             <span class="sku">${IZZY.esc(p.sku||'')}</span>
@@ -122,7 +127,7 @@
           ${p.primary_image_url?`<img src="${IZZY.esc(p.primary_image_url)}" alt="">`:'IZ'}
         </a>
         <div class="linked-info">
-          <div class="row linked-title-row"><div><h3>${IZZY.esc(p.name||'Product')}</h3><small>${IZZY.esc(p.supplier_name||'IzzyDrop supplier')} · ${Number(p.stock_quantity||0)} in stock</small></div><span class="tag ok">Linked</span></div>
+          <div class="row linked-title-row"><div><h3>${IZZY.esc(productName(p)||'Product')}</h3><small>${IZZY.esc(p.supplier_name||'IzzyDrop supplier')} · ${Number(p.stock_quantity||0)} in stock</small></div><span class="tag ok">Linked</span></div>
           <div class="linked-price-grid">
             <div><small>Suggested</small><b>${IZZY.money(suggested,p.currency)}</b></div>
             <label><small>Your selling price</small><div class="price-editor"><input class="linked-price-input" data-link-id="${l.id}" type="number" min="0" step="0.01" value="${selling}"><span>${IZZY.esc(p.currency||'EGP')}</span></div></label>
@@ -134,7 +139,7 @@
         <button class="btn save-linked-price" data-link-id="${l.id}">Save price</button>
         <button class="btn secondary copy-linked" data-slug="${IZZY.esc(p.public_slug||'')}">Copy link</button>
         <a class="btn secondary" href="${p.public_slug?productDetailsUrl(p):'#'}">Details</a>
-        <button class="text-danger remove-linked" data-link-id="${l.id}" data-product-name="${IZZY.esc(p.name||'this product')}">Remove</button>
+        <button class="text-danger remove-linked" data-link-id="${l.id}" data-product-name="${IZZY.esc(productName(p)||(ar()?'هذا المنتج':'this product'))}">Remove</button>
       </div>
     </article>`;
   }
