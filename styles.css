@@ -913,3 +913,24 @@ html[dir="rtl"] .web-variant-head,html[dir="rtl"] .web-variant-row{direction:rtl
   .web-field-head{align-items:flex-start;flex-direction:column;gap:5px}
   .web-code-actions{grid-template-columns:1fr}
 }
+
+
+/* IzzyDrop marketplace intelligence */
+.product-intelligence-row{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}
+.intel-pill{font-size:11px;font-weight:800;padding:6px 8px;border:1px solid var(--line);border-radius:999px;background:var(--panel-2)}
+.intel-pill.hot{border-color:#f0a43a}
+.profit-box{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--panel-2);margin:12px 0}
+.profit-box>div,.profit-box>label{display:flex;flex-direction:column;gap:4px}
+.profit-box small,.cod-stat small{font-size:11px;color:var(--muted);font-weight:700}
+.profit-box input{width:100%;padding:8px 9px;border:1px solid var(--line);border-radius:9px;background:var(--panel);color:var(--text)}
+.profit-margin{font-size:11px;color:var(--muted)}
+.cod-summary-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin:0 0 18px}
+.cod-stat{padding:14px;display:flex;flex-direction:column;gap:5px}
+.cod-stat strong{font-size:20px}
+.alerts-stack{display:grid;gap:8px;margin-bottom:16px}
+.alert-notice{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.alert-notice span{flex:1;min-width:220px}
+.intelligence-card{padding:18px;margin-bottom:20px}
+.compact-heading{margin-top:22px}
+.quote-form{margin-top:14px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media(max-width:900px){.cod-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.profit-box{grid-template-columns:1fr}.quote-form{grid-template-columns:1fr}.quote-form .span-2{grid-column:auto}}
