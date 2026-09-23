@@ -821,3 +821,11 @@ html[dir="rtl"] .admin-order-item{direction:rtl}
   .translate-content-btn{width:100%}
   .translation-review-note{text-align:center}
 }
+
+.settings-language-row{margin-top:8px}
+.settings-language-choice{display:inline-flex;gap:5px;padding:4px;background:var(--soft);border-radius:11px}
+.settings-language-btn{border:0;background:transparent;color:var(--muted);border-radius:8px;padding:8px 11px;font-size:12px;font-weight:850;cursor:pointer}
+.settings-language-btn.on{background:var(--card);color:var(--text);box-shadow:0 2px 8px rgba(17,19,24,.08)}
+html[data-theme="dark"] .settings-language-choice{background:#181d24}
+html[data-theme="dark"] .settings-language-btn.on{background:#252b33;color:#fff;box-shadow:none}
+@media(max-width:560px){.settings-language-choice{width:100%}.settings-language-btn{flex:1}}
