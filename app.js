@@ -232,7 +232,7 @@
     const current=el.value;
     el.innerHTML='<option value="">Choose one of My products</option>'+LINKS.map(l=>{
       const p=map.get(l.supplier_product_id);
-      return p?`<option value="${IZZY.esc(p.product_id)}">${IZZY.esc(p.name)}</option>`:'';
+      return p?`<option value="${IZZY.esc(p.product_id)}">${IZZY.esc(productName(p))}</option>`:'';
     }).join('');
     if([...el.options].some(o=>o.value===current))el.value=current;
   }
