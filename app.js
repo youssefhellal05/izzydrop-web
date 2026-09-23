@@ -1,6 +1,6 @@
 (()=>{
   const $=s=>document.querySelector(s);
-  let PRODUCTS=[],LINKS=[],INTEGRATIONS=[],ORDERS=[],ITEMS=[],SESSION=null,DROPSHIPPER=null,ORDER_FILTER='all';
+  let PRODUCTS=[],LINKS=[],INTEGRATIONS=[],INTEGRATION_VARIANTS=[],ORDERS=[],ITEMS=[],SESSION=null,DROPSHIPPER=null,ORDER_FILTER='all';
 
   const VIEW_COPY={
     products:['Products','Browse products and add the ones you want to sell.'],
@@ -259,7 +259,7 @@
     return `<div data-izzydrop-token="${token}"></div>\n<script src="https://youssefhellal05.github.io/izzydrop-web/izzydrop-widget.js" async><\/script>`;
   }
 
-  function openWebSetup(productId){
+  async function openWebSetup(productId){
     const p=PRODUCTS.find(x=>x.product_id===productId);
     if(!p){status('This product is not available.',true);return}
     const link=LINKS.find(x=>x.supplier_product_id===productId);
@@ -267,9 +267,9 @@
 
     $('#web-product-id').value=productId;
     $('#web-url').value=integration?.website_url||'';
-    $('#web-price').value=Number(link?.retail_price??p.suggested_retail_price??0);
     $('#copy-status').textContent='';
     $('#copy-status').className='status';
+    $('#web-variant-list').innerHTML='<div class="notice">Loading variants…</div>';
 
     if(integration?.public_token){
       $('#web-embed-code').value=makeEmbedCode(integration.public_token);
@@ -282,6 +282,27 @@
     }
 
     $('#link-modal').hidden=false;
+
+    try{
+      const variants=await IZZY.rpc('marketplace_variants',{_product_id:productId});
+      const existing=integration?INTEGRATION_VARIANTS.filter(x=>x.integration_id===integration.id):[];
+      const existingMap=new Map(existing.map(x=>[x.variant_id,x]));
+      const defaultPrice=Number(link?.retail_price??p.suggested_retail_price??0);
+
+      $('#web-variant-list').innerHTML=(variants||[]).map(v=>{
+        const configured=existingMap.get(v.id);
+        const checked=integration?!!configured:true;
+        const price=Number(configured?.retail_price??defaultPrice);
+        return `<label class="web-variant-row" data-web-variant-row="${v.id}">
+          <span><input class="web-variant-check" type="checkbox" data-web-variant-id="${v.id}" ${checked?'checked':''}></span>
+          <span class="web-variant-name"><b>${IZZY.esc(v.variant_name||v.sku||'Default')}</b><small>${IZZY.esc(v.sku||'')}</small></span>
+          <span class="${Number(v.stock_quantity||0)<=0?'stock-low':''}">${Number(v.stock_quantity||0)}</span>
+          <span><input class="web-variant-price" data-web-variant-price="${v.id}" type="number" min="0" step="0.01" value="${price}" aria-label="Selling price"></span>
+        </label>`;
+      }).join('')||'<div class="notice">No variants are available for this product.</div>';
+    }catch(err){
+      $('#web-variant-list').innerHTML=`<div class="notice bad">${IZZY.esc(err.message)}</div>`;
+    }
   }
 
   async function linkProduct(b){
@@ -290,10 +311,11 @@
 
   async function load(showMessage=false){
     try{
-      [PRODUCTS,LINKS,INTEGRATIONS,ORDERS,ITEMS]=await Promise.all([
+      [PRODUCTS,LINKS,INTEGRATIONS,INTEGRATION_VARIANTS,ORDERS,ITEMS]=await Promise.all([
         IZZY.rpc('marketplace_catalog_v2'),
         IZZY.request('/rest/v1/dropshipper_product_links?select=*&order=created_at.desc'),
         IZZY.request('/rest/v1/storefront_integrations?select=*&order=created_at.desc'),
+        IZZY.request('/rest/v1/storefront_integration_variants?select=*&order=created_at.asc'),
         IZZY.request('/rest/v1/orders?select=*&order=created_at.desc&limit=100'),
         IZZY.request('/rest/v1/order_items?select=id,order_id,supplier_product_id,variant_id,quantity,retail_price_at_purchase,fulfillment_status,tracking_number,shipping_carrier,created_at&order=created_at.desc&limit=200')
       ]);
@@ -338,7 +360,6 @@
     const btn=$('#web-setup-submit'),st=$('#copy-status');
     const productId=$('#web-product-id').value;
     const rawUrl=$('#web-url').value.trim();
-    const price=Number($('#web-price').value);
 
     try{
       const u=new URL(rawUrl);
@@ -349,8 +370,20 @@
       return;
     }
 
-    if(!Number.isFinite(price)||price<0){
-      st.textContent='Enter a valid selling price.';
+    const selected=[...document.querySelectorAll('.web-variant-check:checked')].map(check=>{
+      const id=check.dataset.webVariantId;
+      const price=Number(document.querySelector(`[data-web-variant-price="${id}"]`)?.value);
+      return {variant_id:id,retail_price:price};
+    });
+
+    if(!selected.length){
+      st.textContent='Choose at least one variant to add to your website.';
+      st.className='status bad';
+      return;
+    }
+
+    if(selected.some(v=>!Number.isFinite(v.retail_price)||v.retail_price<0)){
+      st.textContent='Enter a valid selling price for every selected variant.';
       st.className='status bad';
       return;
     }
@@ -358,10 +391,10 @@
     btn.disabled=true;btn.textContent='Connecting website…';
     st.textContent='Creating automatic order connection…';st.className='status';
     try{
-      const result=await IZZY.rpc('configure_storefront_integration',{
+      const result=await IZZY.rpc('configure_storefront_integration_v2',{
         _product_id:productId,
         _website_url:rawUrl,
-        _retail_price:price
+        _variants:selected
       });
       $('#web-embed-code').value=makeEmbedCode(result.public_token);
       $('#web-code-section').hidden=false;
@@ -376,6 +409,13 @@
       btn.disabled=false;
       if(btn.textContent==='Connecting website…')btn.textContent='Create automatic web setup';
     }
+  };
+
+  $('#select-all-web-variants').onclick=()=>{
+    const checks=[...document.querySelectorAll('.web-variant-check')];
+    const shouldCheck=checks.some(x=>!x.checked);
+    checks.forEach(x=>x.checked=shouldCheck);
+    $('#select-all-web-variants').textContent=shouldCheck?'Clear all':'Select all';
   };
 
   $('#copy-web-code').onclick=async()=>{
