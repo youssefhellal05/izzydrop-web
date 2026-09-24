@@ -978,7 +978,7 @@ html[dir="rtl"] .web-variant-head,html[dir="rtl"] .web-variant-row{direction:rtl
 .combo-name{display:grid;gap:2px;min-width:0}
 .combo-name b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .combo-name small{font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.edit-variant-row{grid-template-columns:92px minmax(180px,1.2fr) 120px 85px 145px 120px 100px;align-items:center}
+.edit-variant-row{grid-template-columns:92px minmax(180px,1.2fr) 120px 85px 145px 120px 120px 100px;align-items:center}
 .edit-variant-enabled{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:800;color:var(--muted)}
 .edit-variant-enabled input{width:17px;height:17px;padding:0}
 .edit-variant-name-cell{display:grid;gap:3px;min-width:0}
@@ -1486,3 +1486,31 @@ html[data-theme="dark"] .option-quick-values button{background:var(--card)}
 .delivery-managed-badge{display:flex;align-items:center;min-height:44px;padding:10px 12px;border:1px solid var(--line);border-radius:11px;background:var(--soft);font-size:12px;font-weight:850}
 .izzydrop-delivery-field small{display:block;margin-top:5px}
 .simple-product-prices .price-note{display:block;margin-top:2px;font-size:9px;color:var(--muted);font-weight:650}
+
+
+/* Variant pricing mode */
+.variant-pricing-card{display:grid;gap:12px;margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--soft)}
+.variant-pricing-card>div:first-child{display:grid;gap:3px}
+.variant-pricing-card small{font-size:11px;color:var(--muted)}
+.variant-pricing-mode-buttons{display:flex;gap:8px;flex-wrap:wrap}
+.variant-pricing-mode-buttons button{border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:10px;padding:9px 12px;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
+.variant-pricing-mode-buttons button.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.simple-product-wizard:not(.variant-prices-vary) .variant-price-field{display:none!important}
+.simple-product-wizard.variant-prices-vary:not(.show-variant-advanced) .variant-generated-row{grid-template-columns:minmax(155px,1.2fr) auto minmax(95px,.65fr) minmax(120px,.8fr) minmax(130px,.85fr)}
+.simple-product-wizard.variant-prices-vary.show-variant-advanced .variant-generated-row{grid-template-columns:minmax(155px,1.2fr) auto minmax(95px,.65fr) minmax(120px,.8fr) minmax(130px,.85fr) minmax(120px,.8fr) minmax(100px,.7fr)}
+html[data-theme="dark"] .variant-pricing-card{background:#181d24}
+html[data-theme="dark"] .variant-pricing-mode-buttons button{background:var(--card)}
+@media(max-width:900px){
+  .simple-product-wizard.variant-prices-vary:not(.show-variant-advanced) .variant-generated-row,
+  .simple-product-wizard.variant-prices-vary.show-variant-advanced .variant-generated-row{grid-template-columns:1fr 1fr}
+  .simple-product-wizard.variant-prices-vary .variant-generated-name{grid-column:1/-1}
+}
+@media(max-width:680px){
+  .variant-pricing-mode-buttons{display:grid;grid-template-columns:1fr}
+  .variant-pricing-mode-buttons button{width:100%}
+}
+@media(max-width:430px){
+  .simple-product-wizard.variant-prices-vary:not(.show-variant-advanced) .variant-generated-row,
+  .simple-product-wizard.variant-prices-vary.show-variant-advanced .variant-generated-row{grid-template-columns:1fr}
+  .simple-product-wizard.variant-prices-vary .variant-generated-name{grid-column:auto}
+}
