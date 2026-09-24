@@ -967,6 +967,10 @@
 
   $('#add-form').onsubmit=async e=>{
     e.preventDefault();
+    if(PRODUCT_STEP<3){
+      if(validateProductStep(PRODUCT_STEP))setProductStep(PRODUCT_STEP+1);
+      return;
+    }
     const step1ok=validateProductStep(1);
     if(!step1ok){setProductStep(1);return}
     const step2ok=validateProductStep(2);
