@@ -119,6 +119,7 @@
       const current=select.value;
       select.innerHTML=selectedImageOptions(current);
       if([...select.options].some(o=>o.value===current))select.value=current;
+      VARIANT_IMAGE_STATE.set(select.dataset.variantImageKey,select.value);
       const card=select.closest('[data-variant-photo-card]');
       if(card)updateVariantGroupPhoto(card);
     });
@@ -1077,10 +1078,11 @@
       list.innerHTML='';
       renderVariantColorPhotos(definitions);
 
-      const first=definitions[0];
+      const groupDef=definitions.find(def=>def.name.toLowerCase()==='color')||definitions[0];
+      const labelDefs=definitions.filter(def=>def!==groupDef);
       const groups=new Map();
       combinations.forEach(combo=>{
-        const value=combo[first.name];
+        const value=combo[groupDef.name];
         if(!groups.has(value))groups.set(value,[]);
         groups.get(value).push(combo);
       });
@@ -1088,14 +1090,14 @@
       groups.forEach((combos,groupValue)=>{
         const section=document.createElement('div');
         section.className='variant-generated-group';
-        section.innerHTML=`<div class="variant-generated-group-head"><b>${IZZY.esc(first.name)}: ${IZZY.esc(groupValue)}</b><small>${combos.length} ${local(combos.length===1?'version':'versions',combos.length===1?'نسخة':'نسخ')}</small></div><div class="variant-generated-rows"></div>`;
+        section.innerHTML=`<div class="variant-generated-group-head"><b>${IZZY.esc(groupDef.name)}: ${IZZY.esc(groupValue)}</b><small>${combos.length} ${local(combos.length===1?'version':'versions',combos.length===1?'نسخة':'نسخ')}</small></div><div class="variant-generated-rows"></div>`;
         const rows=section.querySelector('.variant-generated-rows');
 
         combos.forEach(combo=>{
           const key=variantStateKey(combo);
           const state=VARIANT_COMBO_STATE.get(key)||{enabled:true,stock:'0',cost:'',sku:'',weight:''};
-          const rest=definitions.slice(1).map(def=>combo[def.name]);
-          const label=rest.length?rest.join(' / '):combo[first.name];
+          const rest=labelDefs.map(def=>combo[def.name]);
+          const label=rest.length?rest.join(' / '):combo[groupDef.name];
           const full=definitions.map(def=>`${def.name}: ${combo[def.name]}`).join(' · ');
           const row=document.createElement('div');
           row.className='variant-generated-row'+(state.enabled===false?' is-disabled':'');
@@ -1216,6 +1218,7 @@
   function removeSelectedImage(index){
     document.querySelectorAll('[data-variant-group-image]').forEach(select=>{
       select.value=adjustImageReference(select.value,index);
+      VARIANT_IMAGE_STATE.set(select.dataset.variantImageKey,select.value);
     });
     SELECTED_IMAGES.splice(index,1);
     const input=$('#p-images');if(input)input.value='';
