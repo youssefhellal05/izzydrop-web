@@ -162,7 +162,9 @@
     value.textContent=`${IZZY.money(margin,'EGP')} · ${pct.toFixed(1)}%`;
     box.classList.add(margin>=0?'positive':'negative');
     note.textContent=margin>=0
-      ? local('Suggested customer price minus your supplier price. Delivery is separate.','سعر البيع المقترح ناقص سعر المورّد. التوصيل منفصل.')
+      ? (VARIANT_PRICES_VARY
+          ? local('Default margin before delivery. Individual variant margins may differ.','الهامش الافتراضي قبل التوصيل. قد يختلف هامش كل خيار.')
+          : local('Suggested customer price minus your supplier price. Delivery is separate.','سعر البيع المقترح ناقص سعر المورّد. التوصيل منفصل.'))
       : local('Suggested selling price is below your supplier price.','سعر البيع المقترح أقل من سعر المورّد.');
   }
 
@@ -996,6 +998,15 @@
       return;
     }
 
+    const normalizedNames=defs.map(def=>def.name.toLowerCase());
+    if(new Set(normalizedNames).size!==normalizedNames.length){
+      setVariantStaleState(!!VARIANT_GENERATION_SIGNATURE);
+      preview.textContent=local('Each option type needs a different name.','يجب أن يكون لكل نوع خيار اسم مختلف.');
+      btn.disabled=true;
+      btn.textContent=local('Fix duplicate options','صحح الخيارات المكررة');
+      return;
+    }
+
     const count=defs.reduce((n,def)=>n*def.values.length,1);
     if(count>MAX_VARIANT_COMBINATIONS){
       setVariantStaleState(!!VARIANT_GENERATION_SIGNATURE);
@@ -1245,7 +1256,7 @@
       ? local('Each available variant can have its own supplier price and suggested selling price.','يمكن لكل خيار متاح أن يكون له سعر مورد وسعر بيع مقترح خاص به.')
       : local('The product prices above will be used for every variant.','سيتم استخدام أسعار المنتج بالأعلى لكل الخيارات.');
     const apply=$('#apply-default-variant-prices');
-    if(apply)apply.hidden=!VARIANT_PRICES_VARY;
+    if(apply)apply.hidden=!VARIANT_PRICES_VARY||!document.querySelector('#variant-combination-list [data-variant-row]');
     fillEmptyVariantPricesFromDefaults(false);
     productWizardSummary();
   }
@@ -1322,6 +1333,8 @@
       $('#variant-combination-count').textContent=String(combinations.length);
       const btn=$('#generate-variants-btn');
       updateVariantBuildPreview();
+      const apply=$('#apply-default-variant-prices');
+      if(apply)apply.hidden=!VARIANT_PRICES_VARY||!document.querySelector('#variant-combination-list [data-variant-row]');
       msg('');
       productWizardSummary();
     }catch(err){
