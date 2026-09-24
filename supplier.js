@@ -707,7 +707,6 @@
     $('#edit-product-description-ar').value=p.description_ar||'';
     $('#edit-product-sku').value=p.sku||'';
     $('#edit-product-cost').value=p.cost_price??0;
-    $('#edit-product-shipping').value=p.estimated_shipping_cost??0;
     refreshCategorySelects();
     $('#edit-product-category').value=p.category_id||'';
     $('#edit-product-market-status').value=p.status||'active';
@@ -758,7 +757,6 @@
             sku:$('#edit-product-sku').value.trim(),
             cost_price:Number($('#edit-product-cost').value),
             category_id:$('#edit-product-category').value||null,
-            estimated_shipping_cost:Number($('#edit-product-shipping').value||0),
             suggested_retail_price:$('#edit-product-retail').value===''?null:Number($('#edit-product-retail').value),
             status:$('#edit-product-market-status').value,
             updated_at:new Date().toISOString()
@@ -1281,10 +1279,8 @@
     try{
       const cost=Number($('#p-cost').value);
       const retail=Number($('#p-retail').value);
-      const shipping=Number($('#p-shipping').value||0);
       if(!Number.isFinite(cost)||cost<0)throw Error(local('Enter your supplier price.','أدخل سعر المورّد.'));
       if(!Number.isFinite(retail)||retail<0)throw Error(local('Enter a suggested selling price.','أدخل سعر البيع المقترح.'));
-      if(!Number.isFinite(shipping)||shipping<0)throw Error(local('Enter a valid shipping cost.','أدخل تكلفة شحن صحيحة.'));
       const variants=collectVariants();
 
       let nameEn=$('#p-name-en').value.trim()||null;
@@ -1321,7 +1317,7 @@
         _currency:'EGP',
         _variants:variants,
         _category_id:$('#p-category').value||null,
-        _shipping_cost:shipping
+        _shipping_cost:0
       });
 
       const pid=result.product_id;
@@ -1377,7 +1373,7 @@
     setVariantFlow(enable,enable);
   };
   $('#toggle-variant-advanced').onclick=()=>setVariantAdvanced(!VARIANT_ADVANCED);
-  ['#p-name-en','#p-name-ar','#simple-product-stock','#p-cost','#p-retail','#p-shipping'].forEach(sel=>{
+  ['#p-name-en','#p-name-ar','#simple-product-stock','#p-cost','#p-retail'].forEach(sel=>{
     const el=$(sel);if(el)el.addEventListener('input',productWizardSummary);
   });
   document.querySelectorAll('[data-add-option-type]').forEach(btn=>btn.onclick=()=>addOptionCard(btn.dataset.addOptionType));
