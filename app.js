@@ -3,12 +3,12 @@
   let PRODUCTS=[],LINKED_PRODUCTS=[],LINKS=[],INTEGRATIONS=[],INTEGRATION_VARIANTS=[],ORDERS=[],ITEMS=[],REQUESTS=[],QUOTES=[],SAMPLES=[],ALERTS=[],COD={},SESSION=null,DROPSHIPPER=null,ORDER_FILTER='all',CURRENT_WEB_TOKEN=null;
 
   const VIEW_COPY={
-    products:['Products','Browse products with live profit, supplier and trend intelligence.'],
-    requests:['Find a product','Ask IzzyDrop suppliers to source a product you want to sell.'],
-    linked:['My products','Manage pricing, availability and the products you have chosen.'],
-    samples:['Samples','Track the product samples you requested from suppliers.'],
-    orders:['Orders','Create orders and track shipping and COD delivery results.'],
-    settings:['Settings','Manage your IzzyDrop account, appearance and security.']
+    products:['Products','Find products to sell.'],
+    linked:['My products','Products you chose to sell.'],
+    orders:['Orders','Create and track customer orders.'],
+    requests:['Find a product','Ask suppliers to source something you need.'],
+    samples:['Samples','Track product samples.'],
+    settings:['Settings','Account and preferences.']
   };
 
   const productName=p=>window.IZZY_I18N?.productName(p)||p?.name||'';
@@ -35,6 +35,11 @@
     const copy=VIEW_COPY[v]||VIEW_COPY.products;
     $('#page-title').textContent=copy[0];
     $('#page-subtitle').textContent=copy[1];
+    const more=document.querySelector('.dropshipper-more');
+    if(more){
+      more.classList.toggle('has-active',['samples','settings'].includes(v));
+      if(!['samples','settings'].includes(v))more.open=false;
+    }
     status('');
   }
 
@@ -81,12 +86,19 @@
   function renderProducts(){
     const a=filteredProducts();
     const linked=new Set(LINKS.map(x=>x.supplier_product_id));
-    $('#product-results-meta').textContent=`${a.length} product${a.length===1?'':'s'} shown`;
+    $('#product-results-meta').textContent=local(
+      `${a.length} product${a.length===1?'':'s'}`,
+      `${a.length} منتج`
+    );
     $('#products').innerHTML=a.map(p=>{
       const isLinked=linked.has(p.product_id);
       const stock=Number(p.stock_quantity||0);
-      const name=productName(p),desc=productDescription(p);
-      return `<article class="card product-card dropshipper-product-card">
+      const name=productName(p);
+      const supplierPrice=Number(p.supplier_cost||0);
+      const suggested=Number(p.suggested_retail_price||0);
+      const shipping=Number(p.estimated_shipping_cost||0);
+      const profit=suggested-supplierPrice-shipping;
+      return `<article class="card product-card dropshipper-product-card simple-product-card">
         <a class="product-image product-open" href="${productDetailsUrl(p)}">
           ${p.primary_image_url?`<img src="${IZZY.esc(p.primary_image_url)}" alt="${IZZY.esc(name)}">`:'<span>IZ</span>'}
         </a>
@@ -97,52 +109,27 @@
           </div>
           <a class="product-title-link" href="${productDetailsUrl(p)}"><h3>${IZZY.esc(name)}</h3></a>
           <p class="supplier-line">${local('Sold by','يباع بواسطة')} <b>${IZZY.esc(p.supplier_name||local('IzzyDrop supplier','مورّد IzzyDrop'))}</b></p>
-          <p class="product-description">${IZZY.esc(desc||(ar()?'جاهز لمتجرك.':'Ready for your store.'))}</p>
-          <div class="product-intelligence-row">
-            <span class="intel-pill">${p.supplier_score==null?local('New supplier','مورّد جديد'):`IzzyScore ${Number(p.supplier_score).toFixed(1)}/10`}</span>
-            ${p.trending?'<span class="intel-pill hot">🔥 '+local('Trending','رائج')+'</span>':''}
-            <span class="intel-pill">${Number(p.orders_7d||0)} ${local('orders / 7d','طلبات / 7 أيام')}</span>
-            <span class="intel-pill">${Number(p.active_store_count||0)} ${local('stores','متاجر')}</span>
+
+          <div class="simple-product-prices">
+            <div><small>${local('Supplier price','سعر المورّد')}</small><b>${IZZY.money(supplierPrice,p.currency)}</b></div>
+            <div><small>${local('Suggested sell','سعر البيع المقترح')}</small><b>${IZZY.money(suggested,p.currency)}</b></div>
+            <div><small>${local('Est. profit','الربح التقديري')}</small><b class="${profit>=0?'positive':'negative'}">${IZZY.money(profit,p.currency)}</b></div>
           </div>
-          <div class="profit-box" data-profit-box="${p.product_id}" data-cost="${Number(p.supplier_cost||0)}" data-shipping="${Number(p.estimated_shipping_cost||0)}">
-            <div><small>${local('Supplier price','سعر المورّد')}</small><b>${IZZY.money(p.supplier_cost,p.currency)}</b></div>
-            <div><small>${local('Est. shipping','الشحن التقديري')}</small><b>${IZZY.money(p.estimated_shipping_cost,p.currency)}</b></div>
-            <label><small>${local('Your selling price','سعر بيعك')}</small><input class="profit-price" data-profit-id="${p.product_id}" type="number" min="0" step="1" value="${Number(p.suggested_retail_price||0)}"></label>
-            <div><small>${local('Est. profit','الربح التقديري')}</small><b class="profit-value" data-profit-value="${p.product_id}">—</b><span class="profit-margin" data-profit-margin="${p.product_id}"></span></div>
-          </div>
-          <div class="product-price-block">
-            <div><small>${local('Suggested selling price','سعر البيع المقترح')}</small><strong>${IZZY.money(p.suggested_retail_price,p.currency)}</strong></div>
-            <span class="sku">${IZZY.esc(p.sku||'')}</span>
-          </div>
-          <div class="product-card-actions">
-            <a class="btn secondary details-btn" href="${productDetailsUrl(p)}">${local('View details','عرض التفاصيل')}</a>
-            <button class="btn sample-btn" data-id="${p.product_id}" ${stock>0?'':'disabled'}>${local('Request sample','طلب عينة')}</button>
-            <button class="btn link-btn" data-id="${p.product_id}" data-slug="${IZZY.esc(p.public_slug)}" data-linked="${isLinked?'1':'0'}">${isLinked?local('Add to your web','أضفه إلى موقعك'):local('Add to My Products','أضف إلى منتجاتي')}</button>
+
+          <div class="product-card-actions simple-product-actions">
+            <a class="btn secondary details-btn" href="${productDetailsUrl(p)}">${local('Details','التفاصيل')}</a>
+            <button class="btn link-btn" data-id="${p.product_id}" data-linked="${isLinked?'1':'0'}" ${stock>0?'':'disabled'}>${isLinked?local('My Products','منتجاتي'):local('Add to My Products','أضف إلى منتجاتي')}</button>
           </div>
         </div>
       </article>`;
     }).join('')||`<div class="empty-state">
       <div class="empty-icon">⌕</div>
-      <h3>No products match</h3>
-      <p>Try changing your search or filters.</p>
-      <button id="clear-product-filters" class="btn secondary">Clear filters</button>
+      <h3>${local('No products match','لا توجد منتجات مطابقة')}</h3>
+      <p>${local('Try changing your search or filters.','جرّب تغيير البحث أو الفلاتر.')}</p>
+      <button id="clear-product-filters" class="btn secondary">${local('Clear filters','مسح الفلاتر')}</button>
     </div>`;
 
     document.querySelectorAll('.link-btn').forEach(b=>b.onclick=()=>linkProduct(b));
-    document.querySelectorAll('.sample-btn').forEach(b=>b.onclick=()=>openSampleRequest(b.dataset.id));
-    document.querySelectorAll('.profit-price').forEach(input=>{
-      const update=()=>{
-        const p=PRODUCTS.find(x=>x.product_id===input.dataset.profitId);
-        if(!p)return;
-        const price=Number(input.value||0),cost=Number(p.supplier_cost||0),shipping=Number(p.estimated_shipping_cost||0);
-        const profit=price-cost-shipping,margin=price>0?(profit/price)*100:0;
-        const value=document.querySelector(`[data-profit-value="${p.product_id}"]`);
-        const pct=document.querySelector(`[data-profit-margin="${p.product_id}"]`);
-        if(value){value.textContent=IZZY.money(profit,p.currency);value.classList.toggle('negative',profit<0);value.classList.toggle('positive',profit>=0)}
-        if(pct)pct.textContent=`${margin.toFixed(1)}% ${local('margin','هامش')}`;
-      };
-      input.oninput=update;update();
-    });
     const clear=$('#clear-product-filters');
     if(clear)clear.onclick=()=>{
       $('#product-search').value='';
@@ -318,7 +305,7 @@
   }
 
   function makeEmbedCode(token){
-    return `<div data-izzydrop-token="${token}"></div>\n<script src="https://youssefhellal05.github.io/izzydrop-web/izzydrop-widget.js?v=20260924-finish4" async><\/script>`;
+    return `<div data-izzydrop-token="${token}"></div>\n<script src="https://youssefhellal05.github.io/izzydrop-web/izzydrop-widget.js?v=20260924-simple1" async><\/script>`;
   }
 
   async function openWebSetup(productId){
@@ -371,7 +358,7 @@
   }
 
   async function linkProduct(b){
-    if(b.dataset.linked==='1'){openWebSetup(b.dataset.id);return}
+    if(b.dataset.linked==='1'){go('linked');return}
     const p=PRODUCTS.find(x=>x.product_id===b.dataset.id);
     if(!p)return;
     b.disabled=true;b.textContent='Adding…';
@@ -388,8 +375,9 @@
           last_seen_stock:Number(p.stock_quantity||0)
         })
       });
-      status('Product added to My Products. You can sell it manually or connect it to any website.');
+      status(local('Product added to My Products.','تمت إضافة المنتج إلى منتجاتي.'));
       await load(false);
+      go('linked');
     }catch(e){status(e.message,true);b.disabled=false;b.textContent='Add to My Products'}
   }
 
@@ -547,7 +535,9 @@
     setLoading();
     go('products');
     await load();
-    const addProduct=new URLSearchParams(location.search).get('add');
+    const params=new URLSearchParams(location.search);
+    const addProduct=params.get('add');
+    const sampleProduct=params.get('sample');
     if(addProduct){
       history.replaceState({},document.title,location.pathname);
       const existing=LINKS.find(l=>l.supplier_product_id===addProduct);
@@ -577,6 +567,11 @@
         go('linked');
         status(p.availability_reason||local('This product is not available.','هذا المنتج غير متاح.'),true);
       }
+    }
+    if(sampleProduct){
+      history.replaceState({},document.title,location.pathname);
+      const p=PRODUCTS.find(x=>x.product_id===sampleProduct);
+      if(p)await openSampleRequest(sampleProduct);
     }
   }
 
