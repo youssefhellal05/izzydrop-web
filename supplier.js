@@ -5,6 +5,7 @@
   const VARIANT_COMBO_STATE=new Map();
   const VARIANT_IMAGE_STATE=new Map();
   let VARIANT_GENERATION_SIGNATURE='';
+  let ADD_PREVIEW_OBJECT_URL=null;
 
   const VIEW_COPY={
     overview:['Overview','What needs your attention.'],
@@ -168,6 +169,68 @@
       : local('Suggested selling price is below your supplier price.','سعر البيع المقترح أقل من سعر المورّد.');
   }
 
+  function updateAddProductHud(state){
+    const detailsDone=state.name!=='—'&&!!state.categoryValue;
+    const photosDone=SELECTED_IMAGES.length>0;
+    const pricingDone=state.costValid&&state.retailValid&&state.baseRetail>=state.cost;
+    const inventoryDone=SIMPLE_PRODUCT_FLOW
+      ? Number.isFinite(Number($('#simple-product-stock')?.value))&&Number($('#simple-product-stock')?.value)>=0
+      : state.variantsValid&&state.enabled.length>0;
+
+    const essentials=[detailsDone,photosDone,pricingDone,inventoryDone];
+    const readyCount=essentials.filter(Boolean).length;
+    const pct=Math.round((readyCount/essentials.length)*100);
+
+    if($('#add-progress-label'))$('#add-progress-label').textContent=local(
+      `${readyCount} of 4 essentials ready`,
+      `${readyCount} من 4 أساسيات جاهزة`
+    );
+    if($('#add-progress-percent'))$('#add-progress-percent').textContent=`${pct}%`;
+    if($('#add-progress-fill'))$('#add-progress-fill').style.width=`${pct}%`;
+
+    const sectionDone={
+      'add-details-section':detailsDone,
+      'add-photos-section':photosDone,
+      'add-pricing-section':pricingDone,
+      'add-inventory-section':inventoryDone,
+      'add-review-section':readyCount===4
+    };
+    document.querySelectorAll('[data-scroll-add-section]').forEach(btn=>{
+      const done=!!sectionDone[btn.dataset.scrollAddSection];
+      btn.classList.toggle('done',done);
+      const badge=btn.querySelector('span');
+      if(badge)badge.textContent=done?'✓':String([...btn.parentElement.children].indexOf(btn)+1);
+    });
+
+    if($('#add-preview-name'))$('#add-preview-name').textContent=state.name==='—'?local('Your product','منتجك'):state.name;
+    if($('#add-preview-category'))$('#add-preview-category').textContent=state.categoryValue?state.category:local('Category','الفئة');
+    if($('#add-preview-price'))$('#add-preview-price').textContent=state.priceText==='—'?local('Add a price','أضف سعرًا'):state.priceText;
+    if($('#add-preview-stock'))$('#add-preview-stock').textContent=local(
+      `${state.stock} in stock`,
+      `${state.stock} في المخزون`
+    );
+
+    const preview=$('#add-preview-image');
+    if(preview){
+      if(ADD_PREVIEW_OBJECT_URL){
+        try{URL.revokeObjectURL(ADD_PREVIEW_OBJECT_URL)}catch(e){}
+        ADD_PREVIEW_OBJECT_URL=null;
+      }
+      const main=SELECTED_IMAGES[0];
+      if(main){
+        ADD_PREVIEW_OBJECT_URL=URL.createObjectURL(main);
+        preview.innerHTML=`<img src="${ADD_PREVIEW_OBJECT_URL}" alt="">`;
+        preview.classList.add('has-image');
+      }else{
+        preview.innerHTML='<span>IZ</span>';
+        preview.classList.remove('has-image');
+      }
+    }
+
+    const hud=$('#add-product-hud');
+    if(hud)hud.classList.toggle('is-ready',readyCount===4);
+  }
+
   function productWizardSummary(){
     const name=$('#p-name-'+NEW_CONTENT_LANG)?.value?.trim()||$('#p-name-en')?.value?.trim()||$('#p-name-ar')?.value?.trim()||'—';
     const categorySelect=$('#p-category');
@@ -178,7 +241,11 @@
     const stock=enabled.reduce((sum,v)=>sum+Number(v.stock||0),0);
     const baseRetailRaw=$('#p-retail')?.value;
     const baseRetail=Number(baseRetailRaw);
-    let priceText=baseRetailRaw!==''&&Number.isFinite(baseRetail)?IZZY.money(baseRetail,'EGP'):'—';
+    const costRaw=$('#p-cost')?.value;
+    const cost=Number(costRaw);
+    const costValid=costRaw!==''&&Number.isFinite(cost)&&cost>=0;
+    const retailValid=baseRetailRaw!==''&&Number.isFinite(baseRetail)&&baseRetail>=0;
+    let priceText=retailValid?IZZY.money(baseRetail,'EGP'):'—';
     if(!SIMPLE_PRODUCT_FLOW&&VARIANT_PRICES_VARY&&enabled.length){
       const prices=enabled.map(v=>Number(v.retail)).filter(Number.isFinite);
       if(prices.length){
@@ -198,9 +265,8 @@
     if(name==='—')missing.push(local('product name','اسم المنتج'));
     if(!categorySelect?.value)missing.push(local('category','الفئة'));
     if(!SELECTED_IMAGES.length)missing.push(local('photo','صورة'));
-    const costRaw=$('#p-cost')?.value,cost=Number(costRaw);
-    if(costRaw===''||!Number.isFinite(cost)||cost<0)missing.push(local('supplier price','سعر المورّد'));
-    if(baseRetailRaw===''||!Number.isFinite(baseRetail)||baseRetail<0)missing.push(local('suggested price','سعر البيع المقترح'));
+    if(!costValid)missing.push(local('supplier price','سعر المورّد'));
+    if(!retailValid)missing.push(local('suggested price','سعر البيع المقترح'));
     else if(costRaw!==''&&Number.isFinite(cost)&&baseRetail<cost)missing.push(local('valid margin','هامش سعر صحيح'));
     if(!SIMPLE_PRODUCT_FLOW&&!variantsValid)missing.push(local('variants','الخيارات'));
 
@@ -212,6 +278,19 @@
         ? local(`Still needed: ${missing.join(', ')}.`,`ما زال مطلوبًا: ${missing.join('، ')}.`)
         : local('Everything required is ready.','كل البيانات المطلوبة جاهزة.');
     }
+    updateAddProductHud({
+      name,
+      category,
+      categoryValue:categorySelect?.value||'',
+      variantsValid,
+      enabled,
+      stock,
+      priceText,
+      cost,
+      baseRetail,
+      costValid,
+      retailValid
+    });
     updatePricePreview();
   }
 
@@ -1517,6 +1596,43 @@
     e.target.value='';
   };
 
+  function updateCharacterCounter(input){
+    if(!input?.id)return;
+    const counter=document.querySelector(`[data-char-count-for="${input.id}"]`);
+    if(counter)counter.textContent=`${input.value.length} / ${input.maxLength||0}`;
+  }
+
+  ['#p-name-en','#p-description-en','#p-name-ar','#p-description-ar'].forEach(sel=>{
+    const input=$(sel);
+    if(!input)return;
+    input.addEventListener('input',()=>{
+      updateCharacterCounter(input);
+      clearFormInvalidState(input);
+      productWizardSummary();
+    });
+    updateCharacterCounter(input);
+  });
+
+  document.querySelectorAll('[data-scroll-add-section]').forEach(btn=>btn.onclick=()=>{
+    const target=document.getElementById(btn.dataset.scrollAddSection);
+    target?.scrollIntoView({behavior:'smooth',block:'start'});
+  });
+
+  const addSections=['add-details-section','add-photos-section','add-pricing-section','add-inventory-section','add-review-section']
+    .map(id=>document.getElementById(id)).filter(Boolean);
+  if('IntersectionObserver' in window&&addSections.length){
+    const observer=new IntersectionObserver(entries=>{
+      const visible=entries
+        .filter(entry=>entry.isIntersecting)
+        .sort((a,b)=>b.intersectionRatio-a.intersectionRatio)[0];
+      if(!visible)return;
+      document.querySelectorAll('[data-scroll-add-section]').forEach(btn=>{
+        btn.classList.toggle('active',btn.dataset.scrollAddSection===visible.target.id);
+      });
+    },{rootMargin:'-20% 0px -62% 0px',threshold:[0,.2,.45,.7]});
+    addSections.forEach(section=>observer.observe(section));
+  }
+
   const photoDrop=$('#photo-drop-zone');
   if(photoDrop){
     ['dragenter','dragover'].forEach(type=>photoDrop.addEventListener(type,e=>{
@@ -1637,7 +1753,7 @@
   });
   $('#toggle-variant-advanced').onclick=()=>setVariantAdvanced(!VARIANT_ADVANCED);
 
-  ['#p-name-en','#p-name-ar','#simple-product-stock','#p-cost','#p-retail'].forEach(sel=>{
+  ['#simple-product-stock','#p-cost','#p-retail'].forEach(sel=>{
     const el=$(sel);if(el)el.addEventListener('input',()=>{
       clearFormInvalidState(el);
       if(sel==='#p-cost'||sel==='#p-retail')fillEmptyVariantPricesFromDefaults(false);
