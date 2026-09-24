@@ -88,6 +88,10 @@
       const name=ar?(p.name_ar||p.name_en||p.name):(p.name_en||p.name_ar||p.name);
       const desc=ar?(p.description_ar||p.description_en||p.description):(p.description_en||p.description_ar||p.description);
       const variants=(p.variants||[]);
+      const variantLabel=v=>{
+        const entries=Object.entries(v?.options||{}).filter(([,value])=>String(value??'').trim());
+        return entries.length?entries.map(([name,value])=>`${name}: ${value}`).join(' · '):(v?.name||v?.sku||'Default');
+      };
       const inStock=variants.reduce((n,v)=>n+Number(v.stock_quantity||0),0);
       const direction=ar?'rtl':'ltr';
 
@@ -107,7 +111,7 @@
             <div class="iz-form" hidden>
               <select class="iz-variant" required>
                 <option value="">${L.variant}</option>
-                ${variants.map(v=>`<option value="${esc(v.id)}" data-price="${Number(v.retail_price||0)}" ${Number(v.stock_quantity||0)<=0?'disabled':''}>${esc(v.name||v.sku||'Default')} · ${money(v.retail_price,p.currency)} · ${Number(v.stock_quantity||0)} ${L.stock}</option>`).join('')}
+                ${variants.map(v=>`<option value="${esc(v.id)}" data-price="${Number(v.retail_price||0)}" ${Number(v.stock_quantity||0)<=0?'disabled':''}>${esc(variantLabel(v))} · ${money(v.retail_price,p.currency)} · ${Number(v.stock_quantity||0)} ${L.stock}</option>`).join('')}
               </select>
               <div class="iz-grid">
                 <input class="iz-name" placeholder="${L.name}" autocomplete="name">
