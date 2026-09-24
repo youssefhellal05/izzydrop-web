@@ -494,17 +494,26 @@
         </div>
         ${q?`<div class="notice ${q.status==='accepted'?'ok':''}"><b>${local('Your quote','عرضك')}: ${IZZY.money(q.offered_cost,'EGP')}</b><span>${IZZY.esc(q.message||'')} · ${IZZY.esc(window.IZZY_I18N?.status?.(q.status)||q.status)}</span></div>`:
         `<form class="form quote-form" data-request-id="${r.id}">
-          <input name="offered_cost" type="number" min="0" step="0.01" placeholder="${local('Your price EGP','سعرك بالجنيه')}" required>
-          <input name="available_quantity" type="number" min="0" step="1" placeholder="Available quantity">
-          <input name="lead_time_days" type="number" min="0" step="1" placeholder="Lead time days">
           <select name="product_id" required>${productOptions}</select>
-          <input name="message" class="span-2" placeholder="Message / MOQ / notes">
-          <button class="btn span-2" type="submit">Submit quote</button>
+          <input name="offered_cost" type="number" min="0" step="0.01" placeholder="${local('Select a product to use its price','اختر منتجًا لاستخدام سعره')}" readonly required>
+          <input name="available_quantity" type="number" min="0" step="1" placeholder="${local('Available quantity','الكمية المتاحة')}">
+          <input name="lead_time_days" type="number" min="0" step="1" placeholder="${local('Lead time days','مدة التجهيز بالأيام')}">
+          <input name="message" class="span-2" placeholder="${local('Message / MOQ / notes','رسالة / الحد الأدنى / ملاحظات')}">
+          <button class="btn span-2" type="submit">${local('Submit quote','إرسال العرض')}</button>
         </form>`}
       </article>`;
     }).join('')||'<div class="empty-state"><div class="empty-icon">⌕</div><h3>No sourcing requests right now</h3><p>New requests from dropshippers will appear here.</p></div>';
 
-    document.querySelectorAll('.quote-form').forEach(form=>form.onsubmit=async e=>{
+    document.querySelectorAll('.quote-form').forEach(form=>{
+      const productSelect=form.querySelector('[name="product_id"]');
+      const offered=form.querySelector('[name="offered_cost"]');
+      const syncPrice=()=>{
+        const p=(PRODUCTS||[]).find(x=>x.id===productSelect.value);
+        offered.value=p?Number(p.cost_price||0).toFixed(2):'';
+      };
+      productSelect.onchange=syncPrice;
+      syncPrice();
+      form.onsubmit=async e=>{
       e.preventDefault();
       const btn=form.querySelector('button[type="submit"]');
       btn.disabled=true;btn.textContent='Sending…';
@@ -520,7 +529,8 @@
         });
         msg('Quote sent to the dropshipper.');
         await load(false);
-      }catch(err){msg(err.message,true);btn.disabled=false;btn.textContent='Submit quote'}
+      }catch(err){msg(err.message,true);btn.disabled=false;btn.textContent=local('Submit quote','إرسال العرض')}
+      };
     });
   }
 
