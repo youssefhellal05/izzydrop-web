@@ -1138,6 +1138,7 @@
     const target=Number(btn.dataset.productStepJump);
     if(target>PRODUCT_STEP+1)return;
     if(target>PRODUCT_STEP&&!validateProductStep(PRODUCT_STEP))return;
+    if(target===2)SIMPLE_PRODUCT_FLOW=false;
     setProductStep(target);
   });
   $('#toggle-variant-advanced').onclick=()=>setVariantAdvanced(!VARIANT_ADVANCED);
