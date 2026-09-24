@@ -11,7 +11,7 @@
   <meta name="theme-color" content="#111318">
   <script>try{document.documentElement.dataset.theme=localStorage.getItem("izzy_theme")==="dark"?"dark":"light"}catch(e){}</script>
   <meta name="description" content="IzzyDrop — Egypt’s independent dropshipping marketplace.">
-  <link rel="stylesheet" href="styles.css?v=20260924-finish4">
+  <link rel="stylesheet" href="styles.css?v=20260924-supplier-simple1">
 </head>
 <body>
 <div class="wrap">
@@ -41,26 +41,34 @@
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h8M8 17h5"/></svg>
             <span>My Products</span>
           </button>
-          <button data-view="requests">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h5"/></svg>
-            <span>Sourcing requests</span>
-          </button>
-          <button data-view="samples">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h8M9 3v5l-4 8a3 3 0 0 0 3 5h8a3 3 0 0 0 3-5l-4-8V3M7 15h10"/></svg>
-            <span>Samples</span>
-          </button>
           <button data-view="orders">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v14H4zM8 3v6M16 3v6M8 13h8M8 17h5"/></svg>
             <span>Orders</span>
           </button>
-          <button data-view="add">
+          <button data-view="requests">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h5"/></svg>
+            <span>Requests</span>
+          </button>
+          <button class="supplier-add-nav" data-view="add">
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
             <span>Add product</span>
           </button>
-          <button data-view="settings">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM19 12l2-1-2-4-2 1a8 8 0 0 0-2-1l-1-3h-4L9 7a8 8 0 0 0-2 1L5 7l-2 4 2 1v2l-2 1 2 4 2-1a8 8 0 0 0 2 1l1 3h4l1-3a8 8 0 0 0 2-1l2 1 2-4-2-1z"/></svg>
-            <span>Settings</span>
-          </button>
+          <details class="supplier-more">
+            <summary>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg>
+              <span>More</span>
+            </summary>
+            <div class="supplier-more-menu">
+              <button data-view="samples">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h8M9 3v5l-4 8a3 3 0 0 0 3 5h8a3 3 0 0 0 3-5l-4-8V3M7 15h10"/></svg>
+                <span>Samples</span>
+              </button>
+              <button data-view="settings">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM19 12l2-1-2-4-2 1a8 8 0 0 0-2-1l-1-3h-4L9 7a8 8 0 0 0-2 1L5 7l-2 4 2 1v2l-2 1 2 4 2-1a8 8 0 0 0 2 1l1 3h4l1-3a8 8 0 0 0 2-1l2 1 2-4-2-1z"/></svg>
+                <span>Settings</span>
+              </button>
+            </div>
+          </details>
         </nav>
       </aside>
 
@@ -189,10 +197,15 @@
 
         <section id="view-add" class="view" hidden>
           <div class="section-heading">
-            <div><h2>Add product</h2><p class="muted">Create a complete product listing for dropshippers.</p></div>
+            <div><h2>Add product</h2><p class="muted">Three simple steps. IzzyDrop handles the technical parts.</p></div>
           </div>
-          <form id="add-form" class="supplier-product-form">
-            <div class="card form-section">
+          <form id="add-form" class="supplier-product-form simple-product-wizard">
+            <div class="product-wizard-steps" aria-label="Product creation steps">
+              <button type="button" class="product-wizard-step on" data-product-step-jump="1"><span>1</span><b>Product</b><small>Name & photos</small></button>
+              <button type="button" class="product-wizard-step" data-product-step-jump="2"><span>2</span><b>Variants</b><small>Stock & options</small></button>
+              <button type="button" class="product-wizard-step" data-product-step-jump="3"><span>3</span><b>Price</b><small>Price & publish</small></button>
+            </div>
+            <div class="card form-section" data-product-step="1">
               <div class="form-section-title form-section-title-row">
                 <div class="form-section-title-left"><span class="form-section-number">1</span><div><h3>Basic information</h3><p>Write the product once, then let IzzyDrop generate the other language for you to review.</p></div></div>
                 <button id="p-translate-btn" type="button" class="btn secondary translate-content-btn">Generate Arabic translation</button>
@@ -237,8 +250,8 @@
               </div>
             </div>
 
-            <div class="card form-section">
-              <div class="form-section-title"><span class="form-section-number">2</span><div><h3>Photos</h3><p>The first photo becomes the main marketplace image.</p></div></div>
+            <div class="card form-section" data-product-step="1">
+              <div class="form-section-title"><div><h3>Photos</h3><p>Add clear photos. The first one becomes the main image.</p></div></div>
               <div class="photo-upload">
                 <div class="row"><div><b>Product photos</b><small>Add up to 6 clear JPG, PNG, or WebP photos. Maximum 5 MB each.</small></div><label class="btn secondary photo-picker" for="p-images">Choose photos</label></div>
                 <input id="p-images" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
@@ -246,8 +259,8 @@
               </div>
             </div>
 
-            <div class="card form-section">
-              <div class="form-section-title"><span class="form-section-number">3</span><div><h3>Pricing</h3><p>Set what dropshippers pay you and the customer price you recommend.</p></div></div>
+            <div class="card form-section" data-product-step="3">
+              <div class="form-section-title"><div><h3>Price & shipping</h3><p>Tell dropshippers what they pay you and what you recommend they sell for.</p></div></div>
               <div class="form form-three-col">
                 <div class="field">
                   <label class="field-label with-info" for="p-cost"><span>Your price to dropshippers (EGP)</span><button class="field-info-btn" data-field-help="cost" type="button" aria-label="Explain supplier price">?</button></label>
@@ -267,10 +280,10 @@
               </div>
             </div>
 
-            <div class="card form-section">
-              <div class="form-section-title">
-                <span class="form-section-number">4</span>
-                <div><h3>Inventory & variants</h3><p>Choose whether this product has one version or options such as color and size.</p></div>
+            <div class="card form-section variant-wizard-section" data-product-step="2">
+              <div class="form-section-title form-section-title-row">
+                <div><h3>Does this product have options?</h3><p>Use one version, or add colors, sizes, models, or any other option.</p></div>
+                <button id="toggle-variant-advanced" class="auth-text-button" type="button">Advanced details</button>
               </div>
 
               <div class="variant-mode-picker" role="group" aria-label="Variant type">
@@ -280,11 +293,11 @@
 
               <div id="single-variant-panel" class="single-variant-panel">
                 <div class="variant-single-grid">
-                  <div class="field"><label class="field-label">Variant SKU <span class="muted">(optional)</span></label><input id="single-variant-sku" placeholder="Auto if blank"></div>
                   <div class="field"><label class="field-label">Stock</label><input id="single-variant-stock" type="number" min="0" step="1" value="0"></div>
-                  <div class="field"><label class="field-label">Supplier price override <span class="muted">(optional)</span></label><input id="single-variant-cost" type="number" min="0" step="0.01" placeholder="Use product price"></div>
-                  <div class="field"><label class="field-label">Weight (g) <span class="muted">(optional)</span></label><input id="single-variant-weight" type="number" min="0" step="1" placeholder="Optional"></div>
-                  <div class="field"><label class="field-label">Variant photo <span class="muted">(optional)</span></label><select id="single-variant-image"><option value="">Use main photo</option></select></div>
+                  <div class="field"><label class="field-label">Photo <span class="muted">(optional)</span></label><select id="single-variant-image"><option value="">Use main photo</option></select></div>
+                  <div class="field variant-advanced-field"><label class="field-label">Variant SKU <span class="muted">(optional)</span></label><input id="single-variant-sku" placeholder="Auto if blank"></div>
+                  <div class="field variant-advanced-field"><label class="field-label">Price override <span class="muted">(optional)</span></label><input id="single-variant-cost" type="number" min="0" step="0.01" placeholder="Use product price"></div>
+                  <div class="field variant-advanced-field"><label class="field-label">Weight (g) <span class="muted">(optional)</span></label><input id="single-variant-weight" type="number" min="0" step="1" placeholder="Optional"></div>
                 </div>
               </div>
 
@@ -301,15 +314,24 @@
                   <span id="variant-combination-count" class="muted">0 combinations</span>
                 </div>
                 <div class="variant-combination-table">
-                  <div class="variant-combination-row variant-combination-header"><span>Sell</span><span>Variant</span><span>Photo</span><span>SKU</span><span>Stock</span><span>Supplier price</span><span>Weight (g)</span></div>
+                  <div class="variant-combination-row variant-combination-header"><span>Sell</span><span>Variant</span><span>Photo</span><span class="combo-advanced">SKU</span><span>Stock</span><span class="combo-advanced">Price</span><span class="combo-advanced">Weight</span></div>
                   <div id="variant-combination-rows"></div>
                 </div>
               </div>
             </div>
 
-            <div class="product-form-submit">
-              <div><b>Ready to list?</b><small>Once created, the product becomes available to dropshippers immediately.</small></div>
-              <button id="add-product-btn" class="btn" type="submit">Add product</button>
+            <div class="card product-publish-summary" data-product-step="3">
+              <div><small>Product</small><b id="publish-product-name">—</b></div>
+              <div><small>Photos</small><b id="publish-photo-count">0</b></div>
+              <div><small>Variants</small><b id="publish-variant-count">1</b></div>
+              <div><small>Total stock</small><b id="publish-stock-count">0</b></div>
+            </div>
+
+            <div class="product-form-submit simple-wizard-actions">
+              <button id="product-step-back" class="btn secondary" type="button" hidden>Back</button>
+              <div class="wizard-action-copy"><b id="product-step-title">Product details</b><small id="product-step-help">Add the basic information and photos.</small></div>
+              <button id="product-step-next" class="btn" type="button">Next: Variants</button>
+              <button id="add-product-btn" class="btn" type="submit" hidden>Publish product</button>
             </div>
           </form>
         </section>
@@ -372,10 +394,10 @@
 </div>
 
 <script src="config.js"></script>
-<script src="common.js?v=20260924-finish4"></script>
-<script src="i18n.js?v=20260924-finish4"></script>
-<script src="supplier.js?v=20260924-finish4"></script>
+<script src="common.js?v=20260924-supplier-simple1"></script>
+<script src="i18n.js?v=20260924-supplier-simple1"></script>
+<script src="supplier.js?v=20260924-supplier-simple1"></script>
 <script>window.IZZY_SETTINGS_ROLE="supplier"</script>
-<script src="settings.js?v=20260924-finish4"></script>
+<script src="settings.js?v=20260924-supplier-simple1"></script>
 </body>
 </html>
