@@ -1179,3 +1179,16 @@ html[dir="rtl"] .supplier-more-menu{padding-left:0;padding-right:8px}
     width:min(360px,calc(100vw - 52px));
   }
 }
+
+/* Product photo removal + no-variant shortcut */
+.photo-remove-btn{position:absolute;top:7px;right:7px;width:30px;height:30px;border:0;border-radius:50%;display:grid;place-items:center;background:rgba(17,19,24,.82);color:#fff;font-size:20px;line-height:1;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.22)}
+.photo-remove-btn:hover{background:#111318}
+html[dir="rtl"] .photo-remove-btn{right:auto;left:7px}
+.wizard-forward-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.product-wizard-step.skipped>span:after{content:"—"}
+.simple-product-stock-field{border:1px solid var(--line);border-radius:12px;padding:11px;background:var(--soft)}
+@media(max-width:680px){
+  .wizard-forward-actions{grid-column:2;justify-content:stretch}
+  .wizard-forward-actions .btn{flex:1;min-width:0}
+  #product-skip-variants{font-size:11px}
+}
