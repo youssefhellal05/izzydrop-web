@@ -11,7 +11,7 @@
   <meta name="theme-color" content="#111318">
   <script>try{document.documentElement.dataset.theme=localStorage.getItem("izzy_theme")==="dark"?"dark":"light"}catch(e){}</script>
   <meta name="description" content="IzzyDrop — Egypt’s independent dropshipping marketplace.">
-  <link rel="stylesheet" href="styles.css?v=20260924-variantpricing2">
+  <link rel="stylesheet" href="styles.css?v=20260924-addpolish1">
 </head>
 <body>
 <div class="wrap">
@@ -197,12 +197,15 @@
 
         <section id="view-add" class="view" hidden>
           <div class="section-heading">
-            <div><h2>Add product</h2><p class="muted">Add the product normally. Turn on variants only if you need colors, sizes, or other options.</p></div>
+            <div><h2>Add product</h2><p class="muted">Create a clean marketplace listing. Start with the essentials — IzzyDrop only shows extra controls when you need them.</p></div>
           </div>
           <form id="add-form" class="supplier-product-form simple-product-wizard">
-            <div class="card form-section">
+            <div class="card form-section product-create-section" id="add-details-section">
               <div class="form-section-title form-section-title-row">
-                <div class="form-section-title-left"><span class="form-section-number">1</span><div><h3>Basic information</h3><p>Write the product once, then let IzzyDrop generate the other language for you to review.</p></div></div>
+                <div class="form-section-title-left">
+                  <span class="form-section-number">1</span>
+                  <div><h3>Product details</h3><p>Give dropshippers the information they need to understand and find this product.</p></div>
+                </div>
                 <button id="p-translate-btn" type="button" class="btn secondary translate-content-btn">Generate Arabic translation</button>
               </div>
 
@@ -211,150 +214,222 @@
                   <button type="button" class="content-language-tab on" data-new-content-lang="en">English</button>
                   <button type="button" class="content-language-tab" data-new-content-lang="ar">العربية</button>
                 </div>
-                <span class="translation-review-note">Translation is a draft — review it before saving.</span>
+                <span class="translation-review-note">Write in either language. IzzyDrop can draft the other one for you.</span>
               </div>
 
               <div id="p-content-en" class="localized-content-panel" data-new-content-panel="en">
                 <div class="form">
-                  <div class="field"><label class="field-label" for="p-name-en">Product name</label><input id="p-name-en" placeholder="e.g. Wireless earbuds"></div>
-                  <div class="field"><label class="field-label" for="p-description-en">Description</label><textarea id="p-description-en" rows="5" maxlength="3000" placeholder="What is the product, what makes it useful, and what should a dropshipper know?"></textarea></div>
+                  <div class="field">
+                    <label class="field-label" for="p-name-en">Product name <span class="required-mark">Required</span></label>
+                    <input id="p-name-en" maxlength="160" autocomplete="off" placeholder="e.g. Wireless earbuds">
+                    <small>Use the name a dropshipper would search for.</small>
+                  </div>
+                  <div class="field">
+                    <label class="field-label" for="p-description-en">Description <span class="recommended-mark">Recommended</span></label>
+                    <textarea id="p-description-en" rows="5" maxlength="3000" placeholder="Describe the product, key features, material/specs, and anything a dropshipper should know."></textarea>
+                  </div>
                 </div>
               </div>
 
               <div id="p-content-ar" class="localized-content-panel" data-new-content-panel="ar" dir="rtl" hidden>
                 <div class="form">
-                  <div class="field"><label class="field-label" for="p-name-ar">اسم المنتج</label><input id="p-name-ar" placeholder="مثال: سماعات لاسلكية"></div>
-                  <div class="field"><label class="field-label" for="p-description-ar">الوصف</label><textarea id="p-description-ar" rows="5" maxlength="3000" placeholder="ما هو المنتج؟ وما أهم مميزاته؟ وما الذي يجب أن يعرفه الدروبشيبر؟"></textarea></div>
+                  <div class="field">
+                    <label class="field-label" for="p-name-ar">اسم المنتج <span class="required-mark">مطلوب</span></label>
+                    <input id="p-name-ar" maxlength="160" autocomplete="off" placeholder="مثال: سماعات لاسلكية">
+                    <small>اكتب الاسم الذي سيبحث به الدروبشيبر عن المنتج.</small>
+                  </div>
+                  <div class="field">
+                    <label class="field-label" for="p-description-ar">الوصف <span class="recommended-mark">مُفضّل</span></label>
+                    <textarea id="p-description-ar" rows="5" maxlength="3000" placeholder="اشرح المنتج وأهم المميزات والخامة أو المواصفات وأي شيء يحتاج الدروبشيبر معرفته."></textarea>
+                  </div>
                 </div>
               </div>
 
               <div id="p-translation-status" class="status translation-status"></div>
 
-              <div class="form form-two-col product-meta-fields">
+              <div class="form product-core-meta">
                 <div class="field">
-                  <label class="field-label with-info" for="p-sku"><span>SKU <span class="muted">(optional)</span></span><button class="field-info-btn" data-field-help="sku" type="button" aria-label="Explain SKU">?</button></label>
-                  <input id="p-sku" placeholder="Leave blank for IzzyDrop to create one">
-                  <small>IzzyDrop will generate an SKU automatically if you leave this blank.</small>
-                  <div class="field-help-panel" data-field-help-panel="sku" hidden></div>
-                </div>
-                <div class="field">
-                  <label class="field-label" for="p-category">Category</label>
+                  <label class="field-label" for="p-category">Category <span class="required-mark">Required</span></label>
                   <select id="p-category"><option value="">Choose category</option></select>
-                  <small>Choose the closest category so dropshippers can find the product faster.</small>
+                  <small>Pick the closest category. It improves search and lets IzzyDrop suggest better options.</small>
                 </div>
+                <details class="optional-product-details">
+                  <summary>Optional inventory details</summary>
+                  <div class="optional-product-details-body">
+                    <div class="field">
+                      <label class="field-label with-info" for="p-sku"><span>Product SKU <span class="muted">(optional)</span></span><button class="field-info-btn" data-field-help="sku" type="button" aria-label="Explain SKU">?</button></label>
+                      <input id="p-sku" autocomplete="off" placeholder="Leave blank for automatic SKU">
+                      <small>Only enter this if you already use your own inventory code.</small>
+                      <div class="field-help-panel" data-field-help-panel="sku" hidden></div>
+                    </div>
+                  </div>
+                </details>
               </div>
             </div>
 
-            <div class="card form-section">
-              <div class="form-section-title"><div><h3>Photos</h3><p>Add general product photos here. If you use Color as an option, you can assign one of these photos to each color later.</p></div></div>
-              <div class="photo-upload">
-                <div class="row"><div><b>Product photos</b><small>Add up to 6 clear JPG, PNG, or WebP photos. Maximum 5 MB each.</small></div><label class="btn secondary photo-picker" for="p-images">Choose photos</label></div>
+            <div class="card form-section product-create-section" id="add-photos-section">
+              <div class="form-section-title">
+                <div class="form-section-title-left">
+                  <span class="form-section-number">2</span>
+                  <div><h3>Product photos</h3><p>Add 1–6 clear photos. The first photo becomes the main marketplace image.</p></div>
+                </div>
+              </div>
+              <div id="photo-drop-zone" class="photo-upload polished-photo-upload">
+                <div class="photo-upload-top">
+                  <div class="photo-upload-copy">
+                    <b>Add product photos <span class="required-mark">Required</span></b>
+                    <small>JPG, PNG or WebP · max 5 MB each · drag files here or choose them.</small>
+                  </div>
+                  <label class="btn secondary photo-picker" for="p-images">Add photos</label>
+                </div>
                 <input id="p-images" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
-                <div id="p-image-preview" class="image-preview-grid"><div class="photo-empty">No photos selected yet.</div></div>
+                <div id="p-image-preview" class="image-preview-grid"><div class="photo-empty">No photos yet. Add at least one clear product photo.</div></div>
               </div>
             </div>
 
-            <div id="variant-choice-card" class="card variant-choice-card">
-              <div class="variant-choice-copy">
-                <div class="variant-choice-icon">↔</div>
-                <div>
-                  <h3>Does this product have colors, sizes, or options?</h3>
-                  <p class="muted">Leave this off for a normal product with one stock number. Turn it on only when customers choose between versions.</p>
+            <div class="card form-section product-create-section" id="add-pricing-section">
+              <div class="form-section-title">
+                <div class="form-section-title-left">
+                  <span class="form-section-number">3</span>
+                  <div><h3>Pricing</h3><p>Set what the dropshipper pays you and the customer price you recommend.</p></div>
                 </div>
               </div>
-              <button id="toggle-product-variants" class="btn secondary variant-choice-btn" type="button">This product has colors, sizes, or options</button>
-            </div>
-
-            <div id="variant-builder-card" class="card form-section variant-wizard-section" hidden>
-              <div class="form-section-title form-section-title-row">
-                <div><h3>Product options</h3><p>Choose only what the customer can actually select. IzzyDrop will build the sellable versions for you.</p></div>
-                <button id="toggle-variant-advanced" class="auth-text-button" type="button">Advanced details</button>
-              </div>
-
-              <div id="variant-category-suggestion" class="variant-smart-suggestion" hidden></div>
-
-              <div class="variant-option-picker">
-                <div>
-                  <b>What changes between versions?</b>
-                  <small>Choose up to 3 option types.</small>
-                </div>
-                <div class="variant-option-type-buttons">
-                  <button type="button" data-add-option-type="Color">Color</button>
-                  <button type="button" data-add-option-type="Size">Size</button>
-                  <button type="button" data-add-option-type="Model">Model</button>
-                  <button type="button" data-add-option-type="Storage">Storage</button>
-                  <button type="button" data-add-option-type="Material">Material</button>
-                  <button type="button" data-add-option-type="custom">+ Custom</button>
-                </div>
-              </div>
-
-              <div id="variant-option-list" class="variant-option-list"></div>
-
-              <div class="variant-generate-bar">
-                <div><b>Ready?</b><small>Generate the exact combinations, then turn off any version you do not sell.</small></div>
-                <button id="generate-variants-btn" class="btn secondary" type="button">Generate variants</button>
-              </div>
-
-              <div class="variant-pricing-card">
-                <div>
-                  <b>Variant pricing</b>
-                  <small>Keep one price for everything, or set different prices for specific versions.</small>
-                </div>
-                <div class="variant-pricing-mode-buttons">
-                  <button type="button" class="on" data-variant-pricing-mode="same">Same price for all variants</button>
-                  <button type="button" data-variant-pricing-mode="vary">Different prices by variant</button>
-                </div>
-                <small id="variant-pricing-note">The product prices below will be used for every variant.</small>
-              </div>
-
-              <div id="variant-color-photos" class="variant-color-photos" hidden></div>
-
-              <div class="variant-combination-section">
-                <div class="variant-combination-head">
-                  <div><b>Sellable versions</b><small>Stock is required only for versions you keep enabled.</small></div>
-                  <span id="variant-combination-count" class="count-badge">0</span>
-                </div>
-                <div id="variant-combination-list" class="variant-combination-list">
-                  <div class="variant-empty-state">Add an option above, enter its values, then generate variants.</div>
-                </div>
-              </div>
-            </div>
-
-            <div class="card form-section">
-              <div class="form-section-title"><div><h3>Price & stock</h3><p>Set your stock and prices. IzzyDrop handles delivery pricing separately.</p></div></div>
-              <div class="form form-three-col">
-                <div id="simple-product-stock-field" class="field simple-product-stock-field">
-                  <label class="field-label" for="simple-product-stock">Stock</label>
-                  <input id="simple-product-stock" type="number" min="0" step="1" value="0">
-                  <small>This product has one version, so you only need one stock number.</small>
-                </div>
+              <div class="form form-two-col pricing-input-grid">
                 <div class="field">
-                  <label class="field-label with-info" for="p-cost"><span>Your price to dropshippers (EGP)</span><button class="field-info-btn" data-field-help="cost" type="button" aria-label="Explain supplier price">?</button></label>
-                  <input id="p-cost" type="number" step="0.01" min="0" placeholder="0.00" required>
+                  <label class="field-label with-info" for="p-cost"><span>Your price to dropshippers (EGP) <span class="required-mark">Required</span></span><button class="field-info-btn" data-field-help="cost" type="button" aria-label="Explain supplier price">?</button></label>
+                  <input id="p-cost" type="number" inputmode="decimal" step="0.01" min="0" placeholder="e.g. 250" required>
+                  <small>This is what you receive for one unit before IzzyDrop fees or adjustments.</small>
                   <div class="field-help-panel" data-field-help-panel="cost" hidden></div>
                 </div>
                 <div class="field">
-                  <label class="field-label with-info" for="p-retail"><span>Suggested selling price (EGP)</span><button class="field-info-btn" data-field-help="retail" type="button" aria-label="Explain suggested selling price">?</button></label>
-                  <input id="p-retail" type="number" step="0.01" min="0" placeholder="0.00" required>
+                  <label class="field-label with-info" for="p-retail"><span>Suggested selling price (EGP) <span class="required-mark">Required</span></span><button class="field-info-btn" data-field-help="retail" type="button" aria-label="Explain suggested selling price">?</button></label>
+                  <input id="p-retail" type="number" inputmode="decimal" step="0.01" min="0" placeholder="e.g. 399" required>
+                  <small>Dropshippers can still choose their own customer price.</small>
                   <div class="field-help-panel" data-field-help-panel="retail" hidden></div>
                 </div>
-                <div class="field izzydrop-delivery-field">
-                  <label class="field-label">Delivery</label>
-                  <div class="delivery-managed-badge">Calculated by IzzyDrop</div>
-                  <small>IzzyDrop sets delivery pricing separately based on the order and destination.</small>
+              </div>
+              <div id="price-margin-preview" class="price-margin-preview">
+                <div><small>Suggested product margin</small><b id="price-margin-value">—</b></div>
+                <span id="price-margin-note">Enter both prices to preview the margin before delivery.</span>
+              </div>
+              <div class="izzydrop-delivery-callout">
+                <div class="delivery-callout-icon">↗</div>
+                <div><b>Delivery is handled by IzzyDrop</b><small>You do not set a delivery fee here. IzzyDrop calculates delivery separately for the order and destination.</small></div>
+              </div>
+            </div>
+
+            <div class="card form-section product-create-section" id="add-inventory-section">
+              <div class="form-section-title">
+                <div class="form-section-title-left">
+                  <span class="form-section-number">4</span>
+                  <div><h3>Inventory & options</h3><p>Choose the simplest setup that matches how this product is actually sold.</p></div>
+                </div>
+              </div>
+
+              <div id="variant-choice-card" class="product-version-selector">
+                <div class="product-version-selector-head">
+                  <b>How many versions does this product have?</b>
+                  <small>Most products only need one stock number. Use options only when the customer chooses between versions.</small>
+                </div>
+                <div class="product-version-buttons">
+                  <button type="button" class="product-version-button on" data-product-version-mode="single">
+                    <span class="product-version-check">✓</span>
+                    <span><b>One version</b><small>One product, one stock number.</small></span>
+                  </button>
+                  <button type="button" class="product-version-button" data-product-version-mode="options">
+                    <span class="product-version-check">+</span>
+                    <span><b>Has options</b><small>Color, size, model, storage, material, or custom options.</small></span>
+                  </button>
+                </div>
+              </div>
+
+              <div id="simple-product-stock-field" class="simple-stock-panel">
+                <div class="field">
+                  <label class="field-label" for="simple-product-stock">Available stock</label>
+                  <input id="simple-product-stock" type="number" inputmode="numeric" min="0" step="1" value="0">
+                  <small>Enter the number of units currently ready to sell.</small>
+                </div>
+              </div>
+
+              <div id="variant-builder-card" class="variant-builder-panel" hidden>
+                <div class="variant-builder-heading">
+                  <div><h4>Options & variants</h4><p>Tell IzzyDrop what customers can choose. We will build the exact sellable versions.</p></div>
+                  <button id="toggle-variant-advanced" class="auth-text-button" type="button">Add SKU & weight</button>
+                </div>
+
+                <div id="variant-category-suggestion" class="variant-smart-suggestion" hidden></div>
+
+                <div class="variant-option-picker">
+                  <div>
+                    <b>1. What can the customer choose?</b>
+                    <small>Choose up to 3 option types. Example: Color + Size.</small>
+                  </div>
+                  <div class="variant-option-type-buttons">
+                    <button type="button" data-add-option-type="Color">Color</button>
+                    <button type="button" data-add-option-type="Size">Size</button>
+                    <button type="button" data-add-option-type="Model">Model</button>
+                    <button type="button" data-add-option-type="Storage">Storage</button>
+                    <button type="button" data-add-option-type="Material">Material</button>
+                    <button type="button" data-add-option-type="custom">+ Custom</button>
+                  </div>
+                </div>
+
+                <div id="variant-option-list" class="variant-option-list"></div>
+
+                <div class="variant-generate-bar">
+                  <div><b>2. Build the sellable versions</b><small id="variant-build-preview">Add an option and its values to see how many variants will be created.</small></div>
+                  <button id="generate-variants-btn" class="btn secondary" type="button" disabled>Add option values first</button>
+                </div>
+
+                <div class="variant-pricing-card">
+                  <div>
+                    <b>3. How are variants priced?</b>
+                    <small>Your product prices from the Pricing section are the defaults.</small>
+                  </div>
+                  <div class="variant-pricing-mode-buttons">
+                    <button type="button" class="on" data-variant-pricing-mode="same">Same price for all</button>
+                    <button type="button" data-variant-pricing-mode="vary">Prices vary by variant</button>
+                  </div>
+                  <div class="variant-pricing-note-row">
+                    <small id="variant-pricing-note">The product prices above will be used for every variant.</small>
+                    <button id="apply-default-variant-prices" class="auth-text-button" type="button" hidden>Apply defaults to all variants</button>
+                  </div>
+                </div>
+
+                <div id="variant-color-photos" class="variant-color-photos" hidden></div>
+
+                <div class="variant-combination-section">
+                  <div class="variant-combination-head">
+                    <div><b>4. Inventory by variant</b><small>Set stock for every version you sell. Turn off combinations that do not exist.</small></div>
+                    <span id="variant-combination-count" class="count-badge">0</span>
+                  </div>
+                  <div id="variant-combination-list" class="variant-combination-list">
+                    <div class="variant-empty-state">Your variants will appear here after you build them.</div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div class="card product-publish-summary">
-              <div><small>Product</small><b id="publish-product-name">—</b></div>
-              <div><small>Photos</small><b id="publish-photo-count">0</b></div>
-              <div><small>Variants</small><b id="publish-variant-count">1</b></div>
-              <div><small>Total stock</small><b id="publish-stock-count">0</b></div>
+            <div class="card product-publish-summary product-create-section" id="add-review-section">
+              <div class="review-section-heading">
+                <div class="form-section-title-left">
+                  <span class="form-section-number">5</span>
+                  <div><h3>Review</h3><p>One last check before this product appears in the marketplace.</p></div>
+                </div>
+                <div id="publish-readiness" class="publish-readiness warn">Complete the required details above.</div>
+              </div>
+              <div class="publish-summary-grid">
+                <div><small>Product</small><b id="publish-product-name">—</b></div>
+                <div><small>Category</small><b id="publish-category">—</b></div>
+                <div><small>Photos</small><b id="publish-photo-count">0</b></div>
+                <div><small>Versions</small><b id="publish-variant-count">1</b></div>
+                <div><small>Total stock</small><b id="publish-stock-count">0</b></div>
+                <div><small>Suggested price</small><b id="publish-price">—</b></div>
+              </div>
             </div>
 
-            <div class="product-form-submit single-page-publish">
-              <div class="wizard-action-copy"><b>Ready to publish?</b><small>Review the details above, then add the product to IzzyDrop.</small></div>
+            <div class="product-form-submit single-page-publish polished-publish-bar">
+              <div class="wizard-action-copy"><b>Ready to publish?</b><small>IzzyDrop will generate missing SKUs automatically and keep delivery pricing separate.</small></div>
               <button id="add-product-btn" class="btn publish-product-btn" type="submit">Publish product</button>
             </div>
           </form>
@@ -418,10 +493,10 @@
 </div>
 
 <script src="config.js"></script>
-<script src="common.js?v=20260924-variantpricing2"></script>
-<script src="i18n.js?v=20260924-variantpricing2"></script>
-<script src="supplier.js?v=20260924-variantpricing2"></script>
+<script src="common.js?v=20260924-addpolish1"></script>
+<script src="i18n.js?v=20260924-addpolish1"></script>
+<script src="supplier.js?v=20260924-addpolish1"></script>
 <script>window.IZZY_SETTINGS_ROLE="supplier"</script>
-<script src="settings.js?v=20260924-variantpricing2"></script>
+<script src="settings.js?v=20260924-addpolish1"></script>
 </body>
 </html>
