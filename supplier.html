@@ -11,7 +11,7 @@
   <meta name="theme-color" content="#111318">
   <script>try{document.documentElement.dataset.theme=localStorage.getItem("izzy_theme")==="dark"?"dark":"light"}catch(e){}</script>
   <meta name="description" content="IzzyDrop — Egypt’s independent dropshipping marketplace.">
-  <link rel="stylesheet" href="styles.css?v=20260924-izzyshipping2">
+  <link rel="stylesheet" href="styles.css?v=20260924-variantpricing1">
 </head>
 <body>
 <div class="wrap">
@@ -295,6 +295,18 @@
                 <button id="generate-variants-btn" class="btn secondary" type="button">Generate variants</button>
               </div>
 
+              <div class="variant-pricing-card">
+                <div>
+                  <b>Variant pricing</b>
+                  <small>Keep one price for everything, or set different prices for specific versions.</small>
+                </div>
+                <div class="variant-pricing-mode-buttons">
+                  <button type="button" class="on" data-variant-pricing-mode="same">Same price for all variants</button>
+                  <button type="button" data-variant-pricing-mode="vary">Different prices by variant</button>
+                </div>
+                <small id="variant-pricing-note">The product prices below will be used for every variant.</small>
+              </div>
+
               <div id="variant-color-photos" class="variant-color-photos" hidden></div>
 
               <div class="variant-combination-section">
@@ -406,10 +418,10 @@
 </div>
 
 <script src="config.js"></script>
-<script src="common.js?v=20260924-izzyshipping2"></script>
-<script src="i18n.js?v=20260924-izzyshipping2"></script>
-<script src="supplier.js?v=20260924-izzyshipping2"></script>
+<script src="common.js?v=20260924-variantpricing1"></script>
+<script src="i18n.js?v=20260924-variantpricing1"></script>
+<script src="supplier.js?v=20260924-variantpricing1"></script>
 <script>window.IZZY_SETTINGS_ROLE="supplier"</script>
-<script src="settings.js?v=20260924-izzyshipping2"></script>
+<script src="settings.js?v=20260924-variantpricing1"></script>
 </body>
 </html>
