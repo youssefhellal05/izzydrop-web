@@ -796,6 +796,15 @@
     Storage:['64 GB','128 GB','256 GB','512 GB'],
     Material:['Cotton','Polyester','Leather']
   };
+
+  function quickValuesForOption(type){
+    const category=($('#p-category')?.selectedOptions?.[0]?.textContent||'').toLowerCase();
+    if(type==='Size'){
+      if(/shoe|footwear|sneaker/.test(category))return ['38','39','40','41','42','43','44'];
+      if(/perfume|fragrance/.test(category))return ['30 ml','50 ml','100 ml'];
+    }
+    return OPTION_QUICK_VALUES[type]||[];
+  }
   const MAX_OPTION_TYPES=3;
   const MAX_VARIANT_COMBINATIONS=100;
 
@@ -909,7 +918,7 @@
     const card=document.createElement('div');
     card.className='variant-option-card';
     card.dataset.optionCard='1';
-    const quick=OPTION_QUICK_VALUES[preset]||[];
+    const quick=quickValuesForOption(preset);
     card.innerHTML=`
       <div class="variant-option-card-head">
         <div><b>${preset?local(preset,preset):local('Custom option','خيار مخصص')}</b><small>${local('Enter the choices a customer can select.','أدخل الاختيارات التي يمكن للعميل تحديدها.')}</small></div>
