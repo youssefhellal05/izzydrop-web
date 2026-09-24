@@ -529,6 +529,11 @@
     const rows=await IZZY.request(`/rest/v1/dropshippers?select=id,status,business_name&profile_id=eq.${encodeURIComponent(SESSION.user.id)}&limit=1`);
     if(!rows?.length){location.href='login.html';return}
     DROPSHIPPER=rows[0];
+    if(DROPSHIPPER.status!=='active'){
+      const g=$('#gate-message');
+      if(g)g.textContent=local('Your IzzyDrop dropshipper account is '+DROPSHIPPER.status+'.','حساب الدروبشيبر الخاص بك حالته '+DROPSHIPPER.status+'.');
+      return;
+    }
     $('#gate').hidden=true;
     $('#dashboard').hidden=false;
     $('#user-email').textContent=SESSION?.user?.email||'Signed in';
