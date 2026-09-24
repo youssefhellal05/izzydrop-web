@@ -1198,17 +1198,18 @@
     });
   }
 
-  function fillEmptyVariantPricesFromDefaults(){
+  function fillEmptyVariantPricesFromDefaults(force=false){
     if(!VARIANT_PRICES_VARY)return;
     const baseCost=$('#p-cost')?.value??'';
     const baseRetail=$('#p-retail')?.value??'';
     document.querySelectorAll('#variant-combination-list [data-variant-row]').forEach(row=>{
       const cost=row.querySelector('[data-variant-cost]');
       const retail=row.querySelector('[data-variant-retail]');
-      if(cost&&cost.value==='')cost.value=baseCost;
-      if(retail&&retail.value==='')retail.value=baseRetail;
+      if(cost&&(force||cost.value===''))cost.value=baseCost;
+      if(retail&&(force||retail.value===''))retail.value=baseRetail;
     });
     captureVariantDraftState();
+    productWizardSummary();
   }
 
   function setVariantPricingMode(mode){
@@ -1216,13 +1217,17 @@
     const form=$('#add-form');
     if(form)form.classList.toggle('variant-prices-vary',VARIANT_PRICES_VARY);
     document.querySelectorAll('[data-variant-pricing-mode]').forEach(btn=>{
-      btn.classList.toggle('on',btn.dataset.variantPricingMode===(VARIANT_PRICES_VARY?'vary':'same'));
+      const active=btn.dataset.variantPricingMode===(VARIANT_PRICES_VARY?'vary':'same');
+      btn.classList.toggle('on',active);
+      btn.setAttribute('aria-pressed',active?'true':'false');
     });
     const note=$('#variant-pricing-note');
     if(note)note.textContent=VARIANT_PRICES_VARY
-      ? local('Each enabled variant can have its own supplier price and suggested selling price.','يمكن لكل خيار مفعّل أن يكون له سعر مورد وسعر بيع مقترح خاص به.')
-      : local('The product prices below will be used for every variant.','سيتم استخدام أسعار المنتج بالأسفل لكل الخيارات.');
-    fillEmptyVariantPricesFromDefaults();
+      ? local('Each available variant can have its own supplier price and suggested selling price.','يمكن لكل خيار متاح أن يكون له سعر مورد وسعر بيع مقترح خاص به.')
+      : local('The product prices above will be used for every variant.','سيتم استخدام أسعار المنتج بالأعلى لكل الخيارات.');
+    const apply=$('#apply-default-variant-prices');
+    if(apply)apply.hidden=!VARIANT_PRICES_VARY;
+    fillEmptyVariantPricesFromDefaults(false);
     productWizardSummary();
   }
 
