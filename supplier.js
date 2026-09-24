@@ -961,9 +961,50 @@
     });
   }
 
-  function markVariantGenerationStale(){
+  function updateVariantBuildPreview(){
+    const cards=optionCards();
+    const preview=$('#variant-build-preview');
     const btn=$('#generate-variants-btn');
-    if(btn&&VARIANT_GENERATION_SIGNATURE)btn.textContent=local('Update variants','تحديث الخيارات');
+    if(!preview||!btn)return;
+    if(!cards.length){
+      preview.textContent=local('Add an option and its values to see how many variants will be created.','أضف خيارًا وقيمه لمعرفة عدد الخيارات التي سيتم إنشاؤها.');
+      btn.disabled=true;
+      btn.textContent=local('Add option values first','أضف قيم الخيارات أولًا');
+      return;
+    }
+    const defs=cards.map(card=>({
+      name:card.querySelector('[data-option-name]')?.value?.trim()||'',
+      values:parseOptionValues(card.querySelector('[data-option-values]')?.value||'')
+    }));
+    if(defs.some(def=>!def.name||!def.values.length)){
+      preview.textContent=local('Complete the option name and values first.','أكمل اسم الخيار وقيمه أولًا.');
+      btn.disabled=true;
+      btn.textContent=local('Complete option values','أكمل قيم الخيارات');
+      return;
+    }
+    const count=defs.reduce((n,def)=>n*def.values.length,1);
+    if(count>MAX_VARIANT_COMBINATIONS){
+      preview.textContent=local(`${count} variants is too many. Reduce the values to ${MAX_VARIANT_COMBINATIONS} or fewer.`,`${count} خيارًا عدد كبير جدًا. قلّل القيم إلى ${MAX_VARIANT_COMBINATIONS} أو أقل.`);
+      btn.disabled=true;
+      btn.textContent=local('Too many variants','عدد خيارات كبير');
+      return;
+    }
+    preview.textContent=local(
+      `${count} sellable ${count===1?'variant':'variants'} will be created from ${defs.length} option ${defs.length===1?'type':'types'}.`,
+      `سيتم إنشاء ${count} ${count===1?'خيار':'خيارات'} قابلة للبيع من ${defs.length} ${defs.length===1?'نوع':'أنواع'}.`
+    );
+    btn.disabled=false;
+    const currentSignature=variantDefinitionSignature(defs);
+    btn.textContent=!VARIANT_GENERATION_SIGNATURE
+      ? local(`Build ${count} ${count===1?'variant':'variants'}`,`إنشاء ${count} ${count===1?'خيار':'خيارات'}`)
+      : currentSignature===VARIANT_GENERATION_SIGNATURE
+        ? local(`Rebuild ${count} ${count===1?'variant':'variants'}`,`إعادة إنشاء ${count} ${count===1?'خيار':'خيارات'}`)
+        : local(`Update ${count} ${count===1?'variant':'variants'}`,`تحديث ${count} ${count===1?'خيار':'خيارات'}`);
+  }
+
+  function markVariantGenerationStale(){
+    updateVariantBuildPreview();
+    productWizardSummary();
   }
 
   function selectedOptionTypeNames(){
@@ -983,6 +1024,7 @@
     if(!values.some(v=>v.toLowerCase()===String(value).toLowerCase()))values.push(value);
     input.value=values.join(', ');
     markVariantGenerationStale();
+    updateVariantBuildPreview();
   }
 
   function addOptionCard(type='custom',prefillValues=[]){
@@ -1021,11 +1063,13 @@
       markVariantGenerationStale();
       refreshOptionTypeButtons();
       updateCategoryOptionSuggestion();
+      updateVariantBuildPreview();
     };
     card.querySelectorAll('[data-option-name],[data-option-values]').forEach(input=>{
       input.addEventListener('input',()=>{
         markVariantGenerationStale();
         refreshOptionTypeButtons();
+        updateVariantBuildPreview();
       });
     });
     card.querySelectorAll('[data-option-quick-value]').forEach(btn=>btn.onclick=()=>{
@@ -1034,6 +1078,7 @@
     box.appendChild(card);
     refreshOptionTypeButtons();
     updateCategoryOptionSuggestion();
+    updateVariantBuildPreview();
     card.querySelector(preset?'[data-option-values]':'[data-option-name]')?.focus();
   }
 
@@ -1228,7 +1273,7 @@
           row.dataset.variantKey=key;
           row.innerHTML=`
             <div class="variant-generated-name"><b>${IZZY.esc(label)}</b><small>${IZZY.esc(full)}</small></div>
-            <label class="variant-sell-toggle"><input data-variant-enabled type="checkbox" ${state.enabled===false?'':'checked'}><span>${local('Sell','بيع')}</span></label>
+            <label class="variant-sell-toggle"><input data-variant-enabled type="checkbox" ${state.enabled===false?'':'checked'}><span>${local('Available','متاح')}</span></label>
             <div class="field"><label class="field-label">${local('Stock','المخزون')}</label><input data-variant-stock type="number" min="0" step="1" value="${IZZY.esc(state.stock??'0')}"></div>
             <div class="field variant-price-field"><label class="field-label">${local('Supplier price','سعر المورّد')}</label><input data-variant-cost type="number" min="0" step="0.01" value="${IZZY.esc(state.cost??'')}" placeholder="${local('Use product price','استخدم سعر المنتج')}"></div>
             <div class="field variant-price-field"><label class="field-label">${local('Suggested sell','سعر البيع المقترح')}</label><input data-variant-retail type="number" min="0" step="0.01" value="${IZZY.esc(state.retail??'')}" placeholder="${local('Use product price','استخدم سعر المنتج')}"></div>
@@ -1252,7 +1297,7 @@
 
       $('#variant-combination-count').textContent=String(combinations.length);
       const btn=$('#generate-variants-btn');
-      if(btn)btn.textContent=local('Update variants','تحديث الخيارات');
+      updateVariantBuildPreview();
       msg('');
       productWizardSummary();
     }catch(err){
@@ -1325,11 +1370,11 @@
     const options=$('#variant-option-list');
     if(options)options.innerHTML='';
     const combinations=$('#variant-combination-list');
-    if(combinations)combinations.innerHTML=`<div class="variant-empty-state">${local('Add an option above, enter its values, then generate variants.','أضف خيارًا بالأعلى وأدخل قيمه ثم أنشئ الخيارات.')}</div>`;
+    if(combinations)combinations.innerHTML=`<div class="variant-empty-state">${local('Your variants will appear here after you build them.','ستظهر خيارات المنتج هنا بعد إنشائها.')}</div>`;
     const photos=$('#variant-color-photos');
     if(photos){photos.hidden=true;photos.innerHTML=''}
     if($('#variant-combination-count'))$('#variant-combination-count').textContent='0';
-    if($('#generate-variants-btn'))$('#generate-variants-btn').textContent=local('Generate variants','إنشاء الخيارات');
+    updateVariantBuildPreview();
     if($('#simple-product-stock'))$('#simple-product-stock').value='0';
     setVariantPricingMode('same');
     refreshOptionTypeButtons();
