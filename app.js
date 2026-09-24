@@ -13,6 +13,10 @@
   const productName=p=>window.IZZY_I18N?.productName(p)||p?.name||'';
   const productDescription=p=>window.IZZY_I18N?.productDescription(p)||p?.description||'';
   const ar=()=>window.IZZY_I18N?.isArabic?.()===true;
+  const variantLabel=v=>{
+    const entries=Object.entries(v?.option_values||v?.options||{}).filter(([,value])=>String(value??'').trim());
+    return entries.length?entries.map(([name,value])=>`${name}: ${value}`).join(' · '):(v?.variant_name||v?.name||v?.sku||'Default');
+  };
 
   const status=(t,b=false)=>{
     const e=$('#dash-status');
@@ -272,8 +276,8 @@
     el.innerHTML='<option value="">Choose variant</option>';el.disabled=true;
     if(!productId)return;
     try{
-      const vs=await IZZY.rpc('marketplace_variants',{_product_id:productId});
-      el.innerHTML='<option value="">Choose variant</option>'+vs.map(v=>`<option value="${IZZY.esc(v.id)}" ${Number(v.stock_quantity)<=0?'disabled':''}>${IZZY.esc(v.variant_name||v.sku||'Default')} · ${v.stock_quantity} in stock</option>`).join('');
+      const vs=await IZZY.rpc('marketplace_variants_v2',{_product_id:productId});
+      el.innerHTML='<option value="">Choose variant</option>'+vs.map(v=>`<option value="${IZZY.esc(v.id)}" ${Number(v.stock_quantity)<=0?'disabled':''}>${IZZY.esc(variantLabel(v))} · ${v.stock_quantity} in stock</option>`).join('');
       el.disabled=false;
     }catch(e){$('#order-status').textContent=e.message;$('#order-status').className='status bad'}
   }
@@ -285,7 +289,7 @@
   }
 
   function makeEmbedCode(token){
-    return `<div data-izzydrop-token="${token}"></div>\n<script src="https://youssefhellal05.github.io/izzydrop-web/izzydrop-widget.js" async><\/script>`;
+    return `<div data-izzydrop-token="${token}"></div>\n<script src="https://youssefhellal05.github.io/izzydrop-web/izzydrop-widget.js?v=20260924-variants1" async><\/script>`;
   }
 
   async function openWebSetup(productId){
@@ -316,7 +320,7 @@
     $('#link-modal').hidden=false;
 
     try{
-      const variants=await IZZY.rpc('marketplace_variants',{_product_id:productId});
+      const variants=await IZZY.rpc('marketplace_variants_v2',{_product_id:productId});
       const existing=integration?INTEGRATION_VARIANTS.filter(x=>x.integration_id===integration.id):[];
       const existingMap=new Map(existing.map(x=>[x.variant_id,x]));
       const defaultPrice=Number(link?.retail_price??p.suggested_retail_price??0);
@@ -327,7 +331,7 @@
         const price=Number(configured?.retail_price??defaultPrice);
         return `<label class="web-variant-row" data-web-variant-row="${v.id}">
           <span><input class="web-variant-check" type="checkbox" data-web-variant-id="${v.id}" ${checked?'checked':''}></span>
-          <span class="web-variant-name"><b>${IZZY.esc(v.variant_name||v.sku||'Default')}</b><small>${IZZY.esc(v.sku||'')}</small></span>
+          <span class="web-variant-name"><b>${IZZY.esc(variantLabel(v))}</b><small>${IZZY.esc(v.sku||'')}</small></span>
           <span class="${Number(v.stock_quantity||0)<=0?'stock-low':''}">${Number(v.stock_quantity||0)}</span>
           <span><input class="web-variant-price" data-web-variant-price="${v.id}" type="number" min="0" step="0.01" value="${price}" aria-label="Selling price"></span>
         </label>`;
@@ -369,7 +373,7 @@
     if(city===null)return;
     btn.disabled=true;btn.textContent='Requesting…';
     try{
-      const variants=await IZZY.rpc('marketplace_variants',{_product_id:productId});
+      const variants=await IZZY.rpc('marketplace_variants_v2',{_product_id:productId});
       const variant=(variants||[]).find(v=>Number(v.stock_quantity)>0)||(variants||[])[0]||null;
       const id=await IZZY.rpc('order_product_sample',{_product_id:productId,_variant_id:variant?.id||null,_shipping_address:{address1:address,city}});
       status('Sample requested ✓ '+String(id).slice(0,8));
