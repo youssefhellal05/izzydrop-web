@@ -1,6 +1,6 @@
 (()=>{
   const $=s=>document.querySelector(s);
-  let SUP=null,PRODUCTS=[],VARIANTS=[],IMAGES=[],ORDERS=[],ITEMS=[],REQUESTS=[],QUOTES=[],CATEGORIES=[],SAMPLES=[],SELECTED_IMAGES=[],ORDER_FILTER='all',NEW_CONTENT_LANG='en',NEW_SOURCE_LANGUAGE='en',EDIT_CONTENT_LANG='en',VARIANT_MODE='single',PRODUCT_STEP=3,VARIANT_ADVANCED=false,SIMPLE_PRODUCT_FLOW=true;
+  let SUP=null,PRODUCTS=[],VARIANTS=[],IMAGES=[],ORDERS=[],ITEMS=[],REQUESTS=[],QUOTES=[],CATEGORIES=[],SAMPLES=[],SELECTED_IMAGES=[],ORDER_FILTER='all',NEW_CONTENT_LANG='en',NEW_SOURCE_LANGUAGE='en',EDIT_CONTENT_LANG='en',VARIANT_MODE='single',PRODUCT_STEP=3,VARIANT_ADVANCED=false,SIMPLE_PRODUCT_FLOW=true,VARIANT_PRICES_VARY=false;
   const SELECTED_PRODUCT_IDS=new Set();
   const VARIANT_COMBO_STATE=new Map();
   const VARIANT_IMAGE_STATE=new Map();
@@ -724,6 +724,7 @@
       <input data-edit-variant-stock type="number" min="0" step="1" value="${Number(v.stock_quantity||0)}" placeholder="${local('Stock','المخزون')}">
       <select data-edit-variant-image aria-label="${local('Variant photo','صورة الخيار')}">${existingImageOptions(id,v.variant_image_url||'')}</select>
       <input data-edit-variant-cost type="number" min="0" step="0.01" value="${v.cost_price??''}" placeholder="${local('Supplier price','سعر المورّد')}">
+      <input data-edit-variant-retail type="number" min="0" step="0.01" value="${v.suggested_retail_price??''}" placeholder="${local('Suggested sell','سعر البيع المقترح')}">
       <input data-edit-variant-weight type="number" min="0" step="1" value="${v.weight_grams??''}" placeholder="${local('Weight (g)','الوزن (جم)')}">
     </div>`).join('')||'<div class="notice">No variants found.</div>';
 
@@ -774,6 +775,7 @@
             sku:row.querySelector('[data-edit-variant-sku]').value.trim()||null,
             stock_quantity:Number(row.querySelector('[data-edit-variant-stock]').value||0),
             cost_price:row.querySelector('[data-edit-variant-cost]').value===''?null:Number(row.querySelector('[data-edit-variant-cost]').value),
+            suggested_retail_price:row.querySelector('[data-edit-variant-retail]').value===''?null:Number(row.querySelector('[data-edit-variant-retail]').value),
             weight_grams:row.querySelector('[data-edit-variant-weight]').value===''?null:Number(row.querySelector('[data-edit-variant-weight]').value),
             variant_image_url:row.querySelector('[data-edit-variant-image]').value||null,
             is_enabled:row.querySelector('[data-edit-variant-enabled]').checked,
@@ -871,6 +873,7 @@
         enabled:!!row.querySelector('[data-variant-enabled]')?.checked,
         stock:row.querySelector('[data-variant-stock]')?.value??'0',
         cost:row.querySelector('[data-variant-cost]')?.value??'',
+        retail:row.querySelector('[data-variant-retail]')?.value??'',
         sku:row.querySelector('[data-variant-sku]')?.value??'',
         weight:row.querySelector('[data-variant-weight]')?.value??''
       });
@@ -1072,6 +1075,34 @@
     });
   }
 
+  function fillEmptyVariantPricesFromDefaults(){
+    if(!VARIANT_PRICES_VARY)return;
+    const baseCost=$('#p-cost')?.value??'';
+    const baseRetail=$('#p-retail')?.value??'';
+    document.querySelectorAll('#variant-combination-list [data-variant-row]').forEach(row=>{
+      const cost=row.querySelector('[data-variant-cost]');
+      const retail=row.querySelector('[data-variant-retail]');
+      if(cost&&cost.value==='')cost.value=baseCost;
+      if(retail&&retail.value==='')retail.value=baseRetail;
+    });
+    captureVariantDraftState();
+  }
+
+  function setVariantPricingMode(mode){
+    VARIANT_PRICES_VARY=mode==='vary';
+    const form=$('#add-form');
+    if(form)form.classList.toggle('variant-prices-vary',VARIANT_PRICES_VARY);
+    document.querySelectorAll('[data-variant-pricing-mode]').forEach(btn=>{
+      btn.classList.toggle('on',btn.dataset.variantPricingMode===(VARIANT_PRICES_VARY?'vary':'same'));
+    });
+    const note=$('#variant-pricing-note');
+    if(note)note.textContent=VARIANT_PRICES_VARY
+      ? local('Each enabled variant can have its own supplier price and suggested selling price.','يمكن لكل خيار مفعّل أن يكون له سعر مورد وسعر بيع مقترح خاص به.')
+      : local('The product prices below will be used for every variant.','سيتم استخدام أسعار المنتج بالأسفل لكل الخيارات.');
+    fillEmptyVariantPricesFromDefaults();
+    productWizardSummary();
+  }
+
   function renderVariantCombinations(){
     try{
       captureVariantDraftState();
@@ -1102,7 +1133,14 @@
 
         combos.forEach(combo=>{
           const key=variantStateKey(combo);
-          const state=VARIANT_COMBO_STATE.get(key)||{enabled:true,stock:'0',cost:'',sku:'',weight:''};
+          const state=VARIANT_COMBO_STATE.get(key)||{
+            enabled:true,
+            stock:'0',
+            cost:VARIANT_PRICES_VARY?($('#p-cost')?.value??''):'',
+            retail:VARIANT_PRICES_VARY?($('#p-retail')?.value??''):'',
+            sku:'',
+            weight:''
+          };
           const rest=labelDefs.map(def=>combo[def.name]);
           const label=rest.length?rest.join(' / '):combo[groupDef.name];
           const full=definitions.map(def=>`${def.name}: ${combo[def.name]}`).join(' · ');
@@ -1114,7 +1152,8 @@
             <div class="variant-generated-name"><b>${IZZY.esc(label)}</b><small>${IZZY.esc(full)}</small></div>
             <label class="variant-sell-toggle"><input data-variant-enabled type="checkbox" ${state.enabled===false?'':'checked'}><span>${local('Sell','بيع')}</span></label>
             <div class="field"><label class="field-label">${local('Stock','المخزون')}</label><input data-variant-stock type="number" min="0" step="1" value="${IZZY.esc(state.stock??'0')}"></div>
-            <div class="field variant-advanced-field"><label class="field-label">${local('Different supplier price','سعر مورد مختلف')}</label><input data-variant-cost type="number" min="0" step="0.01" value="${IZZY.esc(state.cost??'')}" placeholder="${local('Use product price','استخدم سعر المنتج')}"></div>
+            <div class="field variant-price-field"><label class="field-label">${local('Supplier price','سعر المورّد')}</label><input data-variant-cost type="number" min="0" step="0.01" value="${IZZY.esc(state.cost??'')}" placeholder="${local('Use product price','استخدم سعر المنتج')}"></div>
+            <div class="field variant-price-field"><label class="field-label">${local('Suggested sell','سعر البيع المقترح')}</label><input data-variant-retail type="number" min="0" step="0.01" value="${IZZY.esc(state.retail??'')}" placeholder="${local('Use product price','استخدم سعر المنتج')}"></div>
             <div class="field variant-advanced-field"><label class="field-label">${local('Variant SKU','SKU للخيار')}</label><input data-variant-sku value="${IZZY.esc(state.sku??'')}" placeholder="${local('Auto if blank','تلقائي إذا تركته فارغًا')}"></div>
             <div class="field variant-advanced-field"><label class="field-label">${local('Weight (g)','الوزن (جم)')}</label><input data-variant-weight type="number" min="0" step="1" value="${IZZY.esc(state.weight??'')}"></div>
           `;
@@ -1171,12 +1210,16 @@
     const colorDef=definitions.find(def=>def.name.toLowerCase()==='color');
     const variants=combinations.map(combo=>{
       const key=variantStateKey(combo);
-      const state=VARIANT_COMBO_STATE.get(key)||{enabled:true,stock:'0',cost:'',sku:'',weight:''};
+      const state=VARIANT_COMBO_STATE.get(key)||{enabled:true,stock:'0',cost:'',retail:'',sku:'',weight:''};
       const enabled=state.enabled!==false;
       const stock=Number(state.stock||0);
       if(enabled&&(!Number.isFinite(stock)||stock<0))throw Error(local(`Enter valid stock for ${Object.values(combo).join(' / ')}.`,`أدخل مخزونًا صحيحًا لـ ${Object.values(combo).join(' / ')}.`));
-      const cost=state.cost===''?null:Number(state.cost);
-      if(cost!=null&&(!Number.isFinite(cost)||cost<0))throw Error(local('Enter a valid variant price.','أدخل سعرًا صحيحًا للخيار.'));
+      const cost=VARIANT_PRICES_VARY?(state.cost===''?null:Number(state.cost)):null;
+      const retail=VARIANT_PRICES_VARY?(state.retail===''?null:Number(state.retail)):null;
+      if(enabled&&VARIANT_PRICES_VARY&&cost==null)throw Error(local(`Enter the supplier price for ${Object.values(combo).join(' / ')}.`,`أدخل سعر المورّد لـ ${Object.values(combo).join(' / ')}.`));
+      if(enabled&&VARIANT_PRICES_VARY&&retail==null)throw Error(local(`Enter the suggested selling price for ${Object.values(combo).join(' / ')}.`,`أدخل سعر البيع المقترح لـ ${Object.values(combo).join(' / ')}.`));
+      if(cost!=null&&(!Number.isFinite(cost)||cost<0))throw Error(local('Enter a valid variant supplier price.','أدخل سعر مورد صحيحًا للخيار.'));
+      if(retail!=null&&(!Number.isFinite(retail)||retail<0))throw Error(local('Enter a valid variant suggested selling price.','أدخل سعر بيع مقترح صحيحًا للخيار.'));
       const weight=state.weight===''?null:Number(state.weight);
       if(weight!=null&&(!Number.isFinite(weight)||weight<0))throw Error(local('Enter a valid variant weight.','أدخل وزنًا صحيحًا للخيار.'));
       const colorValue=colorDef?combo[colorDef.name]:null;
@@ -1186,6 +1229,7 @@
         sku:String(state.sku||'').trim()||null,
         stock:enabled?stock:0,
         cost,
+        retail,
         weight_grams:weight,
         image_index:imageValue===''?null:Number(imageValue),
         enabled,
@@ -1209,6 +1253,7 @@
     if($('#variant-combination-count'))$('#variant-combination-count').textContent='0';
     if($('#generate-variants-btn'))$('#generate-variants-btn').textContent=local('Generate variants','إنشاء الخيارات');
     if($('#simple-product-stock'))$('#simple-product-stock').value='0';
+    setVariantPricingMode('same');
     refreshOptionTypeButtons();
     updateCategoryOptionSuggestion();
     productWizardSummary();
@@ -1374,10 +1419,14 @@
   };
   $('#toggle-variant-advanced').onclick=()=>setVariantAdvanced(!VARIANT_ADVANCED);
   ['#p-name-en','#p-name-ar','#simple-product-stock','#p-cost','#p-retail'].forEach(sel=>{
-    const el=$(sel);if(el)el.addEventListener('input',productWizardSummary);
+    const el=$(sel);if(el)el.addEventListener('input',()=>{
+      if(sel==='#p-cost'||sel==='#p-retail')fillEmptyVariantPricesFromDefaults();
+      productWizardSummary();
+    });
   });
   document.querySelectorAll('[data-add-option-type]').forEach(btn=>btn.onclick=()=>addOptionCard(btn.dataset.addOptionType));
   $('#generate-variants-btn').onclick=renderVariantCombinations;
+  document.querySelectorAll('[data-variant-pricing-mode]').forEach(btn=>btn.onclick=()=>setVariantPricingMode(btn.dataset.variantPricingMode));
   $('#p-category').addEventListener('change',updateCategoryOptionSuggestion);
   document.querySelectorAll('.field-info-btn').forEach(btn=>btn.onclick=e=>{
     e.preventDefault();
@@ -1395,7 +1444,7 @@
   document.querySelectorAll('[data-edit-content-lang]').forEach(b=>b.onclick=()=>setEditContentLang(b.dataset.editContentLang));
   $('#p-translate-btn').onclick=translateNewContent;
   $('#edit-translate-btn').onclick=translateEditContent;
-  const initialContentLang=window.IZZY_I18N?.isArabic?.()?'ar':'en';NEW_SOURCE_LANGUAGE=initialContentLang;setNewContentLang(initialContentLang,false);setVariantAdvanced(false);resetVariantBuilder();setVariantFlow(false,false);
+  const initialContentLang=window.IZZY_I18N?.isArabic?.()?'ar':'en';NEW_SOURCE_LANGUAGE=initialContentLang;setNewContentLang(initialContentLang,false);setVariantAdvanced(false);resetVariantBuilder();setVariantPricingMode('same');setVariantFlow(false,false);
   $('#supplier-product-search').oninput=renderProducts;
   $('#supplier-product-status').onchange=renderProducts;
   $('#select-all-products').onchange=e=>{
