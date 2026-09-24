@@ -96,8 +96,7 @@
       const name=productName(p);
       const supplierPrice=Number(p.supplier_cost||0);
       const suggested=Number(p.suggested_retail_price||0);
-      const shipping=Number(p.estimated_shipping_cost||0);
-      const profit=suggested-supplierPrice-shipping;
+      const profit=suggested-supplierPrice;
       return `<article class="card product-card dropshipper-product-card simple-product-card">
         <a class="product-image product-open" href="${productDetailsUrl(p)}">
           ${p.primary_image_url?`<img src="${IZZY.esc(p.primary_image_url)}" alt="${IZZY.esc(name)}">`:'<span>IZ</span>'}
@@ -113,7 +112,7 @@
           <div class="simple-product-prices">
             <div><small>${local('Supplier price','سعر المورّد')}</small><b>${IZZY.money(supplierPrice,p.currency)}</b></div>
             <div><small>${local('Suggested sell','سعر البيع المقترح')}</small><b>${IZZY.money(suggested,p.currency)}</b></div>
-            <div><small>${local('Est. profit','الربح التقديري')}</small><b class="${profit>=0?'positive':'negative'}">${IZZY.money(profit,p.currency)}</b></div>
+            <div><small>${local('Product margin','هامش المنتج')}</small><b class="${profit>=0?'positive':'negative'}">${IZZY.money(profit,p.currency)}</b><span class="price-note">${local('before IzzyDrop delivery','قبل توصيل IzzyDrop')}</span></div>
           </div>
 
           <div class="product-card-actions simple-product-actions">
