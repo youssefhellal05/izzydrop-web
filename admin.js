@@ -252,7 +252,7 @@
         <span data-label="Price">${IZZY.money(p.suggested_retail_price,p.currency)}</span>
         <span data-label="Status"><span class="tag ${p.status==='active'?'ok':p.status==='inactive'?'warn':''}">${IZZY.esc(p.status)}</span></span>
         <span data-label="Added">${fmtDate(p.created_at)}</span>
-        <div class="admin-row-actions"><a class="btn secondary" href="product.html?slug=${encodeURIComponent(p.public_slug||'')}" target="_blank" rel="noopener">Inspect</a>${action}</div>
+        <div class="admin-row-actions"><a class="btn secondary" href="product.html?slug=${encodeURIComponent(p.public_slug||'')}&from=admin" target="_blank" rel="noopener">Inspect</a>${action}</div>
       </div>`;
     }).join('')||'<div class="empty-state admin-table-empty"><div class="empty-icon">□</div><h3>No products found</h3><p>Try changing the product filters.</p></div>';
 
@@ -370,6 +370,8 @@
 
   function renderAdmins(){
     const me=ADMINS.find(a=>a.user_id===SESSION?.user?.id);
+    const inviteCard=$('#admin-invite-card');
+    if(inviteCard)inviteCard.hidden=!me?.is_super_admin;
     if(me?.is_super_admin){
       $('#admin-name').textContent='IzzyDrop · Super admin';
     }
