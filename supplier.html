@@ -265,32 +265,6 @@
               <button id="toggle-product-variants" class="btn secondary variant-choice-btn" type="button">This product has colors, sizes, or options</button>
             </div>
 
-            <div class="card form-section">
-              <div class="form-section-title"><div><h3>Price, stock & shipping</h3><p>Set your stock and the prices dropshippers need.</p></div></div>
-              <div class="form form-three-col">
-                <div id="simple-product-stock-field" class="field simple-product-stock-field">
-                  <label class="field-label" for="simple-product-stock">Stock</label>
-                  <input id="simple-product-stock" type="number" min="0" step="1" value="0">
-                  <small>This product has one version, so you only need one stock number.</small>
-                </div>
-                <div class="field">
-                  <label class="field-label with-info" for="p-cost"><span>Your price to dropshippers (EGP)</span><button class="field-info-btn" data-field-help="cost" type="button" aria-label="Explain supplier price">?</button></label>
-                  <input id="p-cost" type="number" step="0.01" min="0" placeholder="0.00" required>
-                  <div class="field-help-panel" data-field-help-panel="cost" hidden></div>
-                </div>
-                <div class="field">
-                  <label class="field-label with-info" for="p-retail"><span>Suggested selling price (EGP)</span><button class="field-info-btn" data-field-help="retail" type="button" aria-label="Explain suggested selling price">?</button></label>
-                  <input id="p-retail" type="number" step="0.01" min="0" placeholder="0.00" required>
-                  <div class="field-help-panel" data-field-help-panel="retail" hidden></div>
-                </div>
-                <div class="field">
-                  <label class="field-label" for="p-shipping">Estimated shipping cost (EGP)</label>
-                  <input id="p-shipping" type="number" step="0.01" min="0" value="0" placeholder="0.00" required>
-                  <small>Typical delivery cost the dropshipper should include when estimating profit.</small>
-                </div>
-              </div>
-            </div>
-
             <div id="variant-builder-card" class="card form-section variant-wizard-section" hidden>
               <div class="form-section-title form-section-title-row">
                 <div><h3>Product options</h3><p>Choose only what the customer can actually select. IzzyDrop will build the sellable versions for you.</p></div>
@@ -330,6 +304,32 @@
                 </div>
                 <div id="variant-combination-list" class="variant-combination-list">
                   <div class="variant-empty-state">Add an option above, enter its values, then generate variants.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card form-section">
+              <div class="form-section-title"><div><h3>Price, stock & shipping</h3><p>Set your stock and the prices dropshippers need.</p></div></div>
+              <div class="form form-three-col">
+                <div id="simple-product-stock-field" class="field simple-product-stock-field">
+                  <label class="field-label" for="simple-product-stock">Stock</label>
+                  <input id="simple-product-stock" type="number" min="0" step="1" value="0">
+                  <small>This product has one version, so you only need one stock number.</small>
+                </div>
+                <div class="field">
+                  <label class="field-label with-info" for="p-cost"><span>Your price to dropshippers (EGP)</span><button class="field-info-btn" data-field-help="cost" type="button" aria-label="Explain supplier price">?</button></label>
+                  <input id="p-cost" type="number" step="0.01" min="0" placeholder="0.00" required>
+                  <div class="field-help-panel" data-field-help-panel="cost" hidden></div>
+                </div>
+                <div class="field">
+                  <label class="field-label with-info" for="p-retail"><span>Suggested selling price (EGP)</span><button class="field-info-btn" data-field-help="retail" type="button" aria-label="Explain suggested selling price">?</button></label>
+                  <input id="p-retail" type="number" step="0.01" min="0" placeholder="0.00" required>
+                  <div class="field-help-panel" data-field-help-panel="retail" hidden></div>
+                </div>
+                <div class="field">
+                  <label class="field-label" for="p-shipping">Estimated shipping cost (EGP)</label>
+                  <input id="p-shipping" type="number" step="0.01" min="0" value="0" placeholder="0.00" required>
+                  <small>Typical delivery cost the dropshipper should include when estimating profit.</small>
                 </div>
               </div>
             </div>
