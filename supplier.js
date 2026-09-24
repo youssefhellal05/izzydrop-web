@@ -199,6 +199,7 @@
     const costRaw=$('#p-cost')?.value,cost=Number(costRaw);
     if(costRaw===''||!Number.isFinite(cost)||cost<0)missing.push(local('supplier price','سعر المورّد'));
     if(baseRetailRaw===''||!Number.isFinite(baseRetail)||baseRetail<0)missing.push(local('suggested price','سعر البيع المقترح'));
+    else if(costRaw!==''&&Number.isFinite(cost)&&baseRetail<cost)missing.push(local('valid margin','هامش سعر صحيح'));
     if(!SIMPLE_PRODUCT_FLOW&&!variantsValid)missing.push(local('variants','الخيارات'));
 
     const readiness=$('#publish-readiness');
@@ -961,45 +962,62 @@
     });
   }
 
+  function setVariantStaleState(stale){
+    const note=$('#variant-stale-note');
+    const list=$('#variant-combination-list');
+    if(note)note.hidden=!stale;
+    if(list)list.classList.toggle('is-stale',stale);
+  }
+
   function updateVariantBuildPreview(){
     const cards=optionCards();
     const preview=$('#variant-build-preview');
     const btn=$('#generate-variants-btn');
     if(!preview||!btn)return;
+
     if(!cards.length){
+      setVariantStaleState(!!VARIANT_GENERATION_SIGNATURE);
       preview.textContent=local('Add an option and its values to see how many variants will be created.','أضف خيارًا وقيمه لمعرفة عدد الخيارات التي سيتم إنشاؤها.');
       btn.disabled=true;
       btn.textContent=local('Add option values first','أضف قيم الخيارات أولًا');
       return;
     }
+
     const defs=cards.map(card=>({
       name:card.querySelector('[data-option-name]')?.value?.trim()||'',
       values:parseOptionValues(card.querySelector('[data-option-values]')?.value||'')
     }));
+
     if(defs.some(def=>!def.name||!def.values.length)){
+      setVariantStaleState(!!VARIANT_GENERATION_SIGNATURE);
       preview.textContent=local('Complete the option name and values first.','أكمل اسم الخيار وقيمه أولًا.');
       btn.disabled=true;
       btn.textContent=local('Complete option values','أكمل قيم الخيارات');
       return;
     }
+
     const count=defs.reduce((n,def)=>n*def.values.length,1);
     if(count>MAX_VARIANT_COMBINATIONS){
+      setVariantStaleState(!!VARIANT_GENERATION_SIGNATURE);
       preview.textContent=local(`${count} variants is too many. Reduce the values to ${MAX_VARIANT_COMBINATIONS} or fewer.`,`${count} خيارًا عدد كبير جدًا. قلّل القيم إلى ${MAX_VARIANT_COMBINATIONS} أو أقل.`);
       btn.disabled=true;
       btn.textContent=local('Too many variants','عدد خيارات كبير');
       return;
     }
+
+    const currentSignature=variantDefinitionSignature(defs);
+    const stale=!!VARIANT_GENERATION_SIGNATURE&&currentSignature!==VARIANT_GENERATION_SIGNATURE;
+    setVariantStaleState(stale);
     preview.textContent=local(
       `${count} sellable ${count===1?'variant':'variants'} will be created from ${defs.length} option ${defs.length===1?'type':'types'}.`,
       `سيتم إنشاء ${count} ${count===1?'خيار':'خيارات'} قابلة للبيع من ${defs.length} ${defs.length===1?'نوع':'أنواع'}.`
     );
     btn.disabled=false;
-    const currentSignature=variantDefinitionSignature(defs);
     btn.textContent=!VARIANT_GENERATION_SIGNATURE
       ? local(`Build ${count} ${count===1?'variant':'variants'}`,`إنشاء ${count} ${count===1?'خيار':'خيارات'}`)
-      : currentSignature===VARIANT_GENERATION_SIGNATURE
-        ? local(`Rebuild ${count} ${count===1?'variant':'variants'}`,`إعادة إنشاء ${count} ${count===1?'خيار':'خيارات'}`)
-        : local(`Update ${count} ${count===1?'variant':'variants'}`,`تحديث ${count} ${count===1?'خيار':'خيارات'}`);
+      : stale
+        ? local(`Update ${count} ${count===1?'variant':'variants'}`,`تحديث ${count} ${count===1?'خيار':'خيارات'}`)
+        : local(`Rebuild ${count} ${count===1?'variant':'variants'}`,`إعادة إنشاء ${count} ${count===1?'خيار':'خيارات'}`);
   }
 
   function markVariantGenerationStale(){
@@ -1013,9 +1031,10 @@
 
   function refreshOptionTypeButtons(){
     const selected=selectedOptionTypeNames();
+    const atLimit=optionCards().length>=MAX_OPTION_TYPES;
     document.querySelectorAll('[data-add-option-type]').forEach(btn=>{
       const type=btn.dataset.addOptionType;
-      btn.disabled=type!=='custom'&&selected.has(type.toLowerCase());
+      btn.disabled=atLimit||(type!=='custom'&&selected.has(type.toLowerCase()));
     });
   }
 
@@ -1348,6 +1367,7 @@
       if(enabled&&VARIANT_PRICES_VARY&&retail==null)throw Error(local(`Enter the suggested selling price for ${Object.values(combo).join(' / ')}.`,`أدخل سعر البيع المقترح لـ ${Object.values(combo).join(' / ')}.`));
       if(cost!=null&&(!Number.isFinite(cost)||cost<0))throw Error(local('Enter a valid variant supplier price.','أدخل سعر مورد صحيحًا للخيار.'));
       if(retail!=null&&(!Number.isFinite(retail)||retail<0))throw Error(local('Enter a valid variant suggested selling price.','أدخل سعر بيع مقترح صحيحًا للخيار.'));
+      if(enabled&&VARIANT_PRICES_VARY&&cost!=null&&retail!=null&&retail<cost)throw Error(local(`Suggested selling price must be at least the supplier price for ${Object.values(combo).join(' / ')}.`,`يجب ألا يقل سعر البيع المقترح عن سعر المورّد لـ ${Object.values(combo).join(' / ')}.`));
       const weight=state.weight===''?null:Number(state.weight);
       if(weight!=null&&(!Number.isFinite(weight)||weight<0))throw Error(local('Enter a valid variant weight.','أدخل وزنًا صحيحًا للخيار.'));
       const colorValue=colorDef?combo[colorDef.name]:null;
@@ -1505,6 +1525,7 @@
     const cost=Number(costRaw),retail=Number(retailRaw);
     if(costRaw===''||!Number.isFinite(cost)||cost<0)return showFormError($('#p-cost'),local('Enter your supplier price.','أدخل سعر المورّد.'));
     if(retailRaw===''||!Number.isFinite(retail)||retail<0)return showFormError($('#p-retail'),local('Enter a suggested selling price.','أدخل سعر البيع المقترح.'));
+    if(retail<cost)return showFormError($('#p-retail'),local('Suggested selling price must be at least your supplier price.','يجب ألا يقل سعر البيع المقترح عن سعر المورّد.'));
 
     if(!SIMPLE_PRODUCT_FLOW&&!validateProductStep(2))return;
 
