@@ -11,7 +11,7 @@
   <meta name="theme-color" content="#111318">
   <script>try{document.documentElement.dataset.theme=localStorage.getItem("izzy_theme")==="dark"?"dark":"light"}catch(e){}</script>
   <meta name="description" content="IzzyDrop — Egypt’s independent dropshipping marketplace.">
-  <link rel="stylesheet" href="styles.css?v=20260924-supplier-simple6">
+  <link rel="stylesheet" href="styles.css?v=20260924-manualvariants1">
 </head>
 <body>
 <div class="wrap">
@@ -251,7 +251,7 @@
             </div>
 
             <div class="card form-section" data-product-step="1">
-              <div class="form-section-title"><div><h3>Photos</h3><p>Add clear photos. The first one becomes the main image.</p></div></div>
+              <div class="form-section-title"><div><h3>Photos</h3><p>Optional general product photos. You can also add a photo while creating each variant.</p></div></div>
               <div class="photo-upload">
                 <div class="row"><div><b>Product photos</b><small>Add up to 6 clear JPG, PNG, or WebP photos. Maximum 5 MB each.</small></div><label class="btn secondary photo-picker" for="p-images">Choose photos</label></div>
                 <input id="p-images" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
@@ -287,42 +287,17 @@
 
             <div class="card form-section variant-wizard-section" data-product-step="2">
               <div class="form-section-title form-section-title-row">
-                <div><h3>Does this product have options?</h3><p>Use one version, or add colors, sizes, models, or any other option.</p></div>
+                <div><h3>Add variants one by one</h3><p>Create only the exact versions you actually sell. Add a photo, color, size, stock, and optional different price for each one.</p></div>
                 <button id="toggle-variant-advanced" class="auth-text-button" type="button">Advanced details</button>
               </div>
 
-              <div class="variant-mode-picker" role="group" aria-label="Variant type">
-                <button class="variant-mode-btn on" data-variant-mode="single" type="button">One version</button>
-                <button class="variant-mode-btn" data-variant-mode="options" type="button">Has options</button>
-              </div>
+              <div id="manual-variant-list" class="manual-variant-list"></div>
 
-              <div id="single-variant-panel" class="single-variant-panel">
-                <div class="variant-single-grid">
-                  <div class="field"><label class="field-label">Stock</label><input id="single-variant-stock" type="number" min="0" step="1" value="0"></div>
-                  <div class="field"><label class="field-label">Photo <span class="muted">(optional)</span></label><select id="single-variant-image"><option value="">Use main photo</option></select></div>
-                  <div class="field variant-advanced-field"><label class="field-label">Variant SKU <span class="muted">(optional)</span></label><input id="single-variant-sku" placeholder="Auto if blank"></div>
-                  <div class="field variant-advanced-field"><label class="field-label">Price override <span class="muted">(optional)</span></label><input id="single-variant-cost" type="number" min="0" step="0.01" placeholder="Use product price"></div>
-                  <div class="field variant-advanced-field"><label class="field-label">Weight (g) <span class="muted">(optional)</span></label><input id="single-variant-weight" type="number" min="0" step="1" placeholder="Optional"></div>
-                </div>
-              </div>
+              <button id="add-manual-variant" class="btn secondary add-manual-variant" type="button">
+                + Add next variant
+              </button>
 
-              <div id="variant-options-panel" class="variant-options-panel" hidden>
-                <div class="variant-options-head">
-                  <div><b>Product options</b><small>Add values separated by commas. IzzyDrop will create every combination automatically.</small></div>
-                  <button id="add-variant-option" class="btn secondary" type="button">Add option</button>
-                </div>
-                <div id="variant-option-rows" class="variant-option-rows"></div>
-                <div class="variant-example-note">Example: Color = Black, White · Size = S, M, L. Then turn off any combination you do not sell.</div>
-
-                <div class="variant-combinations-head">
-                  <div><b>Combinations</b><small>Turn a combination off when that color/size does not exist.</small></div>
-                  <span id="variant-combination-count" class="muted">0 combinations</span>
-                </div>
-                <div class="variant-combination-table">
-                  <div class="variant-combination-row variant-combination-header"><span>Sell</span><span>Variant</span><span>Photo</span><span class="combo-advanced">SKU</span><span>Stock</span><span class="combo-advanced">Price</span><span class="combo-advanced">Weight</span></div>
-                  <div id="variant-combination-rows"></div>
-                </div>
-              </div>
+              <div class="variant-example-note">Example: Black · M · 12 in stock, then Black · L, then White · S. IzzyDrop will not create combinations you did not add.</div>
             </div>
 
             <div class="card product-publish-summary" data-product-step="3">
@@ -402,10 +377,10 @@
 </div>
 
 <script src="config.js"></script>
-<script src="common.js?v=20260924-supplier-simple6"></script>
-<script src="i18n.js?v=20260924-supplier-simple6"></script>
-<script src="supplier.js?v=20260924-supplier-simple6"></script>
+<script src="common.js?v=20260924-manualvariants1"></script>
+<script src="i18n.js?v=20260924-manualvariants1"></script>
+<script src="supplier.js?v=20260924-manualvariants1"></script>
 <script>window.IZZY_SETTINGS_ROLE="supplier"</script>
-<script src="settings.js?v=20260924-supplier-simple6"></script>
+<script src="settings.js?v=20260924-manualvariants1"></script>
 </body>
 </html>
