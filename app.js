@@ -547,9 +547,35 @@
     go('products');
     await load();
     const addProduct=new URLSearchParams(location.search).get('add');
-    if(addProduct&&PRODUCTS.some(p=>p.product_id===addProduct)){
+    if(addProduct){
       history.replaceState({},document.title,location.pathname);
-      openWebSetup(addProduct);
+      const existing=LINKS.find(l=>l.supplier_product_id===addProduct);
+      const p=PRODUCTS.find(x=>x.product_id===addProduct)||LINKED_PRODUCTS.find(x=>x.product_id===addProduct);
+      if(existing){
+        go('linked');
+        status(local('Product is already in My Products.','المنتج موجود بالفعل في منتجاتي.'));
+      }else if(p&&p.available!==false){
+        try{
+          await IZZY.request('/rest/v1/dropshipper_product_links',{
+            method:'POST',
+            headers:{Prefer:'return=minimal'},
+            body:JSON.stringify({
+              dropshipper_id:DROPSHIPPER.id,
+              supplier_product_id:addProduct,
+              retail_price:Number(p.suggested_retail_price||0),
+              status:'active',
+              last_seen_cost:Number(p.supplier_cost||p.supplier_price||0),
+              last_seen_stock:Number(p.stock_quantity||0)
+            })
+          });
+          await load(false);
+          go('linked');
+          status(local('Product added to My Products.','تمت إضافة المنتج إلى منتجاتي.'));
+        }catch(e){status(e.message,true)}
+      }else if(p){
+        go('linked');
+        status(p.availability_reason||local('This product is not available.','هذا المنتج غير متاح.'),true);
+      }
     }
   }
 
