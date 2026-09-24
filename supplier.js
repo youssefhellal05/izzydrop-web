@@ -32,10 +32,11 @@
   function orderFor(id){return ORDERS.find(o=>o.id===id)||{}}
   function productFor(id){return PRODUCTS.find(p=>p.id===id)||{}}
   function variantsFor(id){return VARIANTS.filter(v=>v.product_id===id)}
+  function enabledVariantsFor(id){return variantsFor(id).filter(v=>v.is_enabled!==false)}
   function imagesFor(id){return IMAGES.filter(i=>i.product_id===id).sort((a,b)=>Number(a.position)-Number(b.position))}
-  function totalStock(id){return variantsFor(id).reduce((n,v)=>n+Number(v.stock_quantity||0),0)}
+  function totalStock(id){return enabledVariantsFor(id).reduce((n,v)=>n+Number(v.stock_quantity||0),0)}
   function threshold(){return Number(SUP?.low_stock_threshold??5)}
-  function lowStockProduct(p){const vs=variantsFor(p.id);return vs.length>0&&vs.some(v=>Number(v.stock_quantity||0)<=threshold())}
+  function lowStockProduct(p){const vs=enabledVariantsFor(p.id);return vs.length>0&&vs.some(v=>Number(v.stock_quantity||0)<=threshold())}
   function supplierOrderState(item){
     if(item.fulfillment_status==='fulfilled')return 'fulfilled';
     if(item.fulfillment_status==='cancelled')return 'cancelled';
@@ -341,7 +342,7 @@
         </label>
         <div class="supplier-table-product">
           <div class="supplier-product-thumb">${img?.url?`<img src="${IZZY.esc(img.url)}" alt="">`:'IZ'}</div>
-          <div><b>${IZZY.esc(productName(p))}</b><small>${variantsFor(p.id).length} variant${variantsFor(p.id).length===1?'':'s'} · ${imagesFor(p.id).length} photo${imagesFor(p.id).length===1?'':'s'}</small></div>
+          <div><b>${IZZY.esc(productName(p))}</b><small>${enabledVariantsFor(p.id).length} active variant${enabledVariantsFor(p.id).length===1?'':'s'}${variantsFor(p.id).length!==enabledVariantsFor(p.id).length?` · ${variantsFor(p.id).length-enabledVariantsFor(p.id).length} off`:''} · ${imagesFor(p.id).length} photo${imagesFor(p.id).length===1?'':'s'}</small></div>
         </div>
         <span class="supplier-table-cell" data-label="SKU">${IZZY.esc(p.sku||'—')}</span>
         <span class="supplier-table-cell ${low?'stock-low':''}" data-label="Stock">${stock}${low?' · Low':''}</span>
