@@ -10,6 +10,10 @@
     const displayName=window.IZZY_I18N?.productName(p)||p.name||'';
     const displayDescription=window.IZZY_I18N?.productDescription(p)||p.description||'';
     const isAr=window.IZZY_I18N?.isArabic?.()===true;
+    const variantLabel=v=>{
+      const entries=Object.entries(v?.options||{}).filter(([,value])=>String(value??'').trim());
+      return entries.length?entries.map(([name,value])=>`${name}: ${value}`).join(' · '):(v?.name||v?.sku||'Default');
+    };
     document.title=`${displayName} · IzzyDrop`;
     st.textContent='';
 
@@ -54,7 +58,7 @@
 
           <div class="variant-section">
             <h3>Variants</h3>
-            <div class="variant-list">${(p.variants||[]).map(v=>`<div class="variant"><div><b>${IZZY.esc(v.name||'Default')}</b><small>${IZZY.esc(v.sku||'')}</small></div><span class="tag ${Number(v.stock_quantity)>0?'ok':'warn'}">${Number(v.stock_quantity||0)} in stock</span></div>`).join('')||'<div class="notice">No variants listed.</div>'}</div>
+            <div class="variant-list">${(p.variants||[]).map(v=>`<div class="variant"><div><b>${IZZY.esc(variantLabel(v))}</b><small>${IZZY.esc(v.sku||'')}</small></div><span class="tag ${Number(v.stock_quantity)>0?'ok':'warn'}">${Number(v.stock_quantity||0)} in stock</span></div>`).join('')||'<div class="notice">No variants listed.</div>'}</div>
           </div>
 
           <div class="product-detail-actions">
