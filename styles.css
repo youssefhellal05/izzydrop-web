@@ -1733,3 +1733,13 @@ html[dir="rtl"] .polished-photo-preview .photo-remove-btn{right:auto;left:7px}
   .add-preview-image{width:56px;height:56px}
   .add-preview-meta{align-items:flex-start;flex-direction:column;gap:2px}
 }
+
+.product-create-section.is-current{border-color:color-mix(in srgb,var(--text) 28%,var(--line));box-shadow:0 16px 34px rgba(17,19,24,.055)}
+.product-create-section.is-complete>.form-section-title .form-section-number,
+.product-review-card.is-complete .form-section-number{background:var(--ok);color:#fff}
+.product-create-section.is-complete>.form-section-title .form-section-number,
+.product-review-card.is-complete .form-section-number{box-shadow:0 0 0 3px color-mix(in srgb,var(--ok) 10%,transparent)}
+html[data-theme="dark"] .product-create-section.is-current{box-shadow:0 16px 34px rgba(0,0,0,.18)}
+@media(max-width:680px){
+  .product-create-section.is-current{box-shadow:none}
+}
