@@ -1480,3 +1480,9 @@ html[data-theme="dark"] .option-quick-values button{background:var(--card)}
   .simple-product-wizard.show-variant-advanced .variant-generated-row{grid-template-columns:1fr}
   .variant-generated-name{grid-column:auto}
 }
+
+
+/* IzzyDrop-managed delivery */
+.delivery-managed-badge{display:flex;align-items:center;min-height:44px;padding:10px 12px;border:1px solid var(--line);border-radius:11px;background:var(--soft);font-size:12px;font-weight:850}
+.izzydrop-delivery-field small{display:block;margin-top:5px}
+.simple-product-prices .price-note{display:block;margin-top:2px;font-size:9px;color:var(--muted);font-weight:650}
