@@ -201,6 +201,7 @@
     $('#today-summary').innerHTML='<div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line"></div>';
     $('#products').innerHTML=Array.from({length:4},()=>'<div class="supplier-product-table supplier-product-table-row"><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-button"></div></div>').join('');
     $('#orders').innerHTML=Array.from({length:3},()=>'<div class="card supplier-order-card"><div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line" style="margin-top:12px"></div><div class="skeleton skeleton-line medium" style="margin-top:10px"></div></div>').join('');
+    if($('#supplier-samples'))$('#supplier-samples').innerHTML=Array.from({length:2},()=>'<div class="card supplier-order-card"><div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line medium" style="margin-top:10px"></div></div>').join('');
   }
 
   async function verify(){
@@ -289,12 +290,12 @@
 
     const today=new Date().toDateString();
     const todayOrders=ORDERS.filter(o=>new Date(o.created_at).toDateString()===today);
-    const fulfilledToday=ITEMS.filter(i=>i.fulfillment_status==='fulfilled'&&new Date(i.updated_at||i.created_at).toDateString()===today);
+    const shippedToday=ITEMS.filter(i=>i.fulfillment_status==='fulfilled'&&new Date(i.updated_at||i.created_at).toDateString()===today);
     const unitsToday=ITEMS.filter(i=>new Date(i.created_at).toDateString()===today).reduce((n,i)=>n+Number(i.quantity||0),0);
     $('#today-summary').innerHTML=`
-      <div><small>Orders received</small><strong>${todayOrders.length}</strong></div>
-      <div><small>Units ordered</small><strong>${unitsToday}</strong></div>
-      <div><small>Items fulfilled</small><strong>${fulfilledToday.length}</strong></div>
+      <div><small>${local('Orders received','طلبات وصلت')}</small><strong>${todayOrders.length}</strong></div>
+      <div><small>${local('Units ordered','وحدات مطلوبة')}</small><strong>${unitsToday}</strong></div>
+      <div><small>${local('Items shipped','عناصر تم شحنها')}</small><strong>${shippedToday.length}</strong></div>
     `;
   }
 
@@ -313,11 +314,17 @@
     PRODUCTS.filter(lowStockProduct).slice(0,6).forEach(p=>{
       notes.push({
         kind:'stock',
-        title:'Low stock',
-        text:`${productName(p)} has ${totalStock(p.id)} total units left`,
+        title:local('Low stock','مخزون منخفض'),
+        text:local(`${productName(p)} has ${totalStock(p.id)} total units left`,`${productName(p)} متبقي منه ${totalStock(p.id)} وحدة`),
         view:'products'
       });
     });
+    SAMPLES.filter(x=>x.status==='requested').slice(0,4).forEach(x=>notes.push({
+      kind:'sample',
+      title:local('New sample request','طلب عينة جديد'),
+      text:productName({name:x.product_name,name_en:x.product_name_en,name_ar:x.product_name_ar})||local('Product sample','عينة منتج'),
+      view:'samples'
+    }));
 
     $('#notification-count').textContent=notes.length;
     $('#notification-count').hidden=notes.length===0;
@@ -394,7 +401,7 @@
         </div>
         <span class="supplier-table-cell" data-label="SKU">${IZZY.esc(p.sku||'—')}</span>
         <span class="supplier-table-cell ${low?'stock-low':''}" data-label="Stock">${stock}${low?' · Low':''}</span>
-        <span class="supplier-table-cell" data-label="Your cost">${IZZY.money(p.cost_price,p.currency)}</span>
+        <span class="supplier-table-cell" data-label="Your price">${IZZY.money(p.cost_price,p.currency)}</span>
         <span class="supplier-table-cell" data-label="Suggested retail">${IZZY.money(p.suggested_retail_price,p.currency)}</span>
         <span class="supplier-table-cell" data-label="Status"><span class="tag ${p.status==='active'?'ok':p.status==='inactive'?'warn':''}">${p.status==='inactive'?'paused':IZZY.esc(p.status)}</span></span>
         <div class="supplier-table-actions">
@@ -426,34 +433,36 @@
     const list=ITEMS.filter(i=>ORDER_FILTER==='all'||supplierOrderState(i)===ORDER_FILTER);
     $('#orders').innerHTML=list.map(i=>{
       const o=orderFor(i.order_id),p=productFor(i.supplier_product_id),addr=o.shipping_address||{},state=supplierOrderState(i);
-      const fulfilled=state==='fulfilled',cancelled=state==='cancelled';
+      const shipped=i.fulfillment_status==='fulfilled',cancelled=state==='cancelled';
+      const stateBad=['cancelled','refused','returned'].includes(state);
+      const stateOk=['shipped','in_transit','delivered'].includes(state);
       return `<article class="card supplier-order-card ${state==='new'?'is-new':''}">
         <div class="supplier-order-head">
           <div>
-            <div class="supplier-order-title"><b>${IZZY.esc(productName(p)||'Product')} × ${Number(i.quantity||1)}</b>${state==='new'?'<span class="new-pill">NEW</span>':''}</div>
+            <div class="supplier-order-title"><b>${IZZY.esc(productName(p)||local('Product','المنتج'))} × ${Number(i.quantity||1)}</b>${state==='new'?'<span class="new-pill">NEW</span>':''}</div>
             <small>${IZZY.esc(o.external_order_ref||o.shopify_order_name||('Order '+String(o.id||'').slice(0,8)))} · ${new Date(o.created_at).toLocaleString()}</small>
           </div>
-          <span class="tag ${fulfilled?'ok':state==='new'?'warn':cancelled?'bad':''}">${state}</span>
+          <span class="tag ${stateOk?'ok':state==='new'?'warn':stateBad?'bad':''}">${IZZY.esc(window.IZZY_I18N?.status?.(state)||state)}</span>
         </div>
 
         <div class="supplier-order-grid">
-          <div><small>Customer</small><b>${IZZY.esc(o.customer_name||'—')}</b><span>${IZZY.esc(o.customer_phone||'—')}</span></div>
-          <div><small>Delivery address</small><b>${IZZY.esc([addr.address1,addr.city,addr.governorate].filter(Boolean).join(', ')||'—')}</b></div>
-          <div><small>Quantity</small><b>${Number(i.quantity||1)}</b><span>${IZZY.money(i.retail_price_at_purchase,o.currency||'EGP')} each</span></div>
+          <div><small>${local('Customer','العميل')}</small><b>${IZZY.esc(o.customer_name||'—')}</b><span>${IZZY.esc(o.customer_phone||'—')}</span></div>
+          <div><small>${local('Delivery address','عنوان التوصيل')}</small><b>${IZZY.esc([addr.address1,addr.city,addr.governorate].filter(Boolean).join(', ')||'—')}</b></div>
+          <div><small>${local('Quantity','الكمية')}</small><b>${Number(i.quantity||1)}</b><span>${IZZY.money(i.retail_price_at_purchase,o.currency||'EGP')} ${local('each','للوحدة')}</span></div>
         </div>
 
-        ${fulfilled?`<div class="fulfilled-strip"><span>Fulfilled</span><b>${IZZY.esc(i.shipping_carrier||'Carrier')} ${IZZY.esc(i.tracking_number||'')}</b></div>`:
-          cancelled?'<div class="notice">This order item was cancelled.</div>':
+        ${shipped?`<div class="fulfilled-strip"><span>${local('Shipped','تم الشحن')}</span><b>${IZZY.esc(i.shipping_carrier||local('Carrier','شركة الشحن'))} ${IZZY.esc(i.tracking_number||'')}</b></div>`:
+          cancelled?'<div class="notice">'+local('This order item was cancelled.','تم إلغاء هذا العنصر.')+'</div>':
           `<div class="fulfillment-box">
-            <div><b>Fulfillment</b><small>Add shipping details when the order leaves you.</small></div>
+            <div><b>${local('Shipping','الشحن')}</b><small>${local('Add tracking when the order leaves you.','أضف بيانات التتبع عندما يخرج الطلب للشحن.')}</small></div>
             <div class="fulfillment-fields">
-              <input data-carrier="${i.id}" placeholder="Shipping carrier">
-              <input data-tracking="${i.id}" placeholder="Tracking number">
-              <button class="btn fulfill-btn" data-id="${i.id}">Mark fulfilled</button>
+              <input data-carrier="${i.id}" placeholder="${local('Shipping carrier','شركة الشحن')}">
+              <input data-tracking="${i.id}" placeholder="${local('Tracking number','رقم التتبع')}">
+              <button class="btn fulfill-btn" data-id="${i.id}">${local('Mark shipped','تحديد كمشحون')}</button>
             </div>
           </div>`}
       </article>`;
-    }).join('')||`<div class="empty-state"><div class="empty-icon">□</div><h3>No ${ORDER_FILTER==='all'?'':ORDER_FILTER+' '}orders</h3><p>${ORDER_FILTER==='all'?'Orders will appear here when dropshippers sell your products.':'There are no orders in this status.'}</p></div>`;
+    }).join('')||`<div class="empty-state"><div class="empty-icon">□</div><h3>${local('No orders found','لا توجد طلبات')}</h3><p>${local('Orders will appear here when dropshippers sell your products.','ستظهر الطلبات هنا عندما يبيع الدروبشيبرز منتجاتك.')}</p></div>`;
 
     document.querySelectorAll('.fulfill-btn').forEach(b=>b.onclick=()=>fulfill(b));
   }
@@ -462,12 +471,12 @@
     const id=btn.dataset.id;
     const carrier=document.querySelector(`[data-carrier="${id}"]`)?.value?.trim()||null;
     const tracking=document.querySelector(`[data-tracking="${id}"]`)?.value?.trim()||null;
-    btn.disabled=true;btn.textContent='Updating…';
+    btn.disabled=true;btn.textContent=local('Updating…','جارٍ التحديث…');
     try{
       await IZZY.rpc('supplier_fulfill_order_item',{_order_item_id:id,_tracking_number:tracking,_shipping_carrier:carrier});
-      msg('Order item marked fulfilled.');
+      msg(local('Order marked shipped.','تم تحديد الطلب كمشحون.'));
       await load(false);
-    }catch(e){msg(e.message,true);btn.disabled=false;btn.textContent='Mark fulfilled'}
+    }catch(e){msg(e.message,true);btn.disabled=false;btn.textContent=local('Mark shipped','تحديد كمشحون')}
   }
 
   function renderSourcingRequests(){
@@ -483,9 +492,9 @@
           <div><small>Source</small><b>${r.source_url?'<a href="'+IZZY.esc(r.source_url)+'" target="_blank" rel="noopener">Open link</a>':'—'}</b></div>
           <div><small>Notes</small><span>${IZZY.esc(r.notes||'—')}</span></div>
         </div>
-        ${q?`<div class="notice ok"><b>Your quote: ${IZZY.money(q.offered_cost,'EGP')}</b><span>${IZZY.esc(q.message||'')}</span></div>`:
+        ${q?`<div class="notice ${q.status==='accepted'?'ok':''}"><b>${local('Your quote','عرضك')}: ${IZZY.money(q.offered_cost,'EGP')}</b><span>${IZZY.esc(q.message||'')} · ${IZZY.esc(window.IZZY_I18N?.status?.(q.status)||q.status)}</span></div>`:
         `<form class="form quote-form" data-request-id="${r.id}">
-          <input name="offered_cost" type="number" min="0" step="0.01" placeholder="Your cost EGP" required>
+          <input name="offered_cost" type="number" min="0" step="0.01" placeholder="${local('Your price EGP','سعرك بالجنيه')}" required>
           <input name="available_quantity" type="number" min="0" step="1" placeholder="Available quantity">
           <input name="lead_time_days" type="number" min="0" step="1" placeholder="Lead time days">
           <select name="product_id">${productOptions}</select>
@@ -515,15 +524,53 @@
     });
   }
 
+
+  function renderSamples(){
+    const el=$('#supplier-samples');if(!el)return;
+    el.innerHTML=(SAMPLES||[]).map(x=>{
+      const addr=x.shipping_address||{};
+      const name=productName({name:x.product_name,name_en:x.product_name_en,name_ar:x.product_name_ar})||local('Product','المنتج');
+      const options=Object.entries(x.variant_options||{}).map(([k,v])=>`${k}: ${v}`).join(' · ');
+      const tracking=[x.shipping_carrier,x.tracking_number].filter(Boolean).join(' · ');
+      let actions='';
+      if(x.status==='requested')actions=`<div class="sample-actions"><button class="btn sample-action" data-id="${x.id}" data-next="approved">${local('Approve','موافقة')}</button><button class="btn secondary sample-action" data-id="${x.id}" data-next="rejected">${local('Reject','رفض')}</button></div>`;
+      else if(x.status==='approved')actions=`<div class="sample-ship-form"><input data-sample-carrier="${x.id}" placeholder="${local('Shipping carrier','شركة الشحن')}"><input data-sample-tracking="${x.id}" placeholder="${local('Tracking number','رقم التتبع')}"><button class="btn sample-action" data-id="${x.id}" data-next="shipped">${local('Mark shipped','تحديد كمشحون')}</button></div>`;
+      else if(x.status==='shipped')actions=`<div class="sample-actions"><button class="btn secondary sample-action" data-id="${x.id}" data-next="delivered">${local('Mark delivered','تحديد كمُسلّم')}</button></div>`;
+      return `<article class="card sample-card">
+        <div class="order-card-head"><div><span class="order-id">${IZZY.esc(name)}</span><small>${IZZY.esc(options||x.variant_name||'')} · ${new Date(x.created_at).toLocaleString()}</small></div><span class="tag ${x.status==='delivered'?'ok':x.status==='rejected'?'bad':x.status==='requested'?'warn':''}">${IZZY.esc(window.IZZY_I18N?.status?.(x.status)||x.status)}</span></div>
+        <div class="order-summary-grid">
+          <div><small>${local('Dropshipper','الدروبشيبر')}</small><b>${IZZY.esc(x.dropshipper_name||'—')}</b></div>
+          <div><small>${local('Delivery address','عنوان التوصيل')}</small><b>${IZZY.esc([addr.address1,addr.city,addr.governorate].filter(Boolean).join(', ')||'—')}</b></div>
+          <div><small>${local('Tracking','التتبع')}</small><span>${IZZY.esc(tracking||'—')}</span></div>
+        </div>
+        ${actions}
+      </article>`;
+    }).join('')||`<div class="empty-state"><div class="empty-icon">□</div><h3>${local('No sample requests','لا توجد طلبات عينات')}</h3><p>${local('Dropshipper sample requests will appear here.','ستظهر طلبات عينات الدروبشيبرز هنا.')}</p></div>`;
+
+    document.querySelectorAll('.sample-action').forEach(btn=>btn.onclick=async()=>{
+      const id=btn.dataset.id,next=btn.dataset.next;
+      const carrier=document.querySelector(`[data-sample-carrier="${id}"]`)?.value?.trim()||null;
+      const tracking=document.querySelector(`[data-sample-tracking="${id}"]`)?.value?.trim()||null;
+      btn.disabled=true;
+      try{
+        await IZZY.rpc('supplier_update_sample_order',{_sample_id:id,_status:next,_tracking_number:tracking,_shipping_carrier:carrier});
+        msg(local('Sample request updated.','تم تحديث طلب العينة.'));
+        await load(false);
+      }catch(e){msg(e.message,true);btn.disabled=false}
+    });
+  }
+
   async function load(showMessage=false){
-    const [supplierRows,products,variants,orders,items,requests,quotes]=await Promise.all([
+    const [supplierRows,products,variants,orders,items,requests,quotes,categories,samples]=await Promise.all([
       IZZY.request(`/rest/v1/suppliers?select=id,business_name,status,low_stock_threshold,notification_preferences&id=eq.${encodeURIComponent(SUP.id)}&limit=1`),
       IZZY.request(`/rest/v1/supplier_products?select=*&supplier_id=eq.${encodeURIComponent(SUP.id)}&order=created_at.desc`),
       IZZY.request('/rest/v1/product_variants?select=*&order=created_at.asc'),
       IZZY.request('/rest/v1/orders?select=*&order=created_at.desc&limit=150'),
       IZZY.request(`/rest/v1/order_items?select=*&supplier_id=eq.${encodeURIComponent(SUP.id)}&order=created_at.desc&limit=250`),
-      IZZY.request('/rest/v1/product_requests?select=*&status=in.(open,matched)&order=created_at.desc&limit=100'),
-      IZZY.request(`/rest/v1/product_request_quotes?select=*&supplier_id=eq.${encodeURIComponent(SUP.id)}&order=created_at.desc&limit=100`)
+      IZZY.request('/rest/v1/product_requests?select=*&status=in.(open,matched,accepted)&order=created_at.desc&limit=100'),
+      IZZY.request(`/rest/v1/product_request_quotes?select=*&supplier_id=eq.${encodeURIComponent(SUP.id)}&order=created_at.desc&limit=100`),
+      IZZY.request('/rest/v1/categories?select=id,name,name_ar&order=name.asc'),
+      IZZY.rpc('supplier_samples')
     ]);
 
     if(supplierRows?.[0]){
@@ -536,16 +583,20 @@
     ITEMS=items||[];
     REQUESTS=requests||[];
     QUOTES=quotes||[];
+    CATEGORIES=categories||[];
+    SAMPLES=Array.isArray(samples)?samples:[];
 
     if(PRODUCTS.length){
       const ids=PRODUCTS.map(p=>p.id).join(',');
       IMAGES=await IZZY.request(`/rest/v1/product_images?select=*&product_id=in.(${ids})&order=position.asc`);
     }else IMAGES=[];
 
+    refreshCategorySelects();
     renderOverview();
     renderNotifications();
     renderProducts();
     renderSourcingRequests();
+    renderSamples();
     renderOrders();
     if(showMessage)msg('Supplier workspace updated.');
   }
@@ -576,6 +627,8 @@
     $('#edit-product-sku').value=p.sku||'';
     $('#edit-product-cost').value=p.cost_price??0;
     $('#edit-product-shipping').value=p.estimated_shipping_cost??0;
+    refreshCategorySelects();
+    $('#edit-product-category').value=p.category_id||'';
     $('#edit-product-market-status').value=p.status||'active';
     setEditContentLang(p.content_source_language==='ar'?'ar':'en');
     $('#edit-product-retail').value=p.suggested_retail_price??'';
@@ -589,6 +642,7 @@
       </div>
       <input data-edit-variant-sku value="${IZZY.esc(v.sku||'')}" placeholder="SKU">
       <input data-edit-variant-stock type="number" min="0" step="1" value="${Number(v.stock_quantity||0)}" placeholder="${local('Stock','المخزون')}">
+      <select data-edit-variant-image aria-label="${local('Variant photo','صورة الخيار')}">${existingImageOptions(id,v.variant_image_url||'')}</select>
       <input data-edit-variant-cost type="number" min="0" step="0.01" value="${v.cost_price??''}" placeholder="${local('Supplier price','سعر المورّد')}">
       <input data-edit-variant-weight type="number" min="0" step="1" value="${v.weight_grams??''}" placeholder="${local('Weight (g)','الوزن (جم)')}">
     </div>`).join('')||'<div class="notice">No variants found.</div>';
@@ -622,6 +676,7 @@
             description:(source==='ar'?(descAr||descEn):(descEn||descAr)),
             sku:$('#edit-product-sku').value.trim(),
             cost_price:Number($('#edit-product-cost').value),
+            category_id:$('#edit-product-category').value||null,
             estimated_shipping_cost:Number($('#edit-product-shipping').value||0),
             suggested_retail_price:$('#edit-product-retail').value===''?null:Number($('#edit-product-retail').value),
             status:$('#edit-product-market-status').value,
@@ -641,6 +696,7 @@
             stock_quantity:Number(row.querySelector('[data-edit-variant-stock]').value||0),
             cost_price:row.querySelector('[data-edit-variant-cost]').value===''?null:Number(row.querySelector('[data-edit-variant-cost]').value),
             weight_grams:row.querySelector('[data-edit-variant-weight]').value===''?null:Number(row.querySelector('[data-edit-variant-weight]').value),
+            variant_image_url:row.querySelector('[data-edit-variant-image]').value||null,
             is_enabled:row.querySelector('[data-edit-variant-enabled]').checked,
             updated_at:new Date().toISOString()
           })
@@ -696,7 +752,8 @@
         sku:row.querySelector('[data-combo-sku]').value,
         stock:row.querySelector('[data-combo-stock]').value,
         cost:row.querySelector('[data-combo-cost]').value,
-        weight:row.querySelector('[data-combo-weight]').value
+        weight:row.querySelector('[data-combo-weight]').value,
+        image:row.querySelector('[data-combo-image]')?.value||''
       });
     });
   }
@@ -734,7 +791,7 @@
     box.innerHTML='';
     combos.forEach(options=>{
       const key=JSON.stringify(options);
-      const previous=VARIANT_COMBO_STATE.get(key)||{enabled:true,sku:'',stock:'0',cost:'',weight:''};
+      const previous=VARIANT_COMBO_STATE.get(key)||{enabled:true,sku:'',stock:'0',cost:'',weight:'',image:''};
       const name=Object.values(options).join(' / ');
       const row=document.createElement('div');
       row.className='variant-combination-row';
@@ -743,6 +800,7 @@
       row.innerHTML=`
         <label class="combo-toggle"><input data-combo-enabled type="checkbox" ${previous.enabled?'checked':''}><span></span></label>
         <div class="combo-name"><b>${IZZY.esc(name)}</b><small>${IZZY.esc(Object.entries(options).map(([k,v])=>`${k}: ${v}`).join(' · '))}</small></div>
+        <select data-combo-image aria-label="${local('Variant photo','صورة الخيار')}">${selectedImageOptions(previous.image)}</select>
         <input data-combo-sku placeholder="${local('Auto','تلقائي')}" value="${IZZY.esc(previous.sku||'')}">
         <input data-combo-stock type="number" min="0" step="1" value="${IZZY.esc(previous.stock??'0')}">
         <input data-combo-cost type="number" min="0" step="0.01" placeholder="${local('Use product price','استخدم سعر المنتج')}" value="${IZZY.esc(previous.cost||'')}">
@@ -764,6 +822,7 @@
         stock:Number($('#single-variant-stock').value||0),
         cost:$('#single-variant-cost').value===''?null:Number($('#single-variant-cost').value),
         weight_grams:$('#single-variant-weight').value===''?null:Number($('#single-variant-weight').value),
+        image_index:$('#single-variant-image').value===''?null:Number($('#single-variant-image').value),
         enabled:true,
         options:{}
       }];
@@ -779,6 +838,7 @@
         stock:Number(row.querySelector('[data-combo-stock]').value||0),
         cost:row.querySelector('[data-combo-cost]').value===''?null:Number(row.querySelector('[data-combo-cost]').value),
         weight_grams:row.querySelector('[data-combo-weight]').value===''?null:Number(row.querySelector('[data-combo-weight]').value),
+        image_index:row.querySelector('[data-combo-image]').value===''?null:Number(row.querySelector('[data-combo-image]').value),
         enabled:row.querySelector('[data-combo-enabled]').checked,
         options
       };
@@ -794,6 +854,7 @@
     if($('#single-variant-stock'))$('#single-variant-stock').value='0';
     if($('#single-variant-cost'))$('#single-variant-cost').value='';
     if($('#single-variant-weight'))$('#single-variant-weight').value='';
+    if($('#single-variant-image'))$('#single-variant-image').value='';
     const box=$('#variant-option-rows');
     if(box){
       box.innerHTML='';
@@ -806,8 +867,9 @@
 
   function renderSelectedImages(){
     const box=$('#p-image-preview');
-    if(!SELECTED_IMAGES.length){box.innerHTML='<div class="photo-empty">No photos selected yet.</div>';return}
-    box.innerHTML=SELECTED_IMAGES.map((f,i)=>`<div class="photo-preview"><img src="${URL.createObjectURL(f)}" alt=""><span>${i===0?'Main photo':`Photo ${i+1}`}</span></div>`).join('');
+    if(!SELECTED_IMAGES.length)box.innerHTML='<div class="photo-empty">'+local('No photos selected yet.','لم يتم اختيار صور بعد.')+'</div>';
+    else box.innerHTML=SELECTED_IMAGES.map((f,i)=>`<div class="photo-preview"><img src="${URL.createObjectURL(f)}" alt=""><span>${i===0?local('Main photo','الصورة الرئيسية'):`${local('Photo','صورة')} ${i+1}`}</span></div>`).join('');
+    refreshVariantPhotoChoices();
   }
 
   $('#p-images').onchange=e=>{
@@ -846,11 +908,14 @@
         _cost:cost,
         _retail:Number($('#p-retail').value),
         _currency:'EGP',
-        _variants:variants
+        _variants:variants,
+        _category_id:$('#p-category').value||null,
+        _shipping_cost:Number($('#p-shipping').value||0)
       });
 
       const pid=result.product_id;
       let uploaded=0;
+      const uploadedUrls=[];
       for(let i=0;i<SELECTED_IMAGES.length;i++){
         btn.textContent=`Uploading photo ${i+1} of ${SELECTED_IMAGES.length}…`;
         const file=SELECTED_IMAGES[i],ext=(file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';
@@ -862,11 +927,23 @@
             headers:{Prefer:'return=representation'},
             body:JSON.stringify({product_id:pid,url,position:i})
           });
+          uploadedUrls[i]=url;
           uploaded++;
         }catch(photoError){
           console.warn(photoError);
           msg(`Product created, but only ${uploaded} of ${SELECTED_IMAGES.length} photos uploaded.`,true);
           break;
+        }
+      }
+
+      for(const created of (result.variants||[])){
+        const source=variants[Number(created.index)];
+        const imageUrl=source?.image_index==null?null:uploadedUrls[source.image_index]||null;
+        if(imageUrl){
+          await IZZY.request(`/rest/v1/product_variants?id=eq.${encodeURIComponent(created.id)}`,{
+            method:'PATCH',
+            body:JSON.stringify({variant_image_url:imageUrl,updated_at:new Date().toISOString()})
+          });
         }
       }
 
