@@ -11,7 +11,7 @@
   <meta name="theme-color" content="#111318">
   <script>try{document.documentElement.dataset.theme=localStorage.getItem("izzy_theme")==="dark"?"dark":"light"}catch(e){}</script>
   <meta name="description" content="IzzyDrop — Egypt’s independent dropshipping marketplace.">
-  <link rel="stylesheet" href="styles.css?v=20260924-variants1">
+  <link rel="stylesheet" href="styles.css?v=20260924-finish1">
 </head>
 <body>
 <div class="wrap">
@@ -44,6 +44,10 @@
           <button data-view="linked">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12v16l-6-3-6 3z"/></svg>
             <span>My products</span>
+          </button>
+          <button data-view="samples">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h8M9 3v5l-4 8a3 3 0 0 0 3 5h8a3 3 0 0 0 3-5l-4-8V3M7 15h10"/></svg>
+            <span>Samples</span>
           </button>
           <button data-view="orders">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v14H4zM8 3v6M16 3v6M8 13h8M8 17h5"/></svg>
@@ -117,6 +121,13 @@
           <div id="linked" class="my-products-grid"></div>
         </section>
 
+        <section id="view-samples" class="view" hidden>
+          <div class="section-heading">
+            <div><h2>Samples</h2><p class="muted">Track the product samples you requested from suppliers.</p></div>
+          </div>
+          <div id="dropshipper-samples" class="orders-list"></div>
+        </section>
+
         <section id="view-orders" class="view" hidden>
           <div class="section-heading order-heading">
             <div><h2>Orders</h2><p class="muted">Create orders and track fulfillment from your suppliers.</p></div>
@@ -146,9 +157,12 @@
             <button class="filter-chip on" data-order-filter="all">All</button>
             <button class="filter-chip" data-order-filter="pending">Pending</button>
             <button class="filter-chip" data-order-filter="processing">Processing</button>
-            <button class="filter-chip" data-order-filter="fulfilled">Fulfilled</button>
+            <button class="filter-chip" data-order-filter="shipped">Shipped</button>
+            <button class="filter-chip" data-order-filter="in_transit">In transit</button>
+            <button class="filter-chip" data-order-filter="delivered">Delivered</button>
+            <button class="filter-chip" data-order-filter="refused">Refused</button>
+            <button class="filter-chip" data-order-filter="returned">Returned</button>
             <button class="filter-chip" data-order-filter="cancelled">Cancelled</button>
-            <button class="filter-chip" data-order-filter="refunded">Refunded</button>
           </div>
           <div id="orders" class="orders-list"></div>
         </section>
@@ -156,6 +170,27 @@
         <section id="view-settings" class="view" hidden><div id="settings-root"></div></section>
       </main>
     </div>
+  </div>
+</div>
+
+<div id="sample-modal" class="modal" hidden>
+  <div class="modal-card sample-request-modal">
+    <div class="row">
+      <div><div class="premium-chip">PRODUCT SAMPLE</div><h2>Request sample</h2></div>
+      <button id="close-sample-modal" class="btn secondary" type="button">Close</button>
+    </div>
+    <p class="muted">Choose the exact variant and tell the supplier where to send the sample.</p>
+    <form id="sample-form" class="form">
+      <input id="sample-product-id" type="hidden">
+      <div class="field"><label class="field-label">Variant</label><select id="sample-variant" required></select></div>
+      <div class="field"><label class="field-label">Delivery address</label><input id="sample-address" placeholder="Street / address" required></div>
+      <div class="form-two-col">
+        <div class="field"><label class="field-label">City</label><input id="sample-city" placeholder="City" required></div>
+        <div class="field"><label class="field-label">Governorate</label><input id="sample-governorate" placeholder="Governorate"></div>
+      </div>
+      <button id="sample-submit" class="btn" type="submit">Send sample request</button>
+    </form>
+    <div id="sample-status" class="status"></div>
   </div>
 </div>
 
@@ -212,9 +247,9 @@
 </div>
 
 <script src="config.js"></script>
-<script src="common.js?v=20260924-variants1"></script><script src="i18n.js?v=20260924-variants1"></script>
-<script src="app.js?v=20260924-variants1"></script>
+<script src="common.js?v=20260924-finish1"></script><script src="i18n.js?v=20260924-finish1"></script>
+<script src="app.js?v=20260924-finish1"></script>
 <script>window.IZZY_SETTINGS_ROLE="dropshipper"</script>
-<script src="settings.js?v=20260924-variants1"></script>
+<script src="settings.js?v=20260924-finish1"></script>
 </body>
 </html>
