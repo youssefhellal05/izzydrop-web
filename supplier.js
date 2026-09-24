@@ -113,13 +113,12 @@
   }
 
   function refreshVariantPhotoChoices(){
-    const single=$('#single-variant-image');
-    if(single){
-      const current=single.value;
-      single.innerHTML=selectedImageOptions(current);
-      if([...single.options].some(o=>o.value===current))single.value=current;
-    }
-    if(VARIANT_MODE==='options')renderVariantCombinations();
+    document.querySelectorAll('[data-manual-image]').forEach(select=>{
+      const current=select.value;
+      select.innerHTML=selectedImageOptions(current);
+      if([...select.options].some(o=>o.value===current))select.value=current;
+      updateManualVariantPhoto(select.closest('[data-manual-variant]'));
+    });
   }
 
   function productWizardSummary(){
@@ -791,164 +790,190 @@
     finally{btn.disabled=false;btn.textContent='Save changes'}
   };
 
-  function setVariantMode(mode){
-    SIMPLE_PRODUCT_FLOW=false;
-    VARIANT_MODE=mode==='options'?'options':'single';
-    document.querySelectorAll('[data-variant-mode]').forEach(b=>b.classList.toggle('on',b.dataset.variantMode===VARIANT_MODE));
-    $('#single-variant-panel').hidden=VARIANT_MODE!=='single';
-    $('#variant-options-panel').hidden=VARIANT_MODE!=='options';
-    if(VARIANT_MODE==='options')renderVariantCombinations();
+  function manualVariantRows(){
+    return [...document.querySelectorAll('#manual-variant-list [data-manual-variant]')];
   }
 
-  function addVariantOptionRow(name='',values=''){
-    const box=$('#variant-option-rows');
-    if(!box||box.children.length>=3)return;
-    const row=document.createElement('div');
-    row.className='variant-option-row';
-    row.innerHTML=`
-      <input data-option-name placeholder="${local('Option name, e.g. Color','اسم الخيار، مثال: اللون')}" value="${IZZY.esc(name)}">
-      <input data-option-values placeholder="${local('Values separated by commas, e.g. Black, White','القيم مفصولة بفواصل، مثال: أسود، أبيض')}" value="${IZZY.esc(values)}">
-      <button class="variant-option-remove" type="button" aria-label="${local('Remove option','حذف الخيار')}">×</button>
-    `;
-    row.querySelectorAll('input').forEach(input=>input.addEventListener('input',renderVariantCombinations));
-    row.querySelector('.variant-option-remove').onclick=()=>{
-      row.remove();
-      if(!box.children.length)addVariantOptionRow(local('Color','اللون'),'');
-      renderVariantCombinations();
-    };
-    box.appendChild(row);
-    const add=$('#add-variant-option');if(add)add.disabled=box.children.length>=3;
+  function updateManualVariantPhoto(row){
+    if(!row)return;
+    const select=row.querySelector('[data-manual-image]');
+    const preview=row.querySelector('[data-manual-photo-preview]');
+    if(!select||!preview)return;
+    const index=select.value===''?null:Number(select.value);
+    const file=index==null?null:SELECTED_IMAGES[index];
+    preview.innerHTML=file
+      ? `<img src="${URL.createObjectURL(file)}" alt=""><span>${IZZY.esc(file.name||local('Variant photo','صورة الخيار'))}</span>`
+      : `<span class="manual-variant-photo-empty">${local('Main product photo','صورة المنتج الرئيسية')}</span>`;
   }
 
-  function variantOptionDefinitions(){
-    return [...document.querySelectorAll('#variant-option-rows .variant-option-row')].map((row,index)=>{
-      const name=row.querySelector('[data-option-name]').value.trim()||local(`Option ${index+1}`,`الخيار ${index+1}`);
-      const values=[...new Set(row.querySelector('[data-option-values]').value.split(/[,،]/).map(v=>v.trim()).filter(Boolean))];
-      return {name,values};
-    }).filter(o=>o.values.length);
-  }
-
-  function snapshotVariantCombinations(){
-    document.querySelectorAll('#variant-combination-rows .variant-combination-row[data-combo]').forEach(row=>{
-      VARIANT_COMBO_STATE.set(row.dataset.combo,{
-        enabled:row.querySelector('[data-combo-enabled]').checked,
-        sku:row.querySelector('[data-combo-sku]').value,
-        stock:row.querySelector('[data-combo-stock]').value,
-        cost:row.querySelector('[data-combo-cost]').value,
-        weight:row.querySelector('[data-combo-weight]').value,
-        image:row.querySelector('[data-combo-image]')?.value||''
-      });
+  function renumberManualVariants(){
+    const rows=manualVariantRows();
+    rows.forEach((row,index)=>{
+      const label=row.querySelector('[data-manual-number]');
+      if(label)label.textContent=local(`Variant ${index+1}`,`الخيار ${index+1}`);
+      const remove=row.querySelector('[data-remove-manual-variant]');
+      if(remove)remove.hidden=rows.length===1;
     });
-  }
-
-  function buildCombinations(defs,index=0,current={}){
-    if(index>=defs.length)return [current];
-    const out=[];
-    const def=defs[index];
-    def.values.forEach(value=>out.push(...buildCombinations(defs,index+1,{...current,[def.name]:value})));
-    return out;
-  }
-
-  function updateVariantCombinationCount(){
-    const rows=[...document.querySelectorAll('#variant-combination-rows .variant-combination-row[data-combo]')];
-    const available=rows.filter(r=>r.querySelector('[data-combo-enabled]')?.checked).length;
-    const count=$('#variant-combination-count');
-    if(count)count.textContent=local(
-      `${rows.length} combination${rows.length===1?'':'s'} · ${available} available`,
-      `${rows.length} تركيبة · ${available} متاحة`
-    );
-  }
-
-  function renderVariantCombinations(){
-    if(VARIANT_MODE!=='options')return;
-    snapshotVariantCombinations();
-    const defs=variantOptionDefinitions();
-    const box=$('#variant-combination-rows');
-    if(!box)return;
-    const combos=defs.length?buildCombinations(defs):[];
-    if(!combos.length){
-      box.innerHTML=`<div class="variant-combination-empty">${local('Add option values to create combinations.','أضف قيم الخيارات لإنشاء التركيبات.')}</div>`;
-      updateVariantCombinationCount();
-      return;
-    }
-    box.innerHTML='';
-    combos.forEach(options=>{
-      const key=JSON.stringify(options);
-      const previous=VARIANT_COMBO_STATE.get(key)||{enabled:true,sku:'',stock:'0',cost:'',weight:'',image:''};
-      const name=Object.values(options).join(' / ');
-      const row=document.createElement('div');
-      row.className='variant-combination-row';
-      row.dataset.combo=key;
-      row._izzyOptions=options;
-      row.innerHTML=`
-        <label class="combo-toggle"><input data-combo-enabled type="checkbox" ${previous.enabled?'checked':''}><span></span></label>
-        <div class="combo-name"><b>${IZZY.esc(name)}</b><small>${IZZY.esc(Object.entries(options).map(([k,v])=>`${k}: ${v}`).join(' · '))}</small></div>
-        <select data-combo-image aria-label="${local('Variant photo','صورة الخيار')}">${selectedImageOptions(previous.image)}</select>
-        <input class="combo-advanced" data-combo-sku placeholder="${local('Auto','تلقائي')}" value="${IZZY.esc(previous.sku||'')}">
-        <input data-combo-stock type="number" min="0" step="1" value="${IZZY.esc(previous.stock??'0')}">
-        <input class="combo-advanced" data-combo-cost type="number" min="0" step="0.01" placeholder="${local('Use product price','استخدم سعر المنتج')}" value="${IZZY.esc(previous.cost||'')}">
-        <input class="combo-advanced" data-combo-weight type="number" min="0" step="1" placeholder="${local('Optional','اختياري')}" value="${IZZY.esc(previous.weight||'')}">
-      `;
-      const enabled=row.querySelector('[data-combo-enabled]');
-      const sync=()=>{row.classList.toggle('is-disabled',!enabled.checked);updateVariantCombinationCount();productWizardSummary()};
-      enabled.onchange=sync;sync();
-      row.querySelectorAll('input,select').forEach(el=>el.addEventListener('input',productWizardSummary));
-      box.appendChild(row);
-    });
-    updateVariantCombinationCount();
     productWizardSummary();
   }
 
+  function addManualVariant(prefill={}){
+    const box=$('#manual-variant-list');
+    if(!box)return;
+    const row=document.createElement('div');
+    row.className='manual-variant-card';
+    row.dataset.manualVariant='1';
+    row.innerHTML=`
+      <div class="manual-variant-head">
+        <div><b data-manual-number></b><small>${local('Add the exact version you have in stock.','أضف النسخة الفعلية الموجودة لديك في المخزون.')}</small></div>
+        <button class="variant-option-remove" data-remove-manual-variant type="button" aria-label="${local('Remove variant','حذف الخيار')}">×</button>
+      </div>
+      <div class="manual-variant-grid">
+        <div class="field manual-variant-photo-field">
+          <label class="field-label">${local('Photo','الصورة')}</label>
+          <div class="manual-variant-photo" data-manual-photo-preview></div>
+          <select data-manual-image>${selectedImageOptions(prefill.image_index??'')}</select>
+          <label class="btn secondary manual-variant-upload">
+            ${local('Upload photo','رفع صورة')}
+            <input data-manual-upload type="file" accept="image/jpeg,image/png,image/webp" hidden>
+          </label>
+        </div>
+        <div class="field">
+          <label class="field-label">${local('Color','اللون')} <span class="muted">(${local('optional','اختياري')})</span></label>
+          <input data-manual-color value="${IZZY.esc(prefill.color||'')}" placeholder="${local('e.g. Black','مثال: أسود')}">
+        </div>
+        <div class="field">
+          <label class="field-label">${local('Size','المقاس')} <span class="muted">(${local('optional','اختياري')})</span></label>
+          <input data-manual-size value="${IZZY.esc(prefill.size||'')}" placeholder="${local('e.g. M','مثال: M')}">
+        </div>
+        <div class="field">
+          <label class="field-label">${local('Stock','المخزون')}</label>
+          <input data-manual-stock type="number" min="0" step="1" value="${IZZY.esc(prefill.stock??'0')}">
+        </div>
+        <div class="field">
+          <label class="field-label">${local('Different supplier price','سعر مورد مختلف')} <span class="muted">(${local('optional','اختياري')})</span></label>
+          <input data-manual-cost type="number" min="0" step="0.01" value="${IZZY.esc(prefill.cost??'')}" placeholder="${local('Use product price','استخدم سعر المنتج')}">
+        </div>
+        <div class="field variant-advanced-field">
+          <label class="field-label">${local('Model / other option','الموديل / خيار آخر')} <span class="muted">(${local('optional','اختياري')})</span></label>
+          <input data-manual-model value="${IZZY.esc(prefill.model||'')}" placeholder="${local('e.g. 256 GB','مثال: 256 GB')}">
+        </div>
+        <div class="field variant-advanced-field">
+          <label class="field-label">${local('Variant SKU','SKU للخيار')} <span class="muted">(${local('optional','اختياري')})</span></label>
+          <input data-manual-sku value="${IZZY.esc(prefill.sku||'')}" placeholder="${local('Auto if blank','تلقائي إذا تركته فارغًا')}">
+        </div>
+        <div class="field variant-advanced-field">
+          <label class="field-label">${local('Weight (g)','الوزن (جم)')} <span class="muted">(${local('optional','اختياري')})</span></label>
+          <input data-manual-weight type="number" min="0" step="1" value="${IZZY.esc(prefill.weight??'')}" placeholder="${local('Optional','اختياري')}">
+        </div>
+      </div>
+    `;
+
+    row.querySelector('[data-remove-manual-variant]').onclick=()=>{
+      row.remove();
+      renumberManualVariants();
+    };
+
+    row.querySelector('[data-manual-image]').onchange=()=>{
+      updateManualVariantPhoto(row);
+      productWizardSummary();
+    };
+
+    row.querySelector('[data-manual-upload]').onchange=e=>{
+      const file=e.target.files?.[0];
+      e.target.value='';
+      if(!file)return;
+      const allowed=['image/jpeg','image/png','image/webp'];
+      if(!allowed.includes(file.type)||file.size>5*1024*1024){
+        msg(local('Photos must be JPG, PNG, or WebP and no larger than 5 MB each.','يجب أن تكون الصور JPG أو PNG أو WebP وبحد أقصى 5 ميجابايت للصورة.'),true);
+        return;
+      }
+      let index=SELECTED_IMAGES.findIndex(x=>x.name===file.name&&x.size===file.size&&x.lastModified===file.lastModified);
+      if(index<0){
+        if(SELECTED_IMAGES.length>=6){
+          msg(local('You can add up to 6 product photos. Reuse an existing photo for variants with the same color.','يمكنك إضافة حتى 6 صور للمنتج. استخدم نفس الصورة للخيارات ذات اللون نفسه.'),true);
+          return;
+        }
+        SELECTED_IMAGES.push(file);
+        index=SELECTED_IMAGES.length-1;
+        renderSelectedImages();
+      }
+      const select=row.querySelector('[data-manual-image]');
+      refreshVariantPhotoChoices();
+      select.value=String(index);
+      updateManualVariantPhoto(row);
+      productWizardSummary();
+    };
+
+    row.querySelectorAll('input,select').forEach(el=>{
+      if(!el.matches('[data-manual-upload]'))el.addEventListener('input',productWizardSummary);
+    });
+    box.appendChild(row);
+    updateManualVariantPhoto(row);
+    renumberManualVariants();
+  }
+
   function collectVariants(){
-    if(VARIANT_MODE==='single'){
+    if(SIMPLE_PRODUCT_FLOW){
       return [{
         name:'Default',
-        sku:$('#single-variant-sku').value.trim()||null,
-        stock:Number($('#single-variant-stock').value||0),
-        cost:$('#single-variant-cost').value===''?null:Number($('#single-variant-cost').value),
-        weight_grams:$('#single-variant-weight').value===''?null:Number($('#single-variant-weight').value),
-        image_index:$('#single-variant-image').value===''?null:Number($('#single-variant-image').value),
+        sku:null,
+        stock:Number($('#simple-product-stock')?.value||0),
+        cost:null,
+        weight_grams:null,
+        image_index:null,
         enabled:true,
         options:{}
       }];
     }
 
-    const rows=[...document.querySelectorAll('#variant-combination-rows .variant-combination-row[data-combo]')];
-    if(!rows.length)throw Error(local('Add at least one option value to create variants.','أضف قيمة خيار واحدة على الأقل لإنشاء الخيارات.'));
-    const variants=rows.map(row=>{
-      const options=row._izzyOptions||JSON.parse(row.dataset.combo||'{}');
+    const rows=manualVariantRows();
+    if(!rows.length)throw Error(local('Add at least one variant.','أضف خيارًا واحدًا على الأقل.'));
+
+    const variants=rows.map((row,index)=>{
+      const color=row.querySelector('[data-manual-color]').value.trim();
+      const size=row.querySelector('[data-manual-size]').value.trim();
+      const model=row.querySelector('[data-manual-model]').value.trim();
+      const options={};
+      if(color)options.Color=color;
+      if(size)options.Size=size;
+      if(model)options.Option=model;
+      if(!Object.keys(options).length){
+        throw Error(local(`Add a color, size, or other option for Variant ${index+1}.`,`أضف لونًا أو مقاسًا أو خيارًا آخر للخيار ${index+1}.`));
+      }
+      const stock=Number(row.querySelector('[data-manual-stock]').value||0);
+      if(!Number.isFinite(stock)||stock<0)throw Error(local(`Enter valid stock for Variant ${index+1}.`,`أدخل مخزونًا صحيحًا للخيار ${index+1}.`));
+      const costInput=row.querySelector('[data-manual-cost]').value;
+      const weightInput=row.querySelector('[data-manual-weight]').value;
       return {
-        name:Object.values(options).join(' / ')||'Default',
-        sku:row.querySelector('[data-combo-sku]').value.trim()||null,
-        stock:Number(row.querySelector('[data-combo-stock]').value||0),
-        cost:row.querySelector('[data-combo-cost]').value===''?null:Number(row.querySelector('[data-combo-cost]').value),
-        weight_grams:row.querySelector('[data-combo-weight]').value===''?null:Number(row.querySelector('[data-combo-weight]').value),
-        image_index:row.querySelector('[data-combo-image]').value===''?null:Number(row.querySelector('[data-combo-image]').value),
-        enabled:row.querySelector('[data-combo-enabled]').checked,
+        name:Object.values(options).join(' / '),
+        sku:row.querySelector('[data-manual-sku]').value.trim()||null,
+        stock,
+        cost:costInput===''?null:Number(costInput),
+        weight_grams:weightInput===''?null:Number(weightInput),
+        image_index:row.querySelector('[data-manual-image]').value===''?null:Number(row.querySelector('[data-manual-image]').value),
+        enabled:true,
         options
       };
     });
-    if(!variants.some(v=>v.enabled))throw Error(local('Keep at least one variant available.','يجب أن تترك خيارًا واحدًا متاحًا على الأقل.'));
+
+    const keys=new Set();
+    variants.forEach((variant,index)=>{
+      const key=JSON.stringify(variant.options).toLowerCase();
+      if(keys.has(key))throw Error(local(`Variant ${index+1} duplicates another variant.`,`الخيار ${index+1} مكرر.`));
+      keys.add(key);
+    });
     return variants;
   }
 
   function resetVariantBuilder(){
-    VARIANT_COMBO_STATE.clear();
-    VARIANT_MODE='single';
     SIMPLE_PRODUCT_FLOW=false;
-    if($('#single-variant-sku'))$('#single-variant-sku').value='';
-    if($('#single-variant-stock'))$('#single-variant-stock').value='0';
-    if($('#single-variant-cost'))$('#single-variant-cost').value='';
-    if($('#single-variant-weight'))$('#single-variant-weight').value='';
-    if($('#single-variant-image'))$('#single-variant-image').value='';
-    const box=$('#variant-option-rows');
+    const box=$('#manual-variant-list');
     if(box){
       box.innerHTML='';
-      addVariantOptionRow(local('Color','اللون'),'');
-      addVariantOptionRow(local('Size','المقاس'),'');
+      addManualVariant();
     }
-    setVariantMode('single');
-    renderVariantCombinations();
+    if($('#simple-product-stock'))$('#simple-product-stock').value='0';
     productWizardSummary();
   }
 
@@ -961,14 +986,8 @@
   }
 
   function removeSelectedImage(index){
-    snapshotVariantCombinations();
-    const single=$('#single-variant-image');
-    if(single)single.value=adjustImageReference(single.value,index);
-    document.querySelectorAll('[data-combo-image]').forEach(sel=>{
-      sel.value=adjustImageReference(sel.value,index);
-    });
-    VARIANT_COMBO_STATE.forEach(state=>{
-      state.image=adjustImageReference(state.image,index);
+    document.querySelectorAll('[data-manual-image]').forEach(select=>{
+      select.value=adjustImageReference(select.value,index);
     });
     SELECTED_IMAGES.splice(index,1);
     const input=$('#p-images');if(input)input.value='';
@@ -1123,11 +1142,7 @@
   $('#product-skip-variants').onclick=()=>{
     if(!validateProductStep(1))return;
     SIMPLE_PRODUCT_FLOW=true;
-    VARIANT_MODE='single';
-    setVariantMode('single');
-    SIMPLE_PRODUCT_FLOW=true;
-    const simpleStock=$('#simple-product-stock');
-    if(simpleStock)simpleStock.value=$('#single-variant-stock').value||'0';
+    if($('#simple-product-stock'))$('#simple-product-stock').value='0';
     setProductStep(3);
   };
   $('#product-step-back').onclick=()=>{
@@ -1142,22 +1157,10 @@
     setProductStep(target);
   });
   $('#toggle-variant-advanced').onclick=()=>setVariantAdvanced(!VARIANT_ADVANCED);
-  ['#p-name-en','#p-name-ar','#single-variant-stock','#simple-product-stock','#p-cost','#p-retail','#p-shipping'].forEach(sel=>{
-    const el=$(sel);if(el)el.addEventListener('input',()=>{
-      if(sel==='#simple-product-stock'){
-        const target=$('#single-variant-stock');if(target)target.value=el.value;
-      }else if(sel==='#single-variant-stock'&&SIMPLE_PRODUCT_FLOW){
-        const target=$('#simple-product-stock');if(target)target.value=el.value;
-      }
-      productWizardSummary();
-    });
+  ['#p-name-en','#p-name-ar','#simple-product-stock','#p-cost','#p-retail','#p-shipping'].forEach(sel=>{
+    const el=$(sel);if(el)el.addEventListener('input',productWizardSummary);
   });
-
-  document.querySelectorAll('[data-variant-mode]').forEach(b=>b.onclick=()=>{setVariantMode(b.dataset.variantMode);productWizardSummary()});
-  $('#add-variant-option').onclick=()=>{
-    addVariantOptionRow('', '');
-    renderVariantCombinations();
-  };
+  $('#add-manual-variant').onclick=()=>addManualVariant();
   document.querySelectorAll('.field-info-btn').forEach(btn=>btn.onclick=e=>{
     e.preventDefault();
     e.stopPropagation();
@@ -1174,7 +1177,7 @@
   document.querySelectorAll('[data-edit-content-lang]').forEach(b=>b.onclick=()=>setEditContentLang(b.dataset.editContentLang));
   $('#p-translate-btn').onclick=translateNewContent;
   $('#edit-translate-btn').onclick=translateEditContent;
-  const initialContentLang=window.IZZY_I18N?.isArabic?.()?'ar':'en';NEW_SOURCE_LANGUAGE=initialContentLang;setNewContentLang(initialContentLang,false);setVariantAdvanced(false);setProductStep(1,false);
+  const initialContentLang=window.IZZY_I18N?.isArabic?.()?'ar':'en';NEW_SOURCE_LANGUAGE=initialContentLang;setNewContentLang(initialContentLang,false);setVariantAdvanced(false);resetVariantBuilder();setProductStep(1,false);
   $('#supplier-product-search').oninput=renderProducts;
   $('#supplier-product-status').onchange=renderProducts;
   $('#select-all-products').onchange=e=>{
