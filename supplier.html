@@ -11,7 +11,7 @@
   <meta name="theme-color" content="#111318">
   <script>try{document.documentElement.dataset.theme=localStorage.getItem("izzy_theme")==="dark"?"dark":"light"}catch(e){}</script>
   <meta name="description" content="IzzyDrop — Egypt’s independent dropshipping marketplace.">
-  <link rel="stylesheet" href="styles.css?v=20260924-addpolish2">
+  <link rel="stylesheet" href="styles.css?v=20260924-addpolish3">
 </head>
 <body>
 <div class="wrap">
@@ -199,6 +199,35 @@
           <div class="section-heading">
             <div><h2>Add product</h2><p class="muted">Create a clean marketplace listing. Start with the essentials — IzzyDrop only shows extra controls when you need them.</p></div>
           </div>
+          <div class="add-product-hud" id="add-product-hud">
+            <div class="add-product-progress-card">
+              <div class="add-progress-head">
+                <div><b>Listing progress</b><small id="add-progress-label">0 of 4 essentials ready</small></div>
+                <span id="add-progress-percent">0%</span>
+              </div>
+              <div class="add-progress-track"><span id="add-progress-fill"></span></div>
+              <div class="add-progress-steps" aria-label="Add product sections">
+                <button type="button" data-scroll-add-section="add-details-section"><span>1</span><b>Details</b></button>
+                <button type="button" data-scroll-add-section="add-photos-section"><span>2</span><b>Photos</b></button>
+                <button type="button" data-scroll-add-section="add-pricing-section"><span>3</span><b>Pricing</b></button>
+                <button type="button" data-scroll-add-section="add-inventory-section"><span>4</span><b>Inventory</b></button>
+                <button type="button" data-scroll-add-section="add-review-section"><span>5</span><b>Review</b></button>
+              </div>
+            </div>
+
+            <div class="add-live-preview">
+              <div id="add-preview-image" class="add-preview-image"><span>IZ</span></div>
+              <div class="add-preview-copy">
+                <div class="add-preview-eyebrow"><span id="add-preview-category">Category</span><span>Live preview</span></div>
+                <b id="add-preview-name">Your product</b>
+                <div class="add-preview-meta">
+                  <span id="add-preview-price">Add a price</span>
+                  <span id="add-preview-stock">0 in stock</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <form id="add-form" class="supplier-product-form simple-product-wizard">
             <div class="card form-section product-create-section" id="add-details-section">
               <div class="form-section-title form-section-title-row">
@@ -222,11 +251,12 @@
                   <div class="field">
                     <label class="field-label" for="p-name-en">Product name <span class="required-mark">Required</span></label>
                     <input id="p-name-en" maxlength="160" autocomplete="off" placeholder="e.g. Wireless earbuds">
-                    <small>Use the name a dropshipper would search for.</small>
+                    <div class="field-foot"><small>Use the name a dropshipper would search for.</small><span data-char-count-for="p-name-en">0 / 160</span></div>
                   </div>
                   <div class="field">
                     <label class="field-label" for="p-description-en">Description <span class="recommended-mark">Recommended</span></label>
                     <textarea id="p-description-en" rows="5" maxlength="3000" placeholder="Describe the product, key features, material/specs, and anything a dropshipper should know."></textarea>
+                    <div class="field-foot field-foot-end"><span data-char-count-for="p-description-en">0 / 3000</span></div>
                   </div>
                 </div>
               </div>
@@ -236,11 +266,12 @@
                   <div class="field">
                     <label class="field-label" for="p-name-ar">اسم المنتج <span class="required-mark">مطلوب</span></label>
                     <input id="p-name-ar" maxlength="160" autocomplete="off" placeholder="مثال: سماعات لاسلكية">
-                    <small>اكتب الاسم الذي سيبحث به الدروبشيبر عن المنتج.</small>
+                    <div class="field-foot"><small>اكتب الاسم الذي سيبحث به الدروبشيبر عن المنتج.</small><span data-char-count-for="p-name-ar">0 / 160</span></div>
                   </div>
                   <div class="field">
                     <label class="field-label" for="p-description-ar">الوصف <span class="recommended-mark">مُفضّل</span></label>
                     <textarea id="p-description-ar" rows="5" maxlength="3000" placeholder="اشرح المنتج وأهم المميزات والخامة أو المواصفات وأي شيء يحتاج الدروبشيبر معرفته."></textarea>
+                    <div class="field-foot field-foot-end"><span data-char-count-for="p-description-ar">0 / 3000</span></div>
                   </div>
                 </div>
               </div>
@@ -495,10 +526,10 @@
 </div>
 
 <script src="config.js"></script>
-<script src="common.js?v=20260924-addpolish2"></script>
-<script src="i18n.js?v=20260924-addpolish2"></script>
-<script src="supplier.js?v=20260924-addpolish2"></script>
+<script src="common.js?v=20260924-addpolish3"></script>
+<script src="i18n.js?v=20260924-addpolish3"></script>
+<script src="supplier.js?v=20260924-addpolish3"></script>
 <script>window.IZZY_SETTINGS_ROLE="supplier"</script>
-<script src="settings.js?v=20260924-addpolish2"></script>
+<script src="settings.js?v=20260924-addpolish3"></script>
 </body>
 </html>
