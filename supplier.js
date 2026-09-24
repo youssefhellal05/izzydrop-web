@@ -1499,18 +1499,17 @@
 
   $('#add-form').onsubmit=async e=>{
     e.preventDefault();
-    const step1ok=validateProductStep(1);
-    if(!step1ok)return;
-    if(!SIMPLE_PRODUCT_FLOW&&!validateProductStep(2)){
-      $('#variant-builder-card')?.scrollIntoView({behavior:'smooth',block:'start'});
-      return;
-    }
+    if(!validateProductStep(1))return;
+
+    const costRaw=$('#p-cost').value,retailRaw=$('#p-retail').value;
+    const cost=Number(costRaw),retail=Number(retailRaw);
+    if(costRaw===''||!Number.isFinite(cost)||cost<0)return showFormError($('#p-cost'),local('Enter your supplier price.','أدخل سعر المورّد.'));
+    if(retailRaw===''||!Number.isFinite(retail)||retail<0)return showFormError($('#p-retail'),local('Enter a suggested selling price.','أدخل سعر البيع المقترح.'));
+
+    if(!SIMPLE_PRODUCT_FLOW&&!validateProductStep(2))return;
+
     const btn=$('#add-product-btn');btn.disabled=true;btn.textContent=local('Publishing…','جارٍ النشر…');
     try{
-      const cost=Number($('#p-cost').value);
-      const retail=Number($('#p-retail').value);
-      if(!Number.isFinite(cost)||cost<0)throw Error(local('Enter your supplier price.','أدخل سعر المورّد.'));
-      if(!Number.isFinite(retail)||retail<0)throw Error(local('Enter a suggested selling price.','أدخل سعر البيع المقترح.'));
       const variants=collectVariants();
 
       let nameEn=$('#p-name-en').value.trim()||null;
@@ -1598,21 +1597,33 @@
     finally{btn.disabled=false;btn.textContent=local('Publish product','نشر المنتج')}
   };
 
-  $('#toggle-product-variants').onclick=()=>{
-    const enable=SIMPLE_PRODUCT_FLOW;
-    setVariantFlow(enable,enable);
-  };
+  document.querySelectorAll('[data-product-version-mode]').forEach(btn=>btn.onclick=()=>{
+    const hasOptions=btn.dataset.productVersionMode==='options';
+    setVariantFlow(hasOptions,hasOptions);
+  });
   $('#toggle-variant-advanced').onclick=()=>setVariantAdvanced(!VARIANT_ADVANCED);
+
   ['#p-name-en','#p-name-ar','#simple-product-stock','#p-cost','#p-retail'].forEach(sel=>{
     const el=$(sel);if(el)el.addEventListener('input',()=>{
-      if(sel==='#p-cost'||sel==='#p-retail')fillEmptyVariantPricesFromDefaults();
+      clearFormInvalidState(el);
+      if(sel==='#p-cost'||sel==='#p-retail')fillEmptyVariantPricesFromDefaults(false);
       productWizardSummary();
     });
   });
+
   document.querySelectorAll('[data-add-option-type]').forEach(btn=>btn.onclick=()=>addOptionCard(btn.dataset.addOptionType));
   $('#generate-variants-btn').onclick=renderVariantCombinations;
   document.querySelectorAll('[data-variant-pricing-mode]').forEach(btn=>btn.onclick=()=>setVariantPricingMode(btn.dataset.variantPricingMode));
-  $('#p-category').addEventListener('change',updateCategoryOptionSuggestion);
+  $('#apply-default-variant-prices').onclick=()=>{
+    fillEmptyVariantPricesFromDefaults(true);
+    msg(local('Default product prices applied to every variant.','تم تطبيق أسعار المنتج الافتراضية على كل الخيارات.'));
+  };
+  $('#p-category').addEventListener('change',()=>{
+    clearFormInvalidState($('#p-category'));
+    updateCategoryOptionSuggestion();
+    updateVariantBuildPreview();
+    productWizardSummary();
+  });
   document.querySelectorAll('.field-info-btn').forEach(btn=>btn.onclick=e=>{
     e.preventDefault();
     e.stopPropagation();
