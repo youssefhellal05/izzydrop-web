@@ -1395,50 +1395,107 @@
     return String(n>removedIndex?n-1:n);
   }
 
-  function removeSelectedImage(index){
+  function remapVariantImageReferences(mapper){
     document.querySelectorAll('[data-variant-group-image]').forEach(select=>{
-      select.value=adjustImageReference(select.value,index);
+      select.value=mapper(select.value);
       VARIANT_IMAGE_STATE.set(select.dataset.variantImageKey,select.value);
     });
+    for(const [key,value] of VARIANT_IMAGE_STATE.entries()){
+      VARIANT_IMAGE_STATE.set(key,mapper(value));
+    }
+  }
+
+  function removeSelectedImage(index){
+    remapVariantImageReferences(value=>adjustImageReference(value,index));
     SELECTED_IMAGES.splice(index,1);
     const input=$('#p-images');if(input)input.value='';
     renderSelectedImages();
     msg(local('Photo removed.','تم حذف الصورة.'));
   }
 
+  function makeSelectedImageMain(index){
+    if(index<=0||index>=SELECTED_IMAGES.length)return;
+    remapVariantImageReferences(value=>{
+      if(value===''||value==null)return '';
+      const n=Number(value);
+      if(!Number.isInteger(n))return '';
+      if(n===index)return '0';
+      if(n<index)return String(n+1);
+      return String(n);
+    });
+    const [file]=SELECTED_IMAGES.splice(index,1);
+    SELECTED_IMAGES.unshift(file);
+    renderSelectedImages();
+    msg(local('Main product photo updated.','تم تحديث الصورة الرئيسية للمنتج.'));
+  }
+
   function renderSelectedImages(){
     const box=$('#p-image-preview');
-    if(!SELECTED_IMAGES.length)box.innerHTML='<div class="photo-empty">'+local('No photos selected yet.','لم يتم اختيار صور بعد.')+'</div>';
-    else box.innerHTML=SELECTED_IMAGES.map((f,i)=>`<div class="photo-preview">
-      <img src="${URL.createObjectURL(f)}" alt="">
-      <span>${i===0?local('Main photo','الصورة الرئيسية'):`${local('Photo','صورة')} ${i+1}`}</span>
-      <button class="photo-remove-btn" type="button" data-remove-image="${i}" aria-label="${local('Remove photo','حذف الصورة')}">×</button>
-    </div>`).join('');
+    const drop=$('#photo-drop-zone');
+    drop?.classList.toggle('has-photos',SELECTED_IMAGES.length>0);
+    drop?.classList.remove('is-invalid');
+    if(!SELECTED_IMAGES.length){
+      box.innerHTML='<div class="photo-empty">'+local('No photos yet. Add at least one clear product photo.','لا توجد صور بعد. أضف صورة واضحة واحدة على الأقل للمنتج.')+'</div>';
+    }else{
+      box.innerHTML=SELECTED_IMAGES.map((f,i)=>`<div class="photo-preview polished-photo-preview">
+        <div class="photo-preview-image"><img src="${URL.createObjectURL(f)}" alt=""></div>
+        <div class="photo-preview-meta">
+          <span>${i===0?local('Main photo','الصورة الرئيسية'):`${local('Photo','صورة')} ${i+1}`}</span>
+          ${i===0?`<b class="main-photo-badge">${local('Marketplace cover','صورة الغلاف')}</b>`:`<button class="photo-main-btn" type="button" data-main-image="${i}">${local('Make main','اجعلها الرئيسية')}</button>`}
+        </div>
+        <button class="photo-remove-btn" type="button" data-remove-image="${i}" aria-label="${local('Remove photo','حذف الصورة')}">×</button>
+      </div>`).join('');
+    }
     document.querySelectorAll('[data-remove-image]').forEach(btn=>btn.onclick=()=>removeSelectedImage(Number(btn.dataset.removeImage)));
+    document.querySelectorAll('[data-main-image]').forEach(btn=>btn.onclick=()=>makeSelectedImageMain(Number(btn.dataset.mainImage)));
     refreshVariantPhotoChoices();
     productWizardSummary();
   }
 
-  $('#p-images').onchange=e=>{
-    const files=[...e.target.files];
+  function addSelectedImageFiles(files){
+    const list=[...(files||[])];
+    if(!list.length)return false;
     const allowed=['image/jpeg','image/png','image/webp'];
-    const bad=files.find(f=>!allowed.includes(f.type)||f.size>5*1024*1024);
-    if(bad){msg(local('Photos must be JPG, PNG, or WebP and no larger than 5 MB each.','يجب أن تكون الصور JPG أو PNG أو WebP وبحد أقصى 5 ميجابايت للصورة.'),true);e.target.value='';return}
+    const bad=list.find(file=>!allowed.includes(file.type)||file.size>5*1024*1024);
+    if(bad){
+      msg(local('Photos must be JPG, PNG, or WebP and no larger than 5 MB each.','يجب أن تكون الصور JPG أو PNG أو WebP وبحد أقصى 5 ميجابايت للصورة.'),true);
+      return false;
+    }
     const merged=[...SELECTED_IMAGES];
-    files.forEach(file=>{
+    list.forEach(file=>{
       const duplicate=merged.some(x=>x.name===file.name&&x.size===file.size&&x.lastModified===file.lastModified);
       if(!duplicate)merged.push(file);
     });
     if(merged.length>6){
       msg(local('You can add up to 6 product photos.','يمكنك إضافة حتى 6 صور للمنتج.'),true);
-      e.target.value='';
-      return;
+      return false;
     }
     SELECTED_IMAGES=merged;
-    e.target.value='';
     renderSelectedImages();
-    msg(SELECTED_IMAGES.length?local(`${SELECTED_IMAGES.length} product photo${SELECTED_IMAGES.length===1?'':'s'} ready.`,`${SELECTED_IMAGES.length} صورة جاهزة للمنتج.`):'');
+    msg(local(
+      `${SELECTED_IMAGES.length} product photo${SELECTED_IMAGES.length===1?'':'s'} ready.`,
+      `${SELECTED_IMAGES.length} صورة جاهزة للمنتج.`
+    ));
+    return true;
+  }
+
+  $('#p-images').onchange=e=>{
+    addSelectedImageFiles([...e.target.files]);
+    e.target.value='';
   };
+
+  const photoDrop=$('#photo-drop-zone');
+  if(photoDrop){
+    ['dragenter','dragover'].forEach(type=>photoDrop.addEventListener(type,e=>{
+      e.preventDefault();
+      photoDrop.classList.add('is-dragging');
+    }));
+    ['dragleave','drop'].forEach(type=>photoDrop.addEventListener(type,e=>{
+      e.preventDefault();
+      photoDrop.classList.remove('is-dragging');
+    }));
+    photoDrop.addEventListener('drop',e=>addSelectedImageFiles([...e.dataTransfer.files]));
+  }
 
   $('#add-form').onsubmit=async e=>{
     e.preventDefault();
