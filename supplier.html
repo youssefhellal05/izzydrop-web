@@ -11,7 +11,7 @@
   <meta name="theme-color" content="#111318">
   <script>try{document.documentElement.dataset.theme=localStorage.getItem("izzy_theme")==="dark"?"dark":"light"}catch(e){}</script>
   <meta name="description" content="IzzyDrop — Egypt’s independent dropshipping marketplace.">
-  <link rel="stylesheet" href="styles.css?v=20260924-variants2">
+  <link rel="stylesheet" href="styles.css?v=20260924-finish1">
 </head>
 <body>
 <div class="wrap">
@@ -44,6 +44,10 @@
           <button data-view="requests">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h5"/></svg>
             <span>Sourcing requests</span>
+          </button>
+          <button data-view="samples">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h8M9 3v5l-4 8a3 3 0 0 0 3 5h8a3 3 0 0 0 3-5l-4-8V3M7 15h10"/></svg>
+            <span>Samples</span>
           </button>
           <button data-view="orders">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v14H4zM8 3v6M16 3v6M8 13h8M8 17h5"/></svg>
@@ -145,7 +149,7 @@
           <div id="supplier-products-meta" class="results-meta muted"></div>
           <div class="supplier-table-wrap">
             <div class="supplier-product-table supplier-product-table-head">
-              <span>Product</span><span>SKU</span><span>Stock</span><span>Your cost</span><span>Suggested retail</span><span>Status</span><span>Actions</span>
+              <span></span><span>Product</span><span>SKU</span><span>Stock</span><span>Your price</span><span>Suggested retail</span><span>Status</span><span>Actions</span>
             </div>
             <div id="products" class="supplier-product-table-body"></div>
           </div>
@@ -158,6 +162,13 @@
           <div id="supplier-requests" class="orders-list"></div>
         </section>
 
+        <section id="view-samples" class="view" hidden>
+          <div class="section-heading">
+            <div><h2>Sample requests</h2><p class="muted">Approve sample requests, ship them, and add tracking.</p></div>
+          </div>
+          <div id="supplier-samples" class="orders-list"></div>
+        </section>
+
         <section id="view-orders" class="view" hidden>
           <div class="section-heading">
             <div><h2>Orders</h2><p class="muted">Fulfill customer orders and add tracking when they ship.</p></div>
@@ -166,7 +177,7 @@
             <button class="filter-chip on" data-supplier-order-filter="all">All</button>
             <button class="filter-chip" data-supplier-order-filter="new">New</button>
             <button class="filter-chip" data-supplier-order-filter="processing">Processing</button>
-            <button class="filter-chip" data-supplier-order-filter="fulfilled">Fulfilled</button>
+            <button class="filter-chip" data-supplier-order-filter="shipped">Shipped</button>
             <button class="filter-chip" data-supplier-order-filter="cancelled">Cancelled</button>
           </div>
           <div id="orders" class="orders-list supplier-orders-list"></div>
@@ -209,12 +220,16 @@
 
               <div class="form form-two-col product-meta-fields">
                 <div class="field">
-  <label class="field-label with-info" for="p-sku"><span>SKU <span class="muted">(optional)</span></span><button class="field-info-btn" data-field-help="sku" type="button" aria-label="Explain SKU">?</button></label>
-  <input id="p-sku" placeholder="Leave blank for IzzyDrop to create one">
-  <small>IzzyDrop will generate an SKU automatically if you leave this blank.</small>
-  <div class="field-help-panel" data-field-help-panel="sku" hidden></div>
-</div>
-                <div class="field"><label class="field-label">Currency</label><input value="EGP" disabled></div>
+                  <label class="field-label with-info" for="p-sku"><span>SKU <span class="muted">(optional)</span></span><button class="field-info-btn" data-field-help="sku" type="button" aria-label="Explain SKU">?</button></label>
+                  <input id="p-sku" placeholder="Leave blank for IzzyDrop to create one">
+                  <small>IzzyDrop will generate an SKU automatically if you leave this blank.</small>
+                  <div class="field-help-panel" data-field-help-panel="sku" hidden></div>
+                </div>
+                <div class="field">
+                  <label class="field-label" for="p-category">Category</label>
+                  <select id="p-category"><option value="">Choose category</option></select>
+                  <small>Choose the closest category so dropshippers can find the product faster.</small>
+                </div>
               </div>
             </div>
 
@@ -229,7 +244,7 @@
 
             <div class="card form-section">
               <div class="form-section-title"><span class="form-section-number">3</span><div><h3>Pricing</h3><p>Set what dropshippers pay you and the customer price you recommend.</p></div></div>
-              <div class="form form-two-col">
+              <div class="form form-three-col">
                 <div class="field">
                   <label class="field-label with-info" for="p-cost"><span>Your price to dropshippers (EGP)</span><button class="field-info-btn" data-field-help="cost" type="button" aria-label="Explain supplier price">?</button></label>
                   <input id="p-cost" type="number" step="0.01" min="0" placeholder="0.00" required>
@@ -239,6 +254,11 @@
                   <label class="field-label with-info" for="p-retail"><span>Suggested selling price (EGP)</span><button class="field-info-btn" data-field-help="retail" type="button" aria-label="Explain suggested selling price">?</button></label>
                   <input id="p-retail" type="number" step="0.01" min="0" placeholder="0.00" required>
                   <div class="field-help-panel" data-field-help-panel="retail" hidden></div>
+                </div>
+                <div class="field">
+                  <label class="field-label" for="p-shipping">Estimated shipping cost (EGP)</label>
+                  <input id="p-shipping" type="number" step="0.01" min="0" value="0" placeholder="0.00" required>
+                  <small>Typical delivery cost the dropshipper should include when estimating profit.</small>
                 </div>
               </div>
             </div>
@@ -260,6 +280,7 @@
                   <div class="field"><label class="field-label">Stock</label><input id="single-variant-stock" type="number" min="0" step="1" value="0"></div>
                   <div class="field"><label class="field-label">Supplier price override <span class="muted">(optional)</span></label><input id="single-variant-cost" type="number" min="0" step="0.01" placeholder="Use product price"></div>
                   <div class="field"><label class="field-label">Weight (g) <span class="muted">(optional)</span></label><input id="single-variant-weight" type="number" min="0" step="1" placeholder="Optional"></div>
+                  <div class="field"><label class="field-label">Variant photo <span class="muted">(optional)</span></label><select id="single-variant-image"><option value="">Use main photo</option></select></div>
                 </div>
               </div>
 
@@ -276,7 +297,7 @@
                   <span id="variant-combination-count" class="muted">0 combinations</span>
                 </div>
                 <div class="variant-combination-table">
-                  <div class="variant-combination-row variant-combination-header"><span>Sell</span><span>Variant</span><span>SKU</span><span>Stock</span><span>Supplier price</span><span>Weight (g)</span></div>
+                  <div class="variant-combination-row variant-combination-header"><span>Sell</span><span>Variant</span><span>Photo</span><span>SKU</span><span>Stock</span><span>Supplier price</span><span>Weight (g)</span></div>
                   <div id="variant-combination-rows"></div>
                 </div>
               </div>
@@ -321,6 +342,7 @@
 
       <label class="field-label with-info"><span>SKU</span><button class="field-info-btn" data-field-help="sku" type="button" aria-label="Explain SKU">?</button></label><input id="edit-product-sku" required><div class="field-help-panel" data-field-help-panel="sku" hidden></div>
       <div class="form-two-col">
+        <div class="field"><label class="field-label">Category</label><select id="edit-product-category"><option value="">No category</option></select></div>
         <div class="field"><label class="field-label">Marketplace status</label>
           <select id="edit-product-market-status">
             <option value="active">Active</option>
@@ -336,7 +358,7 @@
         <div class="field"><label class="field-label with-info"><span>Suggested selling price (EGP)</span><button class="field-info-btn" data-field-help="retail" type="button" aria-label="Explain suggested selling price">?</button></label><input id="edit-product-retail" type="number" step="0.01" min="0"><div class="field-help-panel" data-field-help-panel="retail" hidden></div></div>
       </div>
       <div class="edit-variants-section">
-        <div class="row"><div><b>Variants & stock</b><small>Update inventory for each variant.</small></div></div>
+        <div class="row"><div><b>Variants & stock</b><small>Update inventory, availability, and the photo shown for each variant.</small></div></div>
         <div id="edit-variant-list" class="edit-variant-list"></div>
       </div>
       <button id="save-product-edit" class="btn" type="submit">Save changes</button>
@@ -346,10 +368,10 @@
 </div>
 
 <script src="config.js"></script>
-<script src="common.js?v=20260924-variants2"></script>
-<script src="i18n.js?v=20260924-variants2"></script>
-<script src="supplier.js?v=20260924-variants2"></script>
+<script src="common.js?v=20260924-finish1"></script>
+<script src="i18n.js?v=20260924-finish1"></script>
+<script src="supplier.js?v=20260924-finish1"></script>
 <script>window.IZZY_SETTINGS_ROLE="supplier"</script>
-<script src="settings.js?v=20260923-webauto4"></script>
+<script src="settings.js?v=20260924-finish1"></script>
 </body>
 </html>
