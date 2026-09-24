@@ -113,11 +113,11 @@
   }
 
   function refreshVariantPhotoChoices(){
-    document.querySelectorAll('[data-manual-image]').forEach(select=>{
+    document.querySelectorAll('[data-color-image]').forEach(select=>{
       const current=select.value;
       select.innerHTML=selectedImageOptions(current);
       if([...select.options].some(o=>o.value===current))select.value=current;
-      updateManualVariantPhoto(select.closest('[data-manual-variant]'));
+      updateColorPhoto(select.closest('[data-color-group]'));
     });
   }
 
@@ -790,96 +790,141 @@
     finally{btn.disabled=false;btn.textContent='Save changes'}
   };
 
-  function manualVariantRows(){
-    return [...document.querySelectorAll('#manual-variant-list [data-manual-variant]')];
+  function colorGroups(){
+    return [...document.querySelectorAll('#variant-color-list [data-color-group]')];
   }
 
-  function updateManualVariantPhoto(row){
-    if(!row)return;
-    const select=row.querySelector('[data-manual-image]');
-    const preview=row.querySelector('[data-manual-photo-preview]');
+  function sizeRows(group){
+    return [...group.querySelectorAll('[data-size-row]')];
+  }
+
+  function updateColorPhoto(group){
+    if(!group)return;
+    const select=group.querySelector('[data-color-image]');
+    const preview=group.querySelector('[data-color-photo-preview]');
     if(!select||!preview)return;
     const index=select.value===''?null:Number(select.value);
     const file=index==null?null:SELECTED_IMAGES[index];
     preview.innerHTML=file
-      ? `<img src="${URL.createObjectURL(file)}" alt=""><span>${IZZY.esc(file.name||local('Variant photo','صورة الخيار'))}</span>`
-      : `<span class="manual-variant-photo-empty">${local('Main product photo','صورة المنتج الرئيسية')}</span>`;
+      ? `<img src="${URL.createObjectURL(file)}" alt=""><span>${IZZY.esc(file.name||local('Color photo','صورة اللون'))}</span>`
+      : `<span class="manual-variant-photo-empty">${local('Use main product photo','استخدم صورة المنتج الرئيسية')}</span>`;
   }
 
-  function renumberManualVariants(){
-    const rows=manualVariantRows();
+  function renumberColorGroups(){
+    const groups=colorGroups();
+    groups.forEach((group,index)=>{
+      const label=group.querySelector('[data-color-number]');
+      if(label)label.textContent=local(`Color ${index+1}`,`اللون ${index+1}`);
+      const remove=group.querySelector('[data-remove-color]');
+      if(remove)remove.hidden=groups.length===1;
+    });
+    productWizardSummary();
+  }
+
+  function renumberSizes(group){
+    const rows=sizeRows(group);
     rows.forEach((row,index)=>{
-      const label=row.querySelector('[data-manual-number]');
-      if(label)label.textContent=local(`Variant ${index+1}`,`الخيار ${index+1}`);
-      const remove=row.querySelector('[data-remove-manual-variant]');
+      const label=row.querySelector('[data-size-number]');
+      if(label)label.textContent=local(`Size ${index+1}`,`المقاس ${index+1}`);
+      const remove=row.querySelector('[data-remove-size]');
       if(remove)remove.hidden=rows.length===1;
     });
     productWizardSummary();
   }
 
-  function addManualVariant(prefill={}){
-    const box=$('#manual-variant-list');
-    if(!box)return;
+  function addSizeRow(group,prefill={}){
+    const list=group.querySelector('[data-size-list]');
+    if(!list)return;
     const row=document.createElement('div');
-    row.className='manual-variant-card';
-    row.dataset.manualVariant='1';
+    row.className='color-size-row';
+    row.dataset.sizeRow='1';
     row.innerHTML=`
-      <div class="manual-variant-head">
-        <div><b data-manual-number></b><small>${local('Add the exact version you have in stock.','أضف النسخة الفعلية الموجودة لديك في المخزون.')}</small></div>
-        <button class="variant-option-remove" data-remove-manual-variant type="button" aria-label="${local('Remove variant','حذف الخيار')}">×</button>
+      <div class="color-size-row-head">
+        <b data-size-number></b>
+        <button class="variant-option-remove" data-remove-size type="button" aria-label="${local('Remove size','حذف المقاس')}">×</button>
       </div>
-      <div class="manual-variant-grid">
-        <div class="field manual-variant-photo-field">
-          <label class="field-label">${local('Photo','الصورة')}</label>
-          <div class="manual-variant-photo" data-manual-photo-preview></div>
-          <select data-manual-image>${selectedImageOptions(prefill.image_index??'')}</select>
-          <label class="btn secondary manual-variant-upload">
-            ${local('Upload photo','رفع صورة')}
-            <input data-manual-upload type="file" accept="image/jpeg,image/png,image/webp" hidden>
-          </label>
-        </div>
+      <div class="color-size-fields">
         <div class="field">
-          <label class="field-label">${local('Color','اللون')} <span class="muted">(${local('optional','اختياري')})</span></label>
-          <input data-manual-color value="${IZZY.esc(prefill.color||'')}" placeholder="${local('e.g. Black','مثال: أسود')}">
-        </div>
-        <div class="field">
-          <label class="field-label">${local('Size','المقاس')} <span class="muted">(${local('optional','اختياري')})</span></label>
-          <input data-manual-size value="${IZZY.esc(prefill.size||'')}" placeholder="${local('e.g. M','مثال: M')}">
+          <label class="field-label">${local('Size','المقاس')}</label>
+          <input data-size-name value="${IZZY.esc(prefill.size||'')}" placeholder="${local('e.g. M','مثال: M')}">
         </div>
         <div class="field">
           <label class="field-label">${local('Stock','المخزون')}</label>
-          <input data-manual-stock type="number" min="0" step="1" value="${IZZY.esc(prefill.stock??'0')}">
+          <input data-size-stock type="number" min="0" step="1" value="${IZZY.esc(prefill.stock??'0')}">
         </div>
         <div class="field">
           <label class="field-label">${local('Different supplier price','سعر مورد مختلف')} <span class="muted">(${local('optional','اختياري')})</span></label>
-          <input data-manual-cost type="number" min="0" step="0.01" value="${IZZY.esc(prefill.cost??'')}" placeholder="${local('Use product price','استخدم سعر المنتج')}">
-        </div>
-        <div class="field variant-advanced-field">
-          <label class="field-label">${local('Model / other option','الموديل / خيار آخر')} <span class="muted">(${local('optional','اختياري')})</span></label>
-          <input data-manual-model value="${IZZY.esc(prefill.model||'')}" placeholder="${local('e.g. 256 GB','مثال: 256 GB')}">
+          <input data-size-cost type="number" min="0" step="0.01" value="${IZZY.esc(prefill.cost??'')}" placeholder="${local('Use product price','استخدم سعر المنتج')}">
         </div>
         <div class="field variant-advanced-field">
           <label class="field-label">${local('Variant SKU','SKU للخيار')} <span class="muted">(${local('optional','اختياري')})</span></label>
-          <input data-manual-sku value="${IZZY.esc(prefill.sku||'')}" placeholder="${local('Auto if blank','تلقائي إذا تركته فارغًا')}">
+          <input data-size-sku value="${IZZY.esc(prefill.sku||'')}" placeholder="${local('Auto if blank','تلقائي إذا تركته فارغًا')}">
         </div>
         <div class="field variant-advanced-field">
           <label class="field-label">${local('Weight (g)','الوزن (جم)')} <span class="muted">(${local('optional','اختياري')})</span></label>
-          <input data-manual-weight type="number" min="0" step="1" value="${IZZY.esc(prefill.weight??'')}" placeholder="${local('Optional','اختياري')}">
+          <input data-size-weight type="number" min="0" step="1" value="${IZZY.esc(prefill.weight??'')}" placeholder="${local('Optional','اختياري')}">
         </div>
       </div>
     `;
 
-    row.querySelector('[data-remove-manual-variant]').onclick=()=>{
+    row.querySelector('[data-remove-size]').onclick=()=>{
       row.remove();
-      renumberManualVariants();
+      renumberSizes(group);
+    };
+    row.querySelectorAll('input').forEach(el=>el.addEventListener('input',productWizardSummary));
+    list.appendChild(row);
+    renumberSizes(group);
+  }
+
+  function addColorGroup(prefill={}){
+    const box=$('#variant-color-list');
+    if(!box)return;
+    const group=document.createElement('div');
+    group.className='variant-color-card';
+    group.dataset.colorGroup='1';
+    group.innerHTML=`
+      <div class="variant-color-head">
+        <div><b data-color-number></b><small>${local('One photo and one color, with as many sizes as you need.','صورة ولون واحد مع أي عدد من المقاسات التي تحتاجها.')}</small></div>
+        <button class="variant-option-remove" data-remove-color type="button" aria-label="${local('Remove color','حذف اللون')}">×</button>
+      </div>
+
+      <div class="variant-color-main">
+        <div class="field variant-color-photo-field">
+          <label class="field-label">${local('Color photo','صورة اللون')}</label>
+          <div class="manual-variant-photo" data-color-photo-preview></div>
+          <select data-color-image>${selectedImageOptions(prefill.image_index??'')}</select>
+          <label class="btn secondary manual-variant-upload">
+            ${local('Upload photo','رفع صورة')}
+            <input data-color-upload type="file" accept="image/jpeg,image/png,image/webp" hidden>
+          </label>
+        </div>
+        <div class="field">
+          <label class="field-label">${local('Color','اللون')}</label>
+          <input data-color-name value="${IZZY.esc(prefill.color||'')}" placeholder="${local('e.g. Black','مثال: أسود')}">
+        </div>
+      </div>
+
+      <div class="color-sizes-section">
+        <div class="color-sizes-head">
+          <div><b>${local('Sizes & stock','المقاسات والمخزون')}</b><small>${local('Each size has its own stock.','لكل مقاس مخزونه الخاص.')}</small></div>
+          <button class="btn secondary" data-add-size type="button">+ ${local('Add size','أضف مقاسًا')}</button>
+        </div>
+        <div data-size-list class="color-size-list"></div>
+      </div>
+    `;
+
+    group.querySelector('[data-remove-color]').onclick=()=>{
+      group.remove();
+      renumberColorGroups();
     };
 
-    row.querySelector('[data-manual-image]').onchange=()=>{
-      updateManualVariantPhoto(row);
+    group.querySelector('[data-color-name]').addEventListener('input',productWizardSummary);
+    group.querySelector('[data-color-image]').onchange=()=>{
+      updateColorPhoto(group);
       productWizardSummary();
     };
 
-    row.querySelector('[data-manual-upload]').onchange=e=>{
+    group.querySelector('[data-color-upload]').onchange=e=>{
       const file=e.target.files?.[0];
       e.target.value='';
       if(!file)return;
@@ -891,26 +936,27 @@
       let index=SELECTED_IMAGES.findIndex(x=>x.name===file.name&&x.size===file.size&&x.lastModified===file.lastModified);
       if(index<0){
         if(SELECTED_IMAGES.length>=6){
-          msg(local('You can add up to 6 product photos. Reuse an existing photo for variants with the same color.','يمكنك إضافة حتى 6 صور للمنتج. استخدم نفس الصورة للخيارات ذات اللون نفسه.'),true);
+          msg(local('You can add up to 6 product photos. Reuse an existing photo for colors that share a photo.','يمكنك إضافة حتى 6 صور للمنتج. أعد استخدام صورة موجودة للألوان التي تشترك في نفس الصورة.'),true);
           return;
         }
         SELECTED_IMAGES.push(file);
         index=SELECTED_IMAGES.length-1;
         renderSelectedImages();
       }
-      const select=row.querySelector('[data-manual-image]');
+      const select=group.querySelector('[data-color-image]');
       refreshVariantPhotoChoices();
       select.value=String(index);
-      updateManualVariantPhoto(row);
+      updateColorPhoto(group);
       productWizardSummary();
     };
 
-    row.querySelectorAll('input,select').forEach(el=>{
-      if(!el.matches('[data-manual-upload]'))el.addEventListener('input',productWizardSummary);
-    });
-    box.appendChild(row);
-    updateManualVariantPhoto(row);
-    renumberManualVariants();
+    group.querySelector('[data-add-size]').onclick=()=>addSizeRow(group);
+    box.appendChild(group);
+
+    const startingSizes=Array.isArray(prefill.sizes)&&prefill.sizes.length?prefill.sizes:[{}];
+    startingSizes.forEach(size=>addSizeRow(group,size));
+    updateColorPhoto(group);
+    renumberColorGroups();
   }
 
   function collectVariants(){
@@ -927,40 +973,42 @@
       }];
     }
 
-    const rows=manualVariantRows();
-    if(!rows.length)throw Error(local('Add at least one variant.','أضف خيارًا واحدًا على الأقل.'));
+    const groups=colorGroups();
+    if(!groups.length)throw Error(local('Add at least one color.','أضف لونًا واحدًا على الأقل.'));
 
-    const variants=rows.map((row,index)=>{
-      const color=row.querySelector('[data-manual-color]').value.trim();
-      const size=row.querySelector('[data-manual-size]').value.trim();
-      const model=row.querySelector('[data-manual-model]').value.trim();
-      const options={};
-      if(color)options.Color=color;
-      if(size)options.Size=size;
-      if(model)options.Option=model;
-      if(!Object.keys(options).length){
-        throw Error(local(`Add a color, size, or other option for Variant ${index+1}.`,`أضف لونًا أو مقاسًا أو خيارًا آخر للخيار ${index+1}.`));
-      }
-      const stock=Number(row.querySelector('[data-manual-stock]').value||0);
-      if(!Number.isFinite(stock)||stock<0)throw Error(local(`Enter valid stock for Variant ${index+1}.`,`أدخل مخزونًا صحيحًا للخيار ${index+1}.`));
-      const costInput=row.querySelector('[data-manual-cost]').value;
-      const weightInput=row.querySelector('[data-manual-weight]').value;
-      return {
-        name:Object.values(options).join(' / '),
-        sku:row.querySelector('[data-manual-sku]').value.trim()||null,
-        stock,
-        cost:costInput===''?null:Number(costInput),
-        weight_grams:weightInput===''?null:Number(weightInput),
-        image_index:row.querySelector('[data-manual-image]').value===''?null:Number(row.querySelector('[data-manual-image]').value),
-        enabled:true,
-        options
-      };
+    const variants=[];
+    groups.forEach((group,colorIndex)=>{
+      const color=group.querySelector('[data-color-name]').value.trim();
+      if(!color)throw Error(local(`Enter a color for Color ${colorIndex+1}.`,`أدخل لونًا للون ${colorIndex+1}.`));
+      const imageValue=group.querySelector('[data-color-image]').value;
+      const imageIndex=imageValue===''?null:Number(imageValue);
+      const rows=sizeRows(group);
+      if(!rows.length)throw Error(local(`Add at least one size for ${color}.`,`أضف مقاسًا واحدًا على الأقل للون ${color}.`));
+
+      rows.forEach((row,sizeIndex)=>{
+        const size=row.querySelector('[data-size-name]').value.trim();
+        if(!size)throw Error(local(`Enter Size ${sizeIndex+1} for ${color}.`,`أدخل المقاس ${sizeIndex+1} للون ${color}.`));
+        const stock=Number(row.querySelector('[data-size-stock]').value||0);
+        if(!Number.isFinite(stock)||stock<0)throw Error(local(`Enter valid stock for ${color} / ${size}.`,`أدخل مخزونًا صحيحًا لـ ${color} / ${size}.`));
+        const costInput=row.querySelector('[data-size-cost]').value;
+        const weightInput=row.querySelector('[data-size-weight]').value;
+        variants.push({
+          name:`${color} / ${size}`,
+          sku:row.querySelector('[data-size-sku]').value.trim()||null,
+          stock,
+          cost:costInput===''?null:Number(costInput),
+          weight_grams:weightInput===''?null:Number(weightInput),
+          image_index:imageIndex,
+          enabled:true,
+          options:{Color:color,Size:size}
+        });
+      });
     });
 
     const keys=new Set();
     variants.forEach((variant,index)=>{
-      const key=JSON.stringify(variant.options).toLowerCase();
-      if(keys.has(key))throw Error(local(`Variant ${index+1} duplicates another variant.`,`الخيار ${index+1} مكرر.`));
+      const key=`${variant.options.Color}::${variant.options.Size}`.trim().toLowerCase();
+      if(keys.has(key))throw Error(local(`Duplicate color/size: ${variant.name}.`,`اللون/المقاس مكرر: ${variant.name}.`));
       keys.add(key);
     });
     return variants;
@@ -968,10 +1016,10 @@
 
   function resetVariantBuilder(){
     SIMPLE_PRODUCT_FLOW=false;
-    const box=$('#manual-variant-list');
+    const box=$('#variant-color-list');
     if(box){
       box.innerHTML='';
-      addManualVariant();
+      addColorGroup();
     }
     if($('#simple-product-stock'))$('#simple-product-stock').value='0';
     productWizardSummary();
@@ -986,7 +1034,7 @@
   }
 
   function removeSelectedImage(index){
-    document.querySelectorAll('[data-manual-image]').forEach(select=>{
+    document.querySelectorAll('[data-color-image]').forEach(select=>{
       select.value=adjustImageReference(select.value,index);
     });
     SELECTED_IMAGES.splice(index,1);
@@ -1160,7 +1208,7 @@
   ['#p-name-en','#p-name-ar','#simple-product-stock','#p-cost','#p-retail','#p-shipping'].forEach(sel=>{
     const el=$(sel);if(el)el.addEventListener('input',productWizardSummary);
   });
-  $('#add-manual-variant').onclick=()=>addManualVariant();
+  $('#add-variant-color').onclick=()=>addColorGroup();
   document.querySelectorAll('.field-info-btn').forEach(btn=>btn.onclick=e=>{
     e.preventDefault();
     e.stopPropagation();
