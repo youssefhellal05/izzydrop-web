@@ -1,6 +1,6 @@
 (()=>{
   const $=s=>document.querySelector(s);
-  let SUP=null,PRODUCTS=[],VARIANTS=[],IMAGES=[],ORDERS=[],ITEMS=[],REQUESTS=[],QUOTES=[],CATEGORIES=[],SAMPLES=[],SELECTED_IMAGES=[],ORDER_FILTER='all',NEW_CONTENT_LANG='en',NEW_SOURCE_LANGUAGE='en',EDIT_CONTENT_LANG='en',VARIANT_MODE='single',PRODUCT_STEP=1,VARIANT_ADVANCED=false,SIMPLE_PRODUCT_FLOW=false;
+  let SUP=null,PRODUCTS=[],VARIANTS=[],IMAGES=[],ORDERS=[],ITEMS=[],REQUESTS=[],QUOTES=[],CATEGORIES=[],SAMPLES=[],SELECTED_IMAGES=[],ORDER_FILTER='all',NEW_CONTENT_LANG='en',NEW_SOURCE_LANGUAGE='en',EDIT_CONTENT_LANG='en',VARIANT_MODE='single',PRODUCT_STEP=3,VARIANT_ADVANCED=false,SIMPLE_PRODUCT_FLOW=true;
   const SELECTED_PRODUCT_IDS=new Set();
   const VARIANT_COMBO_STATE=new Map();
 
@@ -148,34 +148,29 @@
     return true;
   }
 
-  function setProductStep(step,scroll=true){
-    PRODUCT_STEP=Math.max(1,Math.min(3,Number(step)||1));
-    document.querySelectorAll('[data-product-step]').forEach(el=>el.hidden=Number(el.dataset.productStep)!==PRODUCT_STEP);
-    document.querySelectorAll('[data-product-step-jump]').forEach(btn=>{
-      const n=Number(btn.dataset.productStepJump);
-      btn.classList.toggle('on',n===PRODUCT_STEP);
-      btn.classList.toggle('done',n<PRODUCT_STEP);
-      btn.classList.toggle('skipped',SIMPLE_PRODUCT_FLOW&&n===2);
-    });
-    const back=$('#product-step-back'),next=$('#product-step-next'),publish=$('#add-product-btn'),skip=$('#product-skip-variants');
-    if(back)back.hidden=PRODUCT_STEP===1;
-    if(next){
-      next.hidden=PRODUCT_STEP===3;
-      next.textContent=PRODUCT_STEP===1?local('Next: Variants','التالي: الخيارات'):local('Next: Price','التالي: السعر');
-    }
-    if(skip)skip.hidden=PRODUCT_STEP!==1;
-    if(publish)publish.hidden=PRODUCT_STEP!==3;
+  function setVariantFlow(hasVariants,scroll=false){
+    SIMPLE_PRODUCT_FLOW=!hasVariants;
+    PRODUCT_STEP=3;
+    const builder=$('#variant-builder-card');
     const simpleStock=$('#simple-product-stock-field');
-    if(simpleStock)simpleStock.hidden=!(PRODUCT_STEP===3&&SIMPLE_PRODUCT_FLOW);
-    const title=$('#product-step-title'),help=$('#product-step-help');
-    const copy={
-      1:[local('Product details','بيانات المنتج'),local('Add the name, category and photos.','أضف الاسم والفئة والصور.')],
-      2:[local('Variants & stock','الخيارات والمخزون'),local('Choose one version or create color and size combinations.','اختر نسخة واحدة أو أنشئ تركيبات الألوان والمقاسات.')],
-      3:[local('Price & publish','السعر والنشر'),local('Set the price and publish when everything looks right.','حدد السعر ثم انشر المنتج عندما يصبح جاهزًا.')]
-    }[PRODUCT_STEP];
-    if(title)title.textContent=copy[0];
-    if(help)help.textContent=copy[1];
+    const choice=$('#variant-choice-card');
+    const toggle=$('#toggle-product-variants');
+    if(builder)builder.hidden=!hasVariants;
+    if(simpleStock)simpleStock.hidden=hasVariants;
+    if(choice)choice.classList.toggle('variants-on',hasVariants);
+    if(toggle){
+      toggle.textContent=hasVariants
+        ? local('Use one stock only','استخدم مخزونًا واحدًا فقط')
+        : local('This product has colors, sizes, or options','هذا المنتج له ألوان أو مقاسات أو خيارات');
+      toggle.classList.toggle('secondary',!hasVariants);
+    }
     productWizardSummary();
+    if(scroll&&hasVariants)builder?.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+
+  function setProductStep(step,scroll=true){
+    PRODUCT_STEP=3;
+    setVariantFlow(!SIMPLE_PRODUCT_FLOW,false);
     if(scroll)document.querySelector('#view-add .section-heading')?.scrollIntoView({behavior:'smooth',block:'start'});
   }
 
@@ -1055,7 +1050,6 @@
   }
 
   function resetVariantBuilder(){
-    SIMPLE_PRODUCT_FLOW=false;
     const box=$('#variant-color-list');
     if(box){
       box.innerHTML='';
@@ -1119,14 +1113,12 @@
 
   $('#add-form').onsubmit=async e=>{
     e.preventDefault();
-    if(PRODUCT_STEP<3){
-      if(validateProductStep(PRODUCT_STEP))setProductStep(PRODUCT_STEP+1);
+    const step1ok=validateProductStep(1);
+    if(!step1ok)return;
+    if(!SIMPLE_PRODUCT_FLOW&&!validateProductStep(2)){
+      $('#variant-builder-card')?.scrollIntoView({behavior:'smooth',block:'start'});
       return;
     }
-    const step1ok=validateProductStep(1);
-    if(!step1ok){setProductStep(1);return}
-    const step2ok=validateProductStep(2);
-    if(!step2ok){setProductStep(2);return}
     const btn=$('#add-product-btn');btn.disabled=true;btn.textContent=local('Publishing…','جارٍ النشر…');
     try{
       const cost=Number($('#p-cost').value);
@@ -1214,7 +1206,7 @@
       SELECTED_IMAGES=[];renderSelectedImages();
       resetVariantBuilder();
       setVariantAdvanced(false);
-      setProductStep(1,false);
+      setVariantFlow(false,false);
       await load(false);
       go('products');
       msg(`Product added · SKU ${result.sku}${uploaded? ` · ${uploaded} photo${uploaded===1?'':'s'}`:''}.`);
@@ -1222,28 +1214,10 @@
     finally{btn.disabled=false;btn.textContent=local('Publish product','نشر المنتج')}
   };
 
-  $('#product-step-next').onclick=()=>{
-    if(!validateProductStep(PRODUCT_STEP))return;
-    SIMPLE_PRODUCT_FLOW=false;
-    setProductStep(PRODUCT_STEP+1);
+  $('#toggle-product-variants').onclick=()=>{
+    const enable=SIMPLE_PRODUCT_FLOW;
+    setVariantFlow(enable,enable);
   };
-  $('#product-skip-variants').onclick=()=>{
-    if(!validateProductStep(1))return;
-    SIMPLE_PRODUCT_FLOW=true;
-    if($('#simple-product-stock'))$('#simple-product-stock').value='0';
-    setProductStep(3);
-  };
-  $('#product-step-back').onclick=()=>{
-    if(PRODUCT_STEP===3&&SIMPLE_PRODUCT_FLOW)setProductStep(1);
-    else setProductStep(PRODUCT_STEP-1);
-  };
-  document.querySelectorAll('[data-product-step-jump]').forEach(btn=>btn.onclick=()=>{
-    const target=Number(btn.dataset.productStepJump);
-    if(target>PRODUCT_STEP+1)return;
-    if(target>PRODUCT_STEP&&!validateProductStep(PRODUCT_STEP))return;
-    if(target===2)SIMPLE_PRODUCT_FLOW=false;
-    setProductStep(target);
-  });
   $('#toggle-variant-advanced').onclick=()=>setVariantAdvanced(!VARIANT_ADVANCED);
   ['#p-name-en','#p-name-ar','#simple-product-stock','#p-cost','#p-retail','#p-shipping'].forEach(sel=>{
     const el=$(sel);if(el)el.addEventListener('input',productWizardSummary);
@@ -1265,7 +1239,7 @@
   document.querySelectorAll('[data-edit-content-lang]').forEach(b=>b.onclick=()=>setEditContentLang(b.dataset.editContentLang));
   $('#p-translate-btn').onclick=translateNewContent;
   $('#edit-translate-btn').onclick=translateEditContent;
-  const initialContentLang=window.IZZY_I18N?.isArabic?.()?'ar':'en';NEW_SOURCE_LANGUAGE=initialContentLang;setNewContentLang(initialContentLang,false);setVariantAdvanced(false);resetVariantBuilder();setProductStep(1,false);
+  const initialContentLang=window.IZZY_I18N?.isArabic?.()?'ar':'en';NEW_SOURCE_LANGUAGE=initialContentLang;setNewContentLang(initialContentLang,false);setVariantAdvanced(false);resetVariantBuilder();setVariantFlow(false,false);
   $('#supplier-product-search').oninput=renderProducts;
   $('#supplier-product-status').onchange=renderProducts;
   $('#select-all-products').onchange=e=>{
