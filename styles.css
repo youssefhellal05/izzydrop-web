@@ -1207,3 +1207,57 @@ html[dir="rtl"] .photo-remove-btn{right:auto;left:7px}
   #product-step-next{order:1}
   #product-skip-variants{order:2}
 }
+
+
+/* Final mobile supplier wizard action layout */
+@media(max-width:680px){
+  #view-add .simple-wizard-actions{
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:stretch!important;
+    gap:14px!important;
+    padding:20px!important;
+  }
+  #view-add .wizard-action-copy{
+    order:1!important;
+    width:100%!important;
+    margin:0!important;
+  }
+  #view-add #product-step-back{
+    order:2!important;
+    width:100%!important;
+    max-width:none!important;
+    margin:0!important;
+  }
+  #view-add .wizard-forward-actions{
+    order:3!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:stretch!important;
+    width:100%!important;
+    gap:10px!important;
+    margin:0!important;
+  }
+  #view-add .wizard-forward-actions .btn{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    width:100%!important;
+    max-width:none!important;
+    min-width:0!important;
+    min-height:54px!important;
+    margin:0!important;
+    padding:13px 16px!important;
+    white-space:nowrap!important;
+    font-size:15px!important;
+    line-height:1.15!important;
+  }
+  #view-add #product-step-next{
+    order:1!important;
+    font-size:16px!important;
+  }
+  #view-add #product-skip-variants{
+    order:2!important;
+    font-size:14px!important;
+  }
+}
