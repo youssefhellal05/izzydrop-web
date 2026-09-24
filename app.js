@@ -291,7 +291,7 @@
     el.innerHTML='<option value="">Choose variant</option>';el.disabled=true;
     if(!productId)return;
     try{
-      const vs=await IZZY.rpc('marketplace_variants_v2',{_product_id:productId});
+      const vs=await IZZY.rpc('marketplace_variants_v3',{_product_id:productId});
       el.innerHTML='<option value="">Choose variant</option>'+vs.map(v=>`<option value="${IZZY.esc(v.id)}" ${Number(v.stock_quantity)<=0?'disabled':''}>${IZZY.esc(variantLabel(v))} · ${v.stock_quantity} in stock</option>`).join('');
       el.disabled=false;
     }catch(e){$('#order-status').textContent=e.message;$('#order-status').className='status bad'}
@@ -335,7 +335,7 @@
     $('#link-modal').hidden=false;
 
     try{
-      const variants=await IZZY.rpc('marketplace_variants_v2',{_product_id:productId});
+      const variants=await IZZY.rpc('marketplace_variants_v3',{_product_id:productId});
       const existing=integration?INTEGRATION_VARIANTS.filter(x=>x.integration_id===integration.id):[];
       const existingMap=new Map(existing.map(x=>[x.variant_id,x]));
       const defaultPrice=Number(link?.retail_price??p.suggested_retail_price??0);
@@ -343,7 +343,7 @@
       $('#web-variant-list').innerHTML=(variants||[]).map(v=>{
         const configured=existingMap.get(v.id);
         const checked=integration?!!configured:true;
-        const price=Number(configured?.retail_price??defaultPrice);
+        const price=Number(configured?.retail_price??v.suggested_retail_price??defaultPrice);
         return `<label class="web-variant-row" data-web-variant-row="${v.id}">
           <span><input class="web-variant-check" type="checkbox" data-web-variant-id="${v.id}" ${checked?'checked':''}></span>
           <span class="web-variant-name"><b>${IZZY.esc(variantLabel(v))}</b><small>${IZZY.esc(v.sku||'')}</small></span>
@@ -389,7 +389,7 @@
     $('#sample-variant').innerHTML='<option value="">'+local('Loading variants…','جارٍ تحميل الخيارات…')+'</option>';
     $('#sample-modal').hidden=false;
     try{
-      const variants=await IZZY.rpc('marketplace_variants_v2',{_product_id:productId});
+      const variants=await IZZY.rpc('marketplace_variants_v3',{_product_id:productId});
       const available=(variants||[]).filter(v=>Number(v.stock_quantity)>0);
       $('#sample-variant').innerHTML='<option value="">'+local('Choose variant','اختر الخيار')+'</option>'+
         available.map(v=>`<option value="${v.id}">${IZZY.esc(variantLabel(v))} · ${v.stock_quantity} ${local('in stock','متوفر')}</option>`).join('');
