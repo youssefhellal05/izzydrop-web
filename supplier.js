@@ -1,6 +1,6 @@
 (()=>{
   const $=s=>document.querySelector(s);
-  let SUP=null,PRODUCTS=[],VARIANTS=[],IMAGES=[],ORDERS=[],ITEMS=[],REQUESTS=[],QUOTES=[],SELECTED_IMAGES=[],ORDER_FILTER='all',NEW_CONTENT_LANG='en',NEW_SOURCE_LANGUAGE='en',EDIT_CONTENT_LANG='en',VARIANT_MODE='single';
+  let SUP=null,PRODUCTS=[],VARIANTS=[],IMAGES=[],ORDERS=[],ITEMS=[],REQUESTS=[],QUOTES=[],CATEGORIES=[],SAMPLES=[],SELECTED_IMAGES=[],ORDER_FILTER='all',NEW_CONTENT_LANG='en',NEW_SOURCE_LANGUAGE='en',EDIT_CONTENT_LANG='en',VARIANT_MODE='single';
   const SELECTED_PRODUCT_IDS=new Set();
   const VARIANT_COMBO_STATE=new Map();
 
@@ -8,7 +8,8 @@
     overview:['Overview','See what needs your attention today.'],
     products:['My Products','View and edit every product you have listed on IzzyDrop.'],
     requests:['Sourcing requests','Quote products dropshippers are actively looking for.'],
-    orders:['Orders','Fulfill customer orders and add tracking when they ship.'],
+    samples:['Samples','Approve sample requests and add tracking when they ship.'],
+    orders:['Orders','Ship customer orders and add tracking when they leave you.'],
     add:['Add product','Create a complete product listing for dropshippers.'],
     settings:['Settings','Manage your supplier account, notifications, appearance and security.']
   };
@@ -38,9 +39,12 @@
   function threshold(){return Number(SUP?.low_stock_threshold??5)}
   function lowStockProduct(p){const vs=enabledVariantsFor(p.id);return vs.length>0&&vs.some(v=>Number(v.stock_quantity||0)<=threshold())}
   function supplierOrderState(item){
-    if(item.fulfillment_status==='fulfilled')return 'fulfilled';
     if(item.fulfillment_status==='cancelled')return 'cancelled';
     const o=orderFor(item.order_id);
+    if(item.fulfillment_status==='fulfilled'){
+      if(['delivered','refused','returned','in_transit','shipped'].includes(o.status))return o.status;
+      return 'shipped';
+    }
     return o.status==='processing'?'processing':'new';
   }
   const productName=p=>window.IZZY_I18N?.productName(p)||p?.name||'';
@@ -66,6 +70,50 @@
     const opts=v?.option_values||v?.options||{};
     const entries=Object.entries(opts||{}).filter(([,value])=>String(value??'').trim());
     return entries.length?entries.map(([name,value])=>`${name}: ${value}`).join(' · '):(v?.variant_name||v?.name||v?.sku||'Default');
+  }
+
+  const categoryName=c=>window.IZZY_I18N?.isArabic?.()?(c?.name_ar||c?.name||''):(c?.name||c?.name_ar||'');
+
+  function categoryOptions(selected=''){
+    return '<option value="">'+local('Choose category','اختر الفئة')+'</option>'+
+      CATEGORIES.map(c=>`<option value="${c.id}" ${c.id===selected?'selected':''}>${IZZY.esc(categoryName(c))}</option>`).join('');
+  }
+
+  function refreshCategorySelects(){
+    const add=$('#p-category');
+    if(add){
+      const current=add.value;
+      add.innerHTML=categoryOptions(current);
+      if(CATEGORIES.some(c=>c.id===current))add.value=current;
+    }
+    const edit=$('#edit-product-category');
+    if(edit){
+      const current=edit.value;
+      edit.innerHTML='<option value="">'+local('No category','بدون فئة')+'</option>'+
+        CATEGORIES.map(c=>`<option value="${c.id}">${IZZY.esc(categoryName(c))}</option>`).join('');
+      if(CATEGORIES.some(c=>c.id===current))edit.value=current;
+    }
+  }
+
+  function selectedImageOptions(selectedIndex=''){
+    return '<option value="">'+local('Use main photo','استخدم الصورة الرئيسية')+'</option>'+
+      SELECTED_IMAGES.map((file,index)=>`<option value="${index}" ${String(selectedIndex)===String(index)?'selected':''}>${local('Photo','صورة')} ${index+1} · ${IZZY.esc(file.name||'')}</option>`).join('');
+  }
+
+  function existingImageOptions(productId,currentUrl=''){
+    const imgs=imagesFor(productId);
+    return '<option value="">'+local('Use main photo','استخدم الصورة الرئيسية')+'</option>'+
+      imgs.map((img,index)=>`<option value="${IZZY.esc(img.url)}" ${img.url===currentUrl?'selected':''}>${local('Photo','صورة')} ${index+1}</option>`).join('');
+  }
+
+  function refreshVariantPhotoChoices(){
+    const single=$('#single-variant-image');
+    if(single){
+      const current=single.value;
+      single.innerHTML=selectedImageOptions(current);
+      if([...single.options].some(o=>o.value===current))single.value=current;
+    }
+    if(VARIANT_MODE==='options')renderVariantCombinations();
   }
 
   function setNewContentLang(lang,userAction=true){
