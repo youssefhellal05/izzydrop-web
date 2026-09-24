@@ -885,11 +885,13 @@
         <input class="combo-advanced" data-combo-weight type="number" min="0" step="1" placeholder="${local('Optional','اختياري')}" value="${IZZY.esc(previous.weight||'')}">
       `;
       const enabled=row.querySelector('[data-combo-enabled]');
-      const sync=()=>{row.classList.toggle('is-disabled',!enabled.checked);updateVariantCombinationCount()};
+      const sync=()=>{row.classList.toggle('is-disabled',!enabled.checked);updateVariantCombinationCount();productWizardSummary()};
       enabled.onchange=sync;sync();
+      row.querySelectorAll('input,select').forEach(el=>el.addEventListener('input',productWizardSummary));
       box.appendChild(row);
     });
     updateVariantCombinationCount();
+    productWizardSummary();
   }
 
   function collectVariants(){
@@ -987,15 +989,19 @@
 
       if(!nameEn||!nameAr){
         btn.textContent=local('Preparing translation…','جارٍ تجهيز الترجمة…');
-        const from=nameEn?'en':'ar',to=from==='en'?'ar':'en';
-        const translated=await translateText(nameEn||nameAr,from,to);
-        if(to==='en')nameEn=translated;else nameAr=translated;
+        try{
+          const from=nameEn?'en':'ar',to=from==='en'?'ar':'en';
+          const translated=await translateText(nameEn||nameAr,from,to);
+          if(to==='en')nameEn=translated;else nameAr=translated;
+        }catch(e){console.warn('Automatic name translation skipped',e)}
       }
       if((descEn&&!descAr)||(descAr&&!descEn)){
         btn.textContent=local('Preparing translation…','جارٍ تجهيز الترجمة…');
-        const from=descEn?'en':'ar',to=from==='en'?'ar':'en';
-        const translated=await translateText(descEn||descAr,from,to);
-        if(to==='en')descEn=translated;else descAr=translated;
+        try{
+          const from=descEn?'en':'ar',to=from==='en'?'ar':'en';
+          const translated=await translateText(descEn||descAr,from,to);
+          if(to==='en')descEn=translated;else descAr=translated;
+        }catch(e){console.warn('Automatic description translation skipped',e)}
       }
       const result=await IZZY.rpc('supplier_create_product_v2',{
         _name_en:nameEn,
@@ -1067,6 +1073,7 @@
   $('#product-step-back').onclick=()=>setProductStep(PRODUCT_STEP-1);
   document.querySelectorAll('[data-product-step-jump]').forEach(btn=>btn.onclick=()=>{
     const target=Number(btn.dataset.productStepJump);
+    if(target>PRODUCT_STEP+1)return;
     if(target>PRODUCT_STEP&&!validateProductStep(PRODUCT_STEP))return;
     setProductStep(target);
   });
