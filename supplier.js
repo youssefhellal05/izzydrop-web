@@ -11,7 +11,7 @@
     products:['My Products','Your products and stock.'],
     orders:['Orders','Ship customer orders.'],
     requests:['Requests','Products dropshippers want sourced.'],
-    add:['Add product','Create a product in three simple steps.'],
+    add:['Add product','Build a clean marketplace listing.'],
     samples:['Samples','Sample requests from dropshippers.'],
     settings:['Settings','Account and preferences.']
   };
