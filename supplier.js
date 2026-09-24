@@ -879,10 +879,10 @@
         <label class="combo-toggle"><input data-combo-enabled type="checkbox" ${previous.enabled?'checked':''}><span></span></label>
         <div class="combo-name"><b>${IZZY.esc(name)}</b><small>${IZZY.esc(Object.entries(options).map(([k,v])=>`${k}: ${v}`).join(' · '))}</small></div>
         <select data-combo-image aria-label="${local('Variant photo','صورة الخيار')}">${selectedImageOptions(previous.image)}</select>
-        <input data-combo-sku placeholder="${local('Auto','تلقائي')}" value="${IZZY.esc(previous.sku||'')}">
+        <input class="combo-advanced" data-combo-sku placeholder="${local('Auto','تلقائي')}" value="${IZZY.esc(previous.sku||'')}">
         <input data-combo-stock type="number" min="0" step="1" value="${IZZY.esc(previous.stock??'0')}">
-        <input data-combo-cost type="number" min="0" step="0.01" placeholder="${local('Use product price','استخدم سعر المنتج')}" value="${IZZY.esc(previous.cost||'')}">
-        <input data-combo-weight type="number" min="0" step="1" placeholder="${local('Optional','اختياري')}" value="${IZZY.esc(previous.weight||'')}">
+        <input class="combo-advanced" data-combo-cost type="number" min="0" step="0.01" placeholder="${local('Use product price','استخدم سعر المنتج')}" value="${IZZY.esc(previous.cost||'')}">
+        <input class="combo-advanced" data-combo-weight type="number" min="0" step="1" placeholder="${local('Optional','اختياري')}" value="${IZZY.esc(previous.weight||'')}">
       `;
       const enabled=row.querySelector('[data-combo-enabled]');
       const sync=()=>{row.classList.toggle('is-disabled',!enabled.checked);updateVariantCombinationCount()};
@@ -941,6 +941,7 @@
     }
     setVariantMode('single');
     renderVariantCombinations();
+    productWizardSummary();
   }
 
   function renderSelectedImages(){
@@ -948,6 +949,7 @@
     if(!SELECTED_IMAGES.length)box.innerHTML='<div class="photo-empty">'+local('No photos selected yet.','لم يتم اختيار صور بعد.')+'</div>';
     else box.innerHTML=SELECTED_IMAGES.map((f,i)=>`<div class="photo-preview"><img src="${URL.createObjectURL(f)}" alt=""><span>${i===0?local('Main photo','الصورة الرئيسية'):`${local('Photo','صورة')} ${i+1}`}</span></div>`).join('');
     refreshVariantPhotoChoices();
+    productWizardSummary();
   }
 
   $('#p-images').onchange=e=>{
@@ -963,19 +965,38 @@
 
   $('#add-form').onsubmit=async e=>{
     e.preventDefault();
-    const btn=$('#add-product-btn');btn.disabled=true;btn.textContent='Creating product…';
+    const step1ok=validateProductStep(1);
+    if(!step1ok){setProductStep(1);return}
+    const step2ok=validateProductStep(2);
+    if(!step2ok){setProductStep(2);return}
+    const btn=$('#add-product-btn');btn.disabled=true;btn.textContent=local('Publishing…','جارٍ النشر…');
     try{
       const cost=Number($('#p-cost').value);
+      const retail=Number($('#p-retail').value);
+      const shipping=Number($('#p-shipping').value||0);
+      if(!Number.isFinite(cost)||cost<0)throw Error(local('Enter your supplier price.','أدخل سعر المورّد.'));
+      if(!Number.isFinite(retail)||retail<0)throw Error(local('Enter a suggested selling price.','أدخل سعر البيع المقترح.'));
+      if(!Number.isFinite(shipping)||shipping<0)throw Error(local('Enter a valid shipping cost.','أدخل تكلفة شحن صحيحة.'));
       const variants=collectVariants();
 
-      const nameEn=$('#p-name-en').value.trim()||null;
-      const nameAr=$('#p-name-ar').value.trim()||null;
-      const descEn=$('#p-description-en').value.trim()||null;
-      const descAr=$('#p-description-ar').value.trim()||null;
-      if(!nameEn&&!nameAr)throw Error('Enter the product name in English or Arabic.');
-      if(!nameEn||!nameAr)throw Error('Add both English and Arabic product names. Use Generate translation if you need it.');
-      if((descEn&&!descAr)||(descAr&&!descEn))throw Error('Add both English and Arabic descriptions, or leave both descriptions empty.');
+      let nameEn=$('#p-name-en').value.trim()||null;
+      let nameAr=$('#p-name-ar').value.trim()||null;
+      let descEn=$('#p-description-en').value.trim()||null;
+      let descAr=$('#p-description-ar').value.trim()||null;
+      if(!nameEn&&!nameAr)throw Error(local('Enter the product name.','أدخل اسم المنتج.'));
 
+      if(!nameEn||!nameAr){
+        btn.textContent=local('Preparing translation…','جارٍ تجهيز الترجمة…');
+        const from=nameEn?'en':'ar',to=from==='en'?'ar':'en';
+        const translated=await translateText(nameEn||nameAr,from,to);
+        if(to==='en')nameEn=translated;else nameAr=translated;
+      }
+      if((descEn&&!descAr)||(descAr&&!descEn)){
+        btn.textContent=local('Preparing translation…','جارٍ تجهيز الترجمة…');
+        const from=descEn?'en':'ar',to=from==='en'?'ar':'en';
+        const translated=await translateText(descEn||descAr,from,to);
+        if(to==='en')descEn=translated;else descAr=translated;
+      }
       const result=await IZZY.rpc('supplier_create_product_v2',{
         _name_en:nameEn,
         _name_ar:nameAr,
@@ -984,11 +1005,11 @@
         _source_language:NEW_SOURCE_LANGUAGE,
         _sku:$('#p-sku').value.trim()||null,
         _cost:cost,
-        _retail:Number($('#p-retail').value),
+        _retail:retail,
         _currency:'EGP',
         _variants:variants,
         _category_id:$('#p-category').value||null,
-        _shipping_cost:Number($('#p-shipping').value||0)
+        _shipping_cost:shipping
       });
 
       const pid=result.product_id;
@@ -1030,14 +1051,31 @@
       $('#p-translation-status').textContent='';
       SELECTED_IMAGES=[];renderSelectedImages();
       resetVariantBuilder();
+      setVariantAdvanced(false);
+      setProductStep(1,false);
       await load(false);
       go('products');
       msg(`Product added · SKU ${result.sku}${uploaded? ` · ${uploaded} photo${uploaded===1?'':'s'}`:''}.`);
     }catch(err){msg(err.message,true)}
-    finally{btn.disabled=false;btn.textContent='Add product'}
+    finally{btn.disabled=false;btn.textContent=local('Publish product','نشر المنتج')}
   };
 
-  document.querySelectorAll('[data-variant-mode]').forEach(b=>b.onclick=()=>setVariantMode(b.dataset.variantMode));
+  $('#product-step-next').onclick=()=>{
+    if(!validateProductStep(PRODUCT_STEP))return;
+    setProductStep(PRODUCT_STEP+1);
+  };
+  $('#product-step-back').onclick=()=>setProductStep(PRODUCT_STEP-1);
+  document.querySelectorAll('[data-product-step-jump]').forEach(btn=>btn.onclick=()=>{
+    const target=Number(btn.dataset.productStepJump);
+    if(target>PRODUCT_STEP&&!validateProductStep(PRODUCT_STEP))return;
+    setProductStep(target);
+  });
+  $('#toggle-variant-advanced').onclick=()=>setVariantAdvanced(!VARIANT_ADVANCED);
+  ['#p-name-en','#p-name-ar','#single-variant-stock','#p-cost','#p-retail','#p-shipping'].forEach(sel=>{
+    const el=$(sel);if(el)el.addEventListener('input',productWizardSummary);
+  });
+
+  document.querySelectorAll('[data-variant-mode]').forEach(b=>b.onclick=()=>{setVariantMode(b.dataset.variantMode);productWizardSummary()});
   $('#add-variant-option').onclick=()=>{
     addVariantOptionRow('', '');
     renderVariantCombinations();
@@ -1058,7 +1096,7 @@
   document.querySelectorAll('[data-edit-content-lang]').forEach(b=>b.onclick=()=>setEditContentLang(b.dataset.editContentLang));
   $('#p-translate-btn').onclick=translateNewContent;
   $('#edit-translate-btn').onclick=translateEditContent;
-  const initialContentLang=window.IZZY_I18N?.isArabic?.()?'ar':'en';NEW_SOURCE_LANGUAGE=initialContentLang;setNewContentLang(initialContentLang,false);
+  const initialContentLang=window.IZZY_I18N?.isArabic?.()?'ar':'en';NEW_SOURCE_LANGUAGE=initialContentLang;setNewContentLang(initialContentLang,false);setVariantAdvanced(false);setProductStep(1,false);
   $('#supplier-product-search').oninput=renderProducts;
   $('#supplier-product-status').onchange=renderProducts;
   $('#select-all-products').onchange=e=>{
