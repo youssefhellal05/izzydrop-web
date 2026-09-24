@@ -85,7 +85,7 @@
     const pending=SUPPLIERS.filter(s=>s.status==='pending').length;
     const approved=SUPPLIERS.filter(s=>s.status==='approved').length;
     const activeProducts=PRODUCTS.filter(p=>p.status==='active').length;
-    const openOrders=ORDERS.filter(o=>['pending','processing'].includes(o.status)).length;
+    const openOrders=ORDERS.filter(o=>['pending','processing','shipped','in_transit'].includes(o.status)).length;
     const low=lowStockProducts();
 
     $('#stat-pending-suppliers').textContent=pending;
@@ -120,11 +120,11 @@
     });
 
     const totalStock=VARIANTS.reduce((n,v)=>n+Number(v.stock_quantity||0),0);
-    const fulfilled=ORDERS.filter(o=>o.status==='fulfilled').length;
+    const delivered=ORDERS.filter(o=>o.status==='delivered').length;
     $('#marketplace-snapshot').innerHTML=`
       <div><small>Total products</small><strong>${PRODUCTS.length}</strong></div>
       <div><small>Total stock units</small><strong>${totalStock}</strong></div>
-      <div><small>Fulfilled orders</small><strong>${fulfilled}</strong></div>
+      <div><small>Delivered orders</small><strong>${delivered}</strong></div>
       <div><small>Marketplace commission</small><strong>${Number(DEFAULT_COMMISSION).toFixed(2).replace(/\.00$/,'')}%</strong></div>
     `;
 
@@ -154,7 +154,7 @@
   function renderNotifications(){
     const notes=[];
     SUPPLIERS.filter(s=>s.status==='pending').slice(0,5).forEach(s=>notes.push({kind:'supplier',title:'Supplier application',text:`${s.business_name} is waiting for review`,view:'suppliers',supplierFilter:'pending'}));
-    ORDERS.filter(o=>['pending','processing'].includes(o.status)).slice(0,5).forEach(o=>notes.push({kind:'order',title:'Open order',text:`${o.external_order_ref||o.shopify_order_name||'Order '+String(o.id).slice(0,8)} · ${o.status}`,view:'orders'}));
+    ORDERS.filter(o=>['pending','processing','shipped','in_transit'].includes(o.status)).slice(0,5).forEach(o=>notes.push({kind:'order',title:'Open order',text:`${o.external_order_ref||o.shopify_order_name||'Order '+String(o.id).slice(0,8)} · ${o.status}`,view:'orders'}));
     lowStockProducts().slice(0,5).forEach(p=>notes.push({kind:'stock',title:'Low stock',text:`${productName(p)} · ${supplierFor(p.supplier_id).business_name||'Supplier'}`,view:'products'}));
 
     $('#admin-notification-count').textContent=notes.length;
@@ -302,7 +302,7 @@
       return `<article class="card admin-order-card">
         <div class="admin-order-head">
           <div><b>${IZZY.esc(o.external_order_ref||o.shopify_order_name||('Order '+String(o.id).slice(0,8)))}</b><small>${fmtDateTime(o.created_at)} · ${IZZY.esc(o.source||'manual')}</small></div>
-          <div class="admin-order-statuses"><span class="tag ${['shipped','in_transit','delivered'].includes(o.status)?'ok':['pending','processing'].includes(o.status)?'warn':['cancelled','refunded','refused','returned'].includes(o.status)?'bad':''}">${IZZY.esc(window.IZZY_I18N?.status?.(o.status)||o.status)}</span><span class="tag">${IZZY.esc(window.IZZY_I18N?.status?.(o.payment_status)||o.payment_status||'')}</span></div>
+          <div class="admin-order-statuses"><span class="tag ${['shipped','in_transit','delivered'].includes(o.status)?'ok':['pending','processing','shipped','in_transit'].includes(o.status)?'warn':['cancelled','refunded','refused','returned'].includes(o.status)?'bad':''}">${IZZY.esc(window.IZZY_I18N?.status?.(o.status)||o.status)}</span><span class="tag">${IZZY.esc(window.IZZY_I18N?.status?.(o.payment_status)||o.payment_status||'')}</span></div>
         </div>
         <div class="admin-order-summary">
           <div><small>Customer</small><b>${IZZY.esc(o.customer_name||'—')}</b><span>${IZZY.esc(o.customer_phone||'')}</span></div>
