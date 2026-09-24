@@ -1,7 +1,8 @@
 (()=>{
   const $=s=>document.querySelector(s);
-  let SUP=null,PRODUCTS=[],VARIANTS=[],IMAGES=[],ORDERS=[],ITEMS=[],REQUESTS=[],QUOTES=[],SELECTED_IMAGES=[],ORDER_FILTER='all',NEW_CONTENT_LANG='en',NEW_SOURCE_LANGUAGE='en',EDIT_CONTENT_LANG='en';
+  let SUP=null,PRODUCTS=[],VARIANTS=[],IMAGES=[],ORDERS=[],ITEMS=[],REQUESTS=[],QUOTES=[],SELECTED_IMAGES=[],ORDER_FILTER='all',NEW_CONTENT_LANG='en',NEW_SOURCE_LANGUAGE='en',EDIT_CONTENT_LANG='en',VARIANT_MODE='single';
   const SELECTED_PRODUCT_IDS=new Set();
+  const VARIANT_COMBO_STATE=new Map();
 
   const VIEW_COPY={
     overview:['Overview','See what needs your attention today.'],
@@ -43,6 +44,28 @@
   }
   const productName=p=>window.IZZY_I18N?.productName(p)||p?.name||'';
   const productDescription=p=>window.IZZY_I18N?.productDescription(p)||p?.description||'';
+  const local=(en,ar)=>window.IZZY_I18N?.isArabic?.()?ar:en;
+
+  const FIELD_HELP={
+    sku:{
+      en:'SKU means Stock Keeping Unit. It is a unique code you use to identify this product in your inventory. Enter your own code, or leave it blank and IzzyDrop will create one automatically.',
+      ar:'SKU هو رمز فريد تستخدمه لتمييز المنتج داخل مخزونك. يمكنك كتابة رمزك الخاص، أو تركه فارغًا وسيقوم IzzyDrop بإنشائه تلقائيًا.'
+    },
+    cost:{
+      en:'This is the price a dropshipper pays you for one unit of the product. IzzyDrop uses it when showing the dropshipper their estimated profit.',
+      ar:'هذا هو السعر الذي يدفعه لك الدروبشيبر مقابل وحدة واحدة من المنتج. يستخدمه IzzyDrop لحساب الربح التقديري للدروبشيبر.'
+    },
+    retail:{
+      en:'This is the selling price you recommend the dropshipper charges the final customer. It is only a suggestion — the dropshipper can choose a different selling price.',
+      ar:'هذا هو سعر البيع الذي تقترحه على الدروبشيبر للعميل النهائي. هو سعر مقترح فقط، ويمكن للدروبشيبر اختيار سعر بيع مختلف.'
+    }
+  };
+
+  function variantLabel(v){
+    const opts=v?.option_values||v?.options||{};
+    const entries=Object.entries(opts||{}).filter(([,value])=>String(value??'').trim());
+    return entries.length?entries.map(([name,value])=>`${name}: ${value}`).join(' · '):(v?.variant_name||v?.name||v?.sku||'Default');
+  }
 
   function setNewContentLang(lang,userAction=true){
     NEW_CONTENT_LANG=lang;
@@ -161,7 +184,7 @@
     $('#supplier').hidden=false;
     $('#business').textContent=SUP.business_name||'Supplier';
     $('#supplier-email').textContent=s.user.email||'';
-    addDefaultVariant();
+    resetVariantBuilder();
     setLoading();
     await load();
     return true;
@@ -510,10 +533,15 @@
 
     const vs=variantsFor(id);
     $('#edit-variant-list').innerHTML=vs.map(v=>`<div class="edit-variant-row" data-variant-id="${v.id}">
-      <input data-edit-variant-name value="${IZZY.esc(v.variant_name||'Default')}" placeholder="Variant">
+      <label class="edit-variant-enabled"><input data-edit-variant-enabled type="checkbox" ${v.is_enabled!==false?'checked':''}><span>${local('Available','متاح')}</span></label>
+      <div class="edit-variant-name-cell">
+        <input data-edit-variant-name value="${IZZY.esc(v.variant_name||'Default')}" placeholder="${local('Variant','الخيار')}">
+        <small>${IZZY.esc(variantLabel(v))}</small>
+      </div>
       <input data-edit-variant-sku value="${IZZY.esc(v.sku||'')}" placeholder="SKU">
-      <input data-edit-variant-stock type="number" min="0" step="1" value="${Number(v.stock_quantity||0)}" placeholder="Stock">
-      <input data-edit-variant-cost type="number" min="0" step="0.01" value="${v.cost_price??''}" placeholder="Cost">
+      <input data-edit-variant-stock type="number" min="0" step="1" value="${Number(v.stock_quantity||0)}" placeholder="${local('Stock','المخزون')}">
+      <input data-edit-variant-cost type="number" min="0" step="0.01" value="${v.cost_price??''}" placeholder="${local('Supplier price','سعر المورّد')}">
+      <input data-edit-variant-weight type="number" min="0" step="1" value="${v.weight_grams??''}" placeholder="${local('Weight (g)','الوزن (جم)')}">
     </div>`).join('')||'<div class="notice">No variants found.</div>';
 
     $('#edit-product-status').textContent='';
@@ -563,6 +591,8 @@
             sku:row.querySelector('[data-edit-variant-sku]').value.trim()||null,
             stock_quantity:Number(row.querySelector('[data-edit-variant-stock]').value||0),
             cost_price:row.querySelector('[data-edit-variant-cost]').value===''?null:Number(row.querySelector('[data-edit-variant-cost]').value),
+            weight_grams:row.querySelector('[data-edit-variant-weight]').value===''?null:Number(row.querySelector('[data-edit-variant-weight]').value),
+            is_enabled:row.querySelector('[data-edit-variant-enabled]').checked,
             updated_at:new Date().toISOString()
           })
         });
@@ -574,34 +604,155 @@
     finally{btn.disabled=false;btn.textContent='Save changes'}
   };
 
-  function addDefaultVariant(){
-    if($('#variant-rows').children.length)return;
-    addVariantRow('Default');
+  function setVariantMode(mode){
+    VARIANT_MODE=mode==='options'?'options':'single';
+    document.querySelectorAll('[data-variant-mode]').forEach(b=>b.classList.toggle('on',b.dataset.variantMode===VARIANT_MODE));
+    $('#single-variant-panel').hidden=VARIANT_MODE!=='single';
+    $('#variant-options-panel').hidden=VARIANT_MODE!=='options';
+    if(VARIANT_MODE==='options')renderVariantCombinations();
   }
 
-  function addVariantRow(name=''){
+  function addVariantOptionRow(name='',values=''){
+    const box=$('#variant-option-rows');
+    if(!box||box.children.length>=3)return;
     const row=document.createElement('div');
-    row.className='variant-editor-row';
+    row.className='variant-option-row';
     row.innerHTML=`
-      <input data-variant-name placeholder="e.g. Black / Large" value="${IZZY.esc(name)}" required>
-      <input data-variant-sku placeholder="Auto if blank">
-      <input data-variant-stock type="number" min="0" step="1" value="0" required>
-      <input data-variant-cost type="number" min="0" step="0.01" placeholder="Use product cost">
-      <input data-variant-weight type="number" min="0" step="1" placeholder="Optional">
-      <button class="variant-remove" type="button" aria-label="Remove variant">×</button>
+      <input data-option-name placeholder="${local('Option name, e.g. Color','اسم الخيار، مثال: اللون')}" value="${IZZY.esc(name)}">
+      <input data-option-values placeholder="${local('Values separated by commas, e.g. Black, White','القيم مفصولة بفواصل، مثال: أسود، أبيض')}" value="${IZZY.esc(values)}">
+      <button class="variant-option-remove" type="button" aria-label="${local('Remove option','حذف الخيار')}">×</button>
     `;
-    row.querySelector('.variant-remove').onclick=()=>{
-      if($('#variant-rows').children.length===1){
-        row.querySelector('[data-variant-name]').value='Default';
-        row.querySelector('[data-variant-sku]').value='';
-        row.querySelector('[data-variant-stock]').value='0';
-        row.querySelector('[data-variant-cost]').value='';
-        row.querySelector('[data-variant-weight]').value='';
-        return;
-      }
+    row.querySelectorAll('input').forEach(input=>input.addEventListener('input',renderVariantCombinations));
+    row.querySelector('.variant-option-remove').onclick=()=>{
       row.remove();
+      if(!box.children.length)addVariantOptionRow(local('Color','اللون'),'');
+      renderVariantCombinations();
     };
-    $('#variant-rows').appendChild(row);
+    box.appendChild(row);
+    const add=$('#add-variant-option');if(add)add.disabled=box.children.length>=3;
+  }
+
+  function variantOptionDefinitions(){
+    return [...document.querySelectorAll('#variant-option-rows .variant-option-row')].map((row,index)=>{
+      const name=row.querySelector('[data-option-name]').value.trim()||local(`Option ${index+1}`,`الخيار ${index+1}`);
+      const values=[...new Set(row.querySelector('[data-option-values]').value.split(/[,،]/).map(v=>v.trim()).filter(Boolean))];
+      return {name,values};
+    }).filter(o=>o.values.length);
+  }
+
+  function snapshotVariantCombinations(){
+    document.querySelectorAll('#variant-combination-rows .variant-combination-row[data-combo]').forEach(row=>{
+      VARIANT_COMBO_STATE.set(row.dataset.combo,{
+        enabled:row.querySelector('[data-combo-enabled]').checked,
+        sku:row.querySelector('[data-combo-sku]').value,
+        stock:row.querySelector('[data-combo-stock]').value,
+        cost:row.querySelector('[data-combo-cost]').value,
+        weight:row.querySelector('[data-combo-weight]').value
+      });
+    });
+  }
+
+  function buildCombinations(defs,index=0,current={}){
+    if(index>=defs.length)return [current];
+    const out=[];
+    const def=defs[index];
+    def.values.forEach(value=>out.push(...buildCombinations(defs,index+1,{...current,[def.name]:value})));
+    return out;
+  }
+
+  function updateVariantCombinationCount(){
+    const rows=[...document.querySelectorAll('#variant-combination-rows .variant-combination-row[data-combo]')];
+    const available=rows.filter(r=>r.querySelector('[data-combo-enabled]')?.checked).length;
+    const count=$('#variant-combination-count');
+    if(count)count.textContent=local(
+      `${rows.length} combination${rows.length===1?'':'s'} · ${available} available`,
+      `${rows.length} تركيبة · ${available} متاحة`
+    );
+  }
+
+  function renderVariantCombinations(){
+    if(VARIANT_MODE!=='options')return;
+    snapshotVariantCombinations();
+    const defs=variantOptionDefinitions();
+    const box=$('#variant-combination-rows');
+    if(!box)return;
+    const combos=defs.length?buildCombinations(defs):[];
+    if(!combos.length){
+      box.innerHTML=`<div class="variant-combination-empty">${local('Add option values to create combinations.','أضف قيم الخيارات لإنشاء التركيبات.')}</div>`;
+      updateVariantCombinationCount();
+      return;
+    }
+    box.innerHTML='';
+    combos.forEach(options=>{
+      const key=JSON.stringify(options);
+      const previous=VARIANT_COMBO_STATE.get(key)||{enabled:true,sku:'',stock:'0',cost:'',weight:''};
+      const name=Object.values(options).join(' / ');
+      const row=document.createElement('div');
+      row.className='variant-combination-row';
+      row.dataset.combo=key;
+      row._izzyOptions=options;
+      row.innerHTML=`
+        <label class="combo-toggle"><input data-combo-enabled type="checkbox" ${previous.enabled?'checked':''}><span></span></label>
+        <div class="combo-name"><b>${IZZY.esc(name)}</b><small>${IZZY.esc(Object.entries(options).map(([k,v])=>`${k}: ${v}`).join(' · '))}</small></div>
+        <input data-combo-sku placeholder="${local('Auto','تلقائي')}" value="${IZZY.esc(previous.sku||'')}">
+        <input data-combo-stock type="number" min="0" step="1" value="${IZZY.esc(previous.stock??'0')}">
+        <input data-combo-cost type="number" min="0" step="0.01" placeholder="${local('Use product price','استخدم سعر المنتج')}" value="${IZZY.esc(previous.cost||'')}">
+        <input data-combo-weight type="number" min="0" step="1" placeholder="${local('Optional','اختياري')}" value="${IZZY.esc(previous.weight||'')}">
+      `;
+      const enabled=row.querySelector('[data-combo-enabled]');
+      const sync=()=>{row.classList.toggle('is-disabled',!enabled.checked);updateVariantCombinationCount()};
+      enabled.onchange=sync;sync();
+      box.appendChild(row);
+    });
+    updateVariantCombinationCount();
+  }
+
+  function collectVariants(){
+    if(VARIANT_MODE==='single'){
+      return [{
+        name:'Default',
+        sku:$('#single-variant-sku').value.trim()||null,
+        stock:Number($('#single-variant-stock').value||0),
+        cost:$('#single-variant-cost').value===''?null:Number($('#single-variant-cost').value),
+        weight_grams:$('#single-variant-weight').value===''?null:Number($('#single-variant-weight').value),
+        enabled:true,
+        options:{}
+      }];
+    }
+
+    const rows=[...document.querySelectorAll('#variant-combination-rows .variant-combination-row[data-combo]')];
+    if(!rows.length)throw Error(local('Add at least one option value to create variants.','أضف قيمة خيار واحدة على الأقل لإنشاء الخيارات.'));
+    const variants=rows.map(row=>{
+      const options=row._izzyOptions||JSON.parse(row.dataset.combo||'{}');
+      return {
+        name:Object.values(options).join(' / ')||'Default',
+        sku:row.querySelector('[data-combo-sku]').value.trim()||null,
+        stock:Number(row.querySelector('[data-combo-stock]').value||0),
+        cost:row.querySelector('[data-combo-cost]').value===''?null:Number(row.querySelector('[data-combo-cost]').value),
+        weight_grams:row.querySelector('[data-combo-weight]').value===''?null:Number(row.querySelector('[data-combo-weight]').value),
+        enabled:row.querySelector('[data-combo-enabled]').checked,
+        options
+      };
+    });
+    if(!variants.some(v=>v.enabled))throw Error(local('Keep at least one variant available.','يجب أن تترك خيارًا واحدًا متاحًا على الأقل.'));
+    return variants;
+  }
+
+  function resetVariantBuilder(){
+    VARIANT_COMBO_STATE.clear();
+    VARIANT_MODE='single';
+    if($('#single-variant-sku'))$('#single-variant-sku').value='';
+    if($('#single-variant-stock'))$('#single-variant-stock').value='0';
+    if($('#single-variant-cost'))$('#single-variant-cost').value='';
+    if($('#single-variant-weight'))$('#single-variant-weight').value='';
+    const box=$('#variant-option-rows');
+    if(box){
+      box.innerHTML='';
+      addVariantOptionRow(local('Color','اللون'),'');
+      addVariantOptionRow(local('Size','المقاس'),'');
+    }
+    setVariantMode('single');
+    renderVariantCombinations();
   }
 
   function renderSelectedImages(){
@@ -626,14 +777,7 @@
     const btn=$('#add-product-btn');btn.disabled=true;btn.textContent='Creating product…';
     try{
       const cost=Number($('#p-cost').value);
-      const variantRows=[...document.querySelectorAll('#variant-rows .variant-editor-row')];
-      const variants=variantRows.map(row=>({
-        name:row.querySelector('[data-variant-name]').value.trim()||'Default',
-        sku:row.querySelector('[data-variant-sku]').value.trim()||null,
-        stock:Number(row.querySelector('[data-variant-stock]').value||0),
-        cost:row.querySelector('[data-variant-cost]').value===''?null:Number(row.querySelector('[data-variant-cost]').value),
-        weight_grams:row.querySelector('[data-variant-weight]').value===''?null:Number(row.querySelector('[data-variant-weight]').value)
-      }));
+      const variants=collectVariants();
 
       const nameEn=$('#p-name-en').value.trim()||null;
       const nameAr=$('#p-name-ar').value.trim()||null;
@@ -681,7 +825,7 @@
       const resetLang=window.IZZY_I18N?.isArabic?.()?'ar':'en';NEW_SOURCE_LANGUAGE=resetLang;setNewContentLang(resetLang,false);
       $('#p-translation-status').textContent='';
       SELECTED_IMAGES=[];renderSelectedImages();
-      $('#variant-rows').innerHTML='';addDefaultVariant();
+      resetVariantBuilder();
       await load(false);
       go('products');
       msg(`Product added · SKU ${result.sku}${uploaded? ` · ${uploaded} photo${uploaded===1?'':'s'}`:''}.`);
@@ -689,7 +833,23 @@
     finally{btn.disabled=false;btn.textContent='Add product'}
   };
 
-  $('#add-variant-row').onclick=()=>addVariantRow('');
+  document.querySelectorAll('[data-variant-mode]').forEach(b=>b.onclick=()=>setVariantMode(b.dataset.variantMode));
+  $('#add-variant-option').onclick=()=>{
+    addVariantOptionRow('', '');
+    renderVariantCombinations();
+  };
+  document.querySelectorAll('.field-info-btn').forEach(btn=>btn.onclick=e=>{
+    e.preventDefault();
+    e.stopPropagation();
+    const key=btn.dataset.fieldHelp;
+    const scope=btn.closest('.field')||btn.closest('form');
+    const panel=scope?.querySelector(`[data-field-help-panel="${key}"]`);
+    document.querySelectorAll('.field-help-panel').forEach(p=>{if(p!==panel)p.hidden=true});
+    if(!panel)return;
+    panel.textContent=FIELD_HELP[key]?.[window.IZZY_I18N?.isArabic?.()?'ar':'en']||'';
+    panel.hidden=!panel.hidden;
+    btn.setAttribute('aria-expanded',panel.hidden?'false':'true');
+  });
   document.querySelectorAll('[data-new-content-lang]').forEach(b=>b.onclick=()=>setNewContentLang(b.dataset.newContentLang,true));
   document.querySelectorAll('[data-edit-content-lang]').forEach(b=>b.onclick=()=>setEditContentLang(b.dataset.editContentLang));
   $('#p-translate-btn').onclick=translateNewContent;
