@@ -1192,3 +1192,18 @@ html[dir="rtl"] .photo-remove-btn{right:auto;left:7px}
   .wizard-forward-actions .btn{flex:1;min-width:0}
   #product-skip-variants{font-size:11px}
 }
+
+
+/* Cleaner supplier wizard actions */
+.wizard-forward-actions{display:flex;gap:10px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+#product-step-next{order:1}
+#product-skip-variants{order:2}
+@media(max-width:680px){
+  .simple-wizard-actions{grid-template-columns:1fr}
+  .wizard-action-copy{grid-column:1}
+  #product-step-back{grid-column:1;width:100%}
+  .wizard-forward-actions{grid-column:1;width:100%;display:flex;flex-direction:column;gap:10px}
+  .wizard-forward-actions .btn{width:100%;min-height:50px}
+  #product-step-next{order:1}
+  #product-skip-variants{order:2}
+}
