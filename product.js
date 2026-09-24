@@ -64,7 +64,7 @@
           </div>
 
           <div class="product-detail-actions">
-            ${isDropshipper?`<button id="use-product" class="btn" ${totalStock<=0?'disabled':''}>${alreadyLinked?(isAr?'عرض في منتجاتي':'View in My Products'):(isAr?'أضف إلى منتجاتي':'Add to My Products')}</button>`:`<a class="btn" href="login.html?type=dropshipper">${isAr?'سجّل الدخول لإضافته إلى منتجاتك':'Log in to add to My Products'}</a>`}
+            ${isDropshipper?`<button id="use-product" class="btn" ${totalStock<=0?'disabled':''}>${alreadyLinked?(isAr?'عرض في منتجاتي':'View in My Products'):(isAr?'أضف إلى منتجاتي':'Add to My Products')}</button><button id="request-sample" class="btn secondary" ${totalStock<=0?'disabled':''}>${isAr?'طلب عينة':'Request sample'}</button>`:`<a class="btn" href="login.html?type=dropshipper">${isAr?'سجّل الدخول لإضافته إلى منتجاتك':'Log in to add to My Products'}</a>`}
           </div>
           <div id="product-action-status" class="status"></div>
         </section>
@@ -84,6 +84,10 @@
     const use=document.getElementById('use-product');
     if(use)use.onclick=()=>{
       location.href='app.html?add='+encodeURIComponent(p.product_id);
+    };
+    const sample=document.getElementById('request-sample');
+    if(sample)sample.onclick=()=>{
+      location.href='app.html?sample='+encodeURIComponent(p.product_id);
     };
   }catch(e){st.textContent=e.message;st.className='status bad'}
 })();
