@@ -1164,3 +1164,18 @@ html[dir="rtl"] .supplier-more-menu{padding-left:0;padding-right:8px}
   #product-step-back{grid-column:1}
   #product-step-next,#add-product-btn{grid-column:2;min-width:0}
 }
+
+
+/* Mobile notification panel: open inward from the bell instead of off-screen */
+@media(max-width:680px){
+  html:not([dir="rtl"]) .supplier-top-actions .notification-panel{
+    left:0;
+    right:auto;
+    width:min(360px,calc(100vw - 52px));
+  }
+  html[dir="rtl"] .supplier-top-actions .notification-panel{
+    right:0;
+    left:auto;
+    width:min(360px,calc(100vw - 52px));
+  }
+}
