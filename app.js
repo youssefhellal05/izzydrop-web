@@ -288,13 +288,14 @@
   }
 
   function renderOrderProducts(){
-    const map=new Map(PRODUCTS.map(p=>[p.product_id,p]));
+    const map=new Map(LINKED_PRODUCTS.map(p=>[p.product_id,p]));
     const el=$('#order-product');
     if(!el)return;
     const current=el.value;
-    el.innerHTML='<option value="">Choose one of My products</option>'+LINKS.map(l=>{
+    el.innerHTML='<option value="">'+local('Choose one of My products','اختر منتجًا من منتجاتي')+'</option>'+LINKS.map(l=>{
       const p=map.get(l.supplier_product_id);
-      return p?`<option value="${IZZY.esc(p.product_id)}">${IZZY.esc(productName(p))}</option>`:'';
+      if(!p)return '';
+      return `<option value="${IZZY.esc(p.product_id)}" ${p.available&&Number(p.stock_quantity||0)>0?'':'disabled'}>${IZZY.esc(productName(p))}${p.available?'':` · ${local('Unavailable','غير متاح')}`}</option>`;
     }).join('');
     if([...el.options].some(o=>o.value===current))el.value=current;
   }
@@ -317,12 +318,12 @@
   }
 
   function makeEmbedCode(token){
-    return `<div data-izzydrop-token="${token}"></div>\n<script src="https://youssefhellal05.github.io/izzydrop-web/izzydrop-widget.js?v=20260924-variants1" async><\/script>`;
+    return `<div data-izzydrop-token="${token}"></div>\n<script src="https://youssefhellal05.github.io/izzydrop-web/izzydrop-widget.js?v=20260924-finish1" async><\/script>`;
   }
 
   async function openWebSetup(productId){
-    const p=PRODUCTS.find(x=>x.product_id===productId);
-    if(!p){status('This product is not available.',true);return}
+    const p=PRODUCTS.find(x=>x.product_id===productId)||LINKED_PRODUCTS.find(x=>x.product_id===productId);
+    if(!p||p.available===false){status(p?.availability_reason||local('This product is not available.','هذا المنتج غير متاح.'),true);return}
     const link=LINKS.find(x=>x.supplier_product_id===productId);
     const integration=link?INTEGRATIONS.find(x=>x.link_id===link.id):null;
 
@@ -392,41 +393,106 @@
     }catch(e){status(e.message,true);b.disabled=false;b.textContent='Add to My Products'}
   }
 
-  async function orderSample(productId,btn){
+  async function openSampleRequest(productId){
     const p=PRODUCTS.find(x=>x.product_id===productId);
     if(!p)return;
-    const address=prompt('Sample delivery address:');
-    if(address===null)return;
-    const city=prompt('City / governorate:');
-    if(city===null)return;
-    btn.disabled=true;btn.textContent='Requesting…';
+    const st=$('#sample-status');
+    st.textContent='';st.className='status';
+    $('#sample-product-id').value=productId;
+    $('#sample-variant').innerHTML='<option value="">'+local('Loading variants…','جارٍ تحميل الخيارات…')+'</option>';
+    $('#sample-modal').hidden=false;
     try{
       const variants=await IZZY.rpc('marketplace_variants_v2',{_product_id:productId});
-      const variant=(variants||[]).find(v=>Number(v.stock_quantity)>0)||(variants||[])[0]||null;
-      const id=await IZZY.rpc('order_product_sample',{_product_id:productId,_variant_id:variant?.id||null,_shipping_address:{address1:address,city}});
-      status('Sample requested ✓ '+String(id).slice(0,8));
-    }catch(e){status(e.message,true)}
-    finally{btn.disabled=false;btn.textContent='Order sample'}
+      const available=(variants||[]).filter(v=>Number(v.stock_quantity)>0);
+      $('#sample-variant').innerHTML='<option value="">'+local('Choose variant','اختر الخيار')+'</option>'+
+        available.map(v=>`<option value="${v.id}">${IZZY.esc(variantLabel(v))} · ${v.stock_quantity} ${local('in stock','متوفر')}</option>`).join('');
+      if(available.length===1)$('#sample-variant').value=available[0].id;
+      if(!available.length){
+        st.textContent=local('No in-stock variant is available for a sample.','لا يوجد خيار متوفر لطلب عينة.');
+        st.className='status bad';
+      }
+    }catch(e){st.textContent=e.message;st.className='status bad'}
+  }
+
+  function renderSamples(){
+    const el=$('#dropshipper-samples');if(!el)return;
+    el.innerHTML=(SAMPLES||[]).map(x=>{
+      const addr=x.shipping_address||{};
+      const name=productName({name:x.product_name,name_en:x.product_name_en,name_ar:x.product_name_ar})||local('Product','المنتج');
+      const options=Object.entries(x.variant_options||{}).map(([k,v])=>`${k}: ${v}`).join(' · ');
+      const tracking=[x.shipping_carrier,x.tracking_number].filter(Boolean).join(' · ');
+      return `<article class="card sample-card">
+        <div class="order-card-head"><div><span class="order-id">${IZZY.esc(name)}</span><small>${IZZY.esc(options||x.variant_name||'')} · ${new Date(x.created_at).toLocaleString()}</small></div><span class="tag ${x.status==='delivered'?'ok':x.status==='rejected'?'bad':x.status==='requested'?'warn':''}">${IZZY.esc(window.IZZY_I18N?.status?.(x.status)||x.status)}</span></div>
+        <div class="order-summary-grid">
+          <div><small>${local('Supplier','المورّد')}</small><b>${IZZY.esc(x.supplier_name||'—')}</b></div>
+          <div><small>${local('Delivery address','عنوان التوصيل')}</small><b>${IZZY.esc([addr.address1,addr.city,addr.governorate].filter(Boolean).join(', ')||'—')}</b></div>
+          <div><small>${local('Tracking','التتبع')}</small><span>${IZZY.esc(tracking||'—')}</span></div>
+        </div>
+        ${x.status==='shipped'?`<div class="sample-actions"><button class="btn sample-received" data-id="${x.id}">${local('I received it','استلمت العينة')}</button></div>`:''}
+      </article>`;
+    }).join('')||`<div class="empty-state"><div class="empty-icon">□</div><h3>${local('No sample requests yet','لا توجد طلبات عينات بعد')}</h3><p>${local('Request a sample from any marketplace product to test it first.','اطلب عينة من أي منتج في السوق لتجربته أولًا.')}</p></div>`;
+
+    document.querySelectorAll('.sample-received').forEach(btn=>btn.onclick=async()=>{
+      btn.disabled=true;
+      try{
+        await IZZY.rpc('dropshipper_mark_sample_delivered',{_sample_id:btn.dataset.id});
+        status(local('Sample marked delivered.','تم تحديد العينة كمُسلّمة.'));
+        await load(false);
+      }catch(e){status(e.message,true);btn.disabled=false}
+    });
   }
 
   function renderCod(){
     const el=$('#cod-summary');if(!el)return;
     el.innerHTML=[
-      ['COD orders',COD.total||0],
-      ['Delivered',COD.delivered||0],
-      ['In progress',Number(COD.processing||0)+Number(COD.pending||0)],
-      ['Cancelled',COD.cancelled||0],
-      ['Success rate',`${Number(COD.success_rate||0).toFixed(1)}%`],
-      ['Delivered value',IZZY.money(COD.delivered_value||0,'EGP')]
+      [local('COD orders','طلبات الدفع عند الاستلام'),COD.total||0],
+      [local('Delivered','تم التوصيل'),COD.delivered||0],
+      [local('In progress','قيد التنفيذ'),Number(COD.processing||0)+Number(COD.pending||0)+Number(COD.shipped||0)+Number(COD.in_transit||0)],
+      [local('Failed delivery','فشل التوصيل'),Number(COD.refused||0)+Number(COD.returned||0)],
+      [local('Delivery success','نجاح التوصيل'),`${Number(COD.success_rate||0).toFixed(1)}%`],
+      [local('Collected COD','قيمة COD المحصلة'),IZZY.money(COD.delivered_value||0,'EGP')]
     ].map(([k,v])=>`<div class="card cod-stat"><small>${k}</small><strong>${v}</strong></div>`).join('');
   }
 
   function renderRequests(){
     const el=$('#product-requests');if(!el)return;
-    el.innerHTML=(REQUESTS||[]).map(r=>`<article class="card order-card">
-      <div class="order-card-head"><div><span class="order-id">${IZZY.esc(r.title)}</span><small>${new Date(r.created_at).toLocaleString()}</small></div><span class="tag ${r.status==='matched'?'ok':'warn'}">${IZZY.esc(r.status)}</span></div>
-      <div class="order-summary-grid"><div><small>Target cost</small><b>${r.target_cost==null?'—':IZZY.money(r.target_cost,'EGP')}</b></div><div><small>Source</small><b>${r.source_url?'<a href="'+IZZY.esc(r.source_url)+'" target="_blank" rel="noopener">Open link</a>':'—'}</b></div><div><small>Notes</small><span>${IZZY.esc(r.notes||'—')}</span></div></div>
-    </article>`).join('')||'<div class="empty-state"><div class="empty-icon">⌕</div><h3>No sourcing requests yet</h3><p>Send a product link or description and IzzyDrop suppliers can match it.</p></div>';
+    const byRequest=new Map();
+    (QUOTES||[]).forEach(q=>{if(!byRequest.has(q.request_id))byRequest.set(q.request_id,[]);byRequest.get(q.request_id).push(q)});
+    el.innerHTML=(REQUESTS||[]).map(r=>{
+      const quotes=byRequest.get(r.id)||[];
+      const quoteHtml=quotes.map(q=>{
+        const accepted=q.status==='accepted';
+        const declined=q.status==='declined';
+        const pname=productName({name:q.product_name,name_en:q.product_name_en,name_ar:q.product_name_ar});
+        return `<div class="sourcing-quote ${accepted?'is-accepted':''} ${declined?'is-declined':''}">
+          <div><b>${IZZY.esc(q.supplier_name||local('Supplier','المورّد'))}</b><small>${q.available_quantity==null?'':`${q.available_quantity} ${local('available','متاح')}`}${q.lead_time_days==null?'':` · ${q.lead_time_days} ${local('day lead time','يوم مدة تجهيز')}`}</small></div>
+          <strong>${IZZY.money(q.offered_cost,'EGP')}</strong>
+          ${q.message?`<p>${IZZY.esc(q.message)}</p>`:''}
+          ${pname?`<small>${local('Matched product','المنتج المطابق')}: ${IZZY.esc(pname)}</small>`:''}
+          <div class="sourcing-quote-actions">
+            ${q.public_slug?`<a class="btn secondary" href="product.html?slug=${encodeURIComponent(q.public_slug)}&from=app">${local('View product','عرض المنتج')}</a>`:''}
+            ${!accepted&&!declined&&r.status!=='accepted'?`<button class="btn accept-quote" data-id="${q.id}">${local('Accept quote','قبول العرض')}</button>`:''}
+            ${accepted?`<span class="tag ok">${local('Accepted','تم القبول')}</span>`:''}
+            ${declined?`<span class="tag">${local('Not selected','لم يتم اختياره')}</span>`:''}
+          </div>
+        </div>`;
+      }).join('');
+      return `<article class="card order-card">
+        <div class="order-card-head"><div><span class="order-id">${IZZY.esc(r.title)}</span><small>${new Date(r.created_at).toLocaleString()}</small></div><span class="tag ${r.status==='accepted'?'ok':r.status==='matched'?'ok':'warn'}">${IZZY.esc(window.IZZY_I18N?.status?.(r.status)||r.status)}</span></div>
+        <div class="order-summary-grid"><div><small>${local('Target cost','التكلفة المستهدفة')}</small><b>${r.target_cost==null?'—':IZZY.money(r.target_cost,'EGP')}</b></div><div><small>${local('Source','المصدر')}</small><b>${r.source_url?'<a href="'+IZZY.esc(r.source_url)+'" target="_blank" rel="noopener">'+local('Open link','فتح الرابط')+'</a>':'—'}</b></div><div><small>${local('Notes','ملاحظات')}</small><span>${IZZY.esc(r.notes||'—')}</span></div></div>
+        <div class="sourcing-quotes">${quoteHtml||`<div class="notice">${local('No supplier quotes yet.','لا توجد عروض من المورّدين بعد.')}</div>`}</div>
+      </article>`;
+    }).join('')||`<div class="empty-state"><div class="empty-icon">⌕</div><h3>${local('No sourcing requests yet','لا توجد طلبات توريد بعد')}</h3><p>${local('Send a product link or description and IzzyDrop suppliers can quote it.','أرسل رابط منتج أو وصفًا وسيتمكن مورّدو IzzyDrop من تقديم عروض.')}</p></div>`;
+
+    document.querySelectorAll('.accept-quote').forEach(btn=>btn.onclick=async()=>{
+      if(!confirm(local('Accept this supplier quote? Other quotes for this request will be closed.','قبول عرض هذا المورّد؟ سيتم إغلاق باقي العروض لهذا الطلب.')))return;
+      btn.disabled=true;
+      try{
+        await IZZY.rpc('accept_product_request_quote',{_quote_id:btn.dataset.id});
+        status(local('Supplier quote accepted.','تم قبول عرض المورّد.'));
+        await load(false);
+      }catch(e){status(e.message,true);btn.disabled=false}
+    });
   }
 
   function renderAlerts(){
@@ -441,14 +507,17 @@
 
   async function load(showMessage=false){
     try{
-      [PRODUCTS,LINKS,INTEGRATIONS,INTEGRATION_VARIANTS,ORDERS,ITEMS,REQUESTS,ALERTS,COD]=await Promise.all([
+      [PRODUCTS,LINKED_PRODUCTS,LINKS,INTEGRATIONS,INTEGRATION_VARIANTS,ORDERS,ITEMS,REQUESTS,QUOTES,SAMPLES,ALERTS,COD]=await Promise.all([
         IZZY.rpc('marketplace_catalog_v3'),
+        IZZY.rpc('dropshipper_linked_catalog'),
         IZZY.request('/rest/v1/dropshipper_product_links?select=*&order=created_at.desc'),
         IZZY.request('/rest/v1/storefront_integrations?select=*&order=created_at.desc'),
         IZZY.request('/rest/v1/storefront_integration_variants?select=*&order=created_at.asc'),
         IZZY.request('/rest/v1/orders?select=*&order=created_at.desc&limit=100'),
         IZZY.request('/rest/v1/order_items?select=id,order_id,supplier_product_id,variant_id,quantity,retail_price_at_purchase,fulfillment_status,tracking_number,shipping_carrier,created_at&order=created_at.desc&limit=200'),
         IZZY.request('/rest/v1/product_requests?select=*&order=created_at.desc&limit=50'),
+        IZZY.rpc('dropshipper_sourcing_quotes'),
+        IZZY.rpc('dropshipper_samples'),
         IZZY.request('/rest/v1/dropshipper_alerts?select=*&order=created_at.desc&limit=50'),
         IZZY.rpc('dropshipper_cod_metrics')
       ]);
@@ -459,6 +528,7 @@
       renderOrderProducts();
       renderCod();
       renderRequests();
+      renderSamples();
       renderAlerts();
       if(showMessage)status('Everything is up to date.');
     }catch(e){status(e.message,true)}
@@ -491,6 +561,8 @@
   document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>go(b.dataset.view));
   $('#close-modal').onclick=()=>$('#link-modal').hidden=true;
   $('#link-modal').onclick=e=>{if(e.target===$('#link-modal'))$('#link-modal').hidden=true};
+  $('#close-sample-modal').onclick=()=>$('#sample-modal').hidden=true;
+  $('#sample-modal').onclick=e=>{if(e.target===$('#sample-modal'))$('#sample-modal').hidden=true};
 
   $('#web-setup-form').onsubmit=async e=>{
     e.preventDefault();
@@ -584,6 +656,31 @@
       st.textContent='Embed code copied.';
       st.className='status ok';
     }
+  };
+
+  $('#sample-form').onsubmit=async e=>{
+    e.preventDefault();
+    const btn=$('#sample-submit'),st=$('#sample-status');
+    const productId=$('#sample-product-id').value,variantId=$('#sample-variant').value;
+    if(!variantId){st.textContent=local('Choose a variant.','اختر أحد الخيارات.');st.className='status bad';return}
+    btn.disabled=true;btn.textContent=local('Sending…','جارٍ الإرسال…');st.textContent='';
+    try{
+      const id=await IZZY.rpc('order_product_sample',{
+        _product_id:productId,
+        _variant_id:variantId,
+        _shipping_address:{
+          address1:$('#sample-address').value.trim(),
+          city:$('#sample-city').value.trim(),
+          governorate:$('#sample-governorate').value.trim()
+        }
+      });
+      st.textContent=local('Sample request sent ✓ ','تم إرسال طلب العينة ✓ ')+String(id).slice(0,8);
+      st.className='status ok';
+      e.target.reset();
+      setTimeout(()=>{$('#sample-modal').hidden=true;go('samples')},500);
+      await load(false);
+    }catch(err){st.textContent=err.message;st.className='status bad'}
+    finally{btn.disabled=false;btn.textContent=local('Send sample request','إرسال طلب العينة')}
   };
 
   $('#toggle-order-form').onclick=()=>{$('#order-create-card').hidden=false;$('#toggle-order-form').hidden=true};
