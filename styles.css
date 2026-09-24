@@ -1657,3 +1657,79 @@ html[dir="rtl"] .product-version-button{text-align:right}
 .variant-combination-list{transition:opacity .16s ease}
 .variant-combination-list.is-stale{opacity:.52}
 html[dir="rtl"] .polished-photo-preview .photo-remove-btn{right:auto;left:7px}
+
+
+/* Add Product live HUD */
+.add-product-hud{position:sticky;top:12px;z-index:6;display:grid;grid-template-columns:minmax(0,1.55fr) minmax(260px,.85fr);gap:12px;max-width:980px;margin:0 0 16px}
+.add-product-progress-card,.add-live-preview{background:color-mix(in srgb,var(--card) 92%,transparent);border:1px solid var(--line);box-shadow:0 14px 34px rgba(17,19,24,.08);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.add-product-progress-card{padding:13px 14px;border-radius:16px}
+.add-progress-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.add-progress-head>div{display:grid;gap:2px}
+.add-progress-head b{font-size:12px}
+.add-progress-head small{font-size:10px;color:var(--muted)}
+.add-progress-head>span{font-size:12px;font-weight:900;color:var(--muted)}
+.add-product-hud.is-ready .add-progress-head>span{color:var(--ok)}
+.add-progress-track{height:4px;margin:10px 0 11px;border-radius:999px;overflow:hidden;background:var(--soft)}
+.add-progress-track>span{display:block;height:100%;width:0;border-radius:inherit;background:var(--text);transition:width .28s cubic-bezier(.2,.8,.2,1)}
+.add-product-hud.is-ready .add-progress-track>span{background:var(--ok)}
+.add-progress-steps{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
+.add-progress-steps button{display:flex;align-items:center;justify-content:center;gap:6px;min-width:0;padding:7px 5px;border:0;border-radius:9px;background:transparent;color:var(--muted);font:inherit;font-size:9px;font-weight:850;cursor:pointer;transition:background .16s ease,color .16s ease,transform .16s ease}
+.add-progress-steps button:hover{background:var(--soft);color:var(--text)}
+.add-progress-steps button.active{background:var(--soft);color:var(--text)}
+.add-progress-steps button.done{color:var(--ok)}
+.add-progress-steps button>span{display:grid;place-items:center;width:18px;height:18px;flex:0 0 18px;border-radius:6px;background:var(--soft);font-size:8px;font-weight:950}
+.add-progress-steps button.active>span{background:var(--text);color:var(--card)}
+.add-progress-steps button.done>span{background:color-mix(in srgb,var(--ok) 14%,var(--soft));color:var(--ok)}
+.add-progress-steps button b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.add-live-preview{display:grid;grid-template-columns:74px minmax(0,1fr);gap:12px;align-items:center;padding:10px;border-radius:16px;min-width:0}
+.add-preview-image{width:74px;height:74px;border-radius:12px;background:linear-gradient(135deg,var(--soft),var(--brand-soft));display:grid;place-items:center;overflow:hidden;color:var(--muted);font-size:15px;font-weight:950}
+.add-preview-image img{width:100%;height:100%;object-fit:cover}
+.add-preview-copy{display:grid;gap:7px;min-width:0}
+.add-preview-eyebrow{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+.add-preview-eyebrow span{font-size:8px;text-transform:uppercase;letter-spacing:.06em;font-weight:900;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.add-preview-copy>b{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.add-preview-meta{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.add-preview-meta span{font-size:10px;font-weight:800;color:var(--muted);white-space:nowrap}
+.add-preview-meta span:first-child{color:var(--text)}
+
+.product-create-section{transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease}
+.product-create-section:target{border-color:var(--text)}
+.add-progress-steps button:focus-visible,
+.product-version-button:focus-visible,
+.variant-option-type-buttons button:focus-visible,
+.variant-pricing-mode-buttons button:focus-visible{outline:2px solid var(--text);outline-offset:2px}
+.field-foot{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.field-foot>span{flex:0 0 auto;font-size:9px;color:var(--muted);font-variant-numeric:tabular-nums}
+.field-foot-end{justify-content:flex-end}
+
+@media(prefers-reduced-motion:no-preference){
+  .product-create-section{animation:addSectionIn .32s ease both}
+  .product-create-section:nth-of-type(2){animation-delay:.03s}
+  .product-create-section:nth-of-type(3){animation-delay:.06s}
+  .product-create-section:nth-of-type(4){animation-delay:.09s}
+  .product-create-section:nth-of-type(5){animation-delay:.12s}
+  @keyframes addSectionIn{from{opacity:.01;transform:translateY(7px)}to{opacity:1;transform:none}}
+}
+
+@media(max-width:900px){
+  .add-product-hud{grid-template-columns:1fr}
+  .add-live-preview{grid-template-columns:62px minmax(0,1fr)}
+  .add-preview-image{width:62px;height:62px}
+}
+@media(max-width:680px){
+  .add-product-hud{position:static;margin-bottom:14px}
+  .add-product-progress-card{padding:11px}
+  .add-progress-steps{grid-template-columns:repeat(5,1fr)}
+  .add-progress-steps button{display:grid;gap:4px;padding:6px 2px}
+  .add-progress-steps button>span{margin:auto}
+  .add-progress-steps button b{font-size:8px}
+  .add-live-preview{padding:9px}
+}
+@media(max-width:430px){
+  .add-progress-steps button b{display:none}
+  .add-progress-steps button{padding:6px}
+  .add-live-preview{grid-template-columns:56px minmax(0,1fr)}
+  .add-preview-image{width:56px;height:56px}
+  .add-preview-meta{align-items:flex-start;flex-direction:column;gap:2px}
+}
