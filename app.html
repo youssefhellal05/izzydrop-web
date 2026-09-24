@@ -11,7 +11,7 @@
   <meta name="theme-color" content="#111318">
   <script>try{document.documentElement.dataset.theme=localStorage.getItem("izzy_theme")==="dark"?"dark":"light"}catch(e){}</script>
   <meta name="description" content="IzzyDrop — Egypt’s independent dropshipping marketplace.">
-  <link rel="stylesheet" href="styles.css?v=20260924-finish4">
+  <link rel="stylesheet" href="styles.css?v=20260924-simple1">
 </head>
 <body>
 <div class="wrap">
@@ -37,26 +37,34 @@
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg>
             <span>Products</span>
           </button>
-          <button data-view="requests">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h5"/></svg>
-            <span>Find a product</span>
-          </button>
           <button data-view="linked">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12v16l-6-3-6 3z"/></svg>
             <span>My products</span>
-          </button>
-          <button data-view="samples">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h8M9 3v5l-4 8a3 3 0 0 0 3 5h8a3 3 0 0 0 3-5l-4-8V3M7 15h10"/></svg>
-            <span>Samples</span>
           </button>
           <button data-view="orders">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v14H4zM8 3v6M16 3v6M8 13h8M8 17h5"/></svg>
             <span>Orders</span>
           </button>
-          <button data-view="settings">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM19 12l2-1-2-4-2 1a8 8 0 0 0-2-1l-1-3h-4L9 7a8 8 0 0 0-2 1L5 7l-2 4 2 1v2l-2 1 2 4 2-1a8 8 0 0 0 2 1l1 3h4l1-3a8 8 0 0 0 2-1l2 1 2-4-2-1z"/></svg>
-            <span>Settings</span>
+          <button data-view="requests">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h5"/></svg>
+            <span>Find product</span>
           </button>
+          <details class="dropshipper-more">
+            <summary>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg>
+              <span>More</span>
+            </summary>
+            <div class="dropshipper-more-menu">
+              <button data-view="samples">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h8M9 3v5l-4 8a3 3 0 0 0 3 5h8a3 3 0 0 0 3-5l-4-8V3M7 15h10"/></svg>
+                <span>Samples</span>
+              </button>
+              <button data-view="settings">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM19 12l2-1-2-4-2 1a8 8 0 0 0-2-1l-1-3h-4L9 7a8 8 0 0 0-2 1L5 7l-2 4 2 1v2l-2 1 2 4 2-1a8 8 0 0 0 2 1l1 3h4l1-3a8 8 0 0 0 2-1l2 1 2-4-2-1z"/></svg>
+                <span>Settings</span>
+              </button>
+            </div>
+          </details>
         </nav>
       </aside>
 
@@ -75,20 +83,25 @@
         <div id="dash-status" class="status"></div>
 
         <section id="view-products" class="view">
-          <div class="dropshipper-toolbar">
+          <div class="dropshipper-toolbar simple-toolbar">
             <div class="search-wrap">
               <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="m16 16 4 4"/></svg>
-              <input id="product-search" class="search" placeholder="Search products, suppliers or SKU">
+              <input id="product-search" class="search" placeholder="Search products">
             </div>
             <select id="product-category" class="control"><option value="">All categories</option></select>
-            <select id="product-sort" class="control">
-              <option value="newest">Newest</option>
-              <option value="price-low">Price: low to high</option>
-              <option value="price-high">Price: high to low</option>
-              <option value="stock-high">Stock: high to low</option>
-            </select>
-            <label class="stock-toggle"><input id="in-stock-only" type="checkbox"><span>In stock only</span></label>
-            <label class="stock-toggle"><input id="trending-only" type="checkbox"><span>Trending only 🔥</span></label>
+            <details class="product-filter-more">
+              <summary>Filters</summary>
+              <div class="product-filter-panel">
+                <select id="product-sort" class="control">
+                  <option value="newest">Newest</option>
+                  <option value="price-low">Price: low to high</option>
+                  <option value="price-high">Price: high to low</option>
+                  <option value="stock-high">Stock: high to low</option>
+                </select>
+                <label class="stock-toggle"><input id="in-stock-only" type="checkbox"><span>In stock only</span></label>
+                <label class="stock-toggle"><input id="trending-only" type="checkbox"><span>Trending only 🔥</span></label>
+              </div>
+            </details>
           </div>
           <div id="product-results-meta" class="results-meta muted"></div>
           <div id="products" class="product-grid dropshipper-product-grid"></div>
@@ -247,9 +260,9 @@
 </div>
 
 <script src="config.js"></script>
-<script src="common.js?v=20260924-finish4"></script><script src="i18n.js?v=20260924-finish4"></script>
-<script src="app.js?v=20260924-finish4"></script>
+<script src="common.js?v=20260924-simple1"></script><script src="i18n.js?v=20260924-simple1"></script>
+<script src="app.js?v=20260924-simple1"></script>
 <script>window.IZZY_SETTINGS_ROLE="dropshipper"</script>
-<script src="settings.js?v=20260924-finish4"></script>
+<script src="settings.js?v=20260924-simple1"></script>
 </body>
 </html>
