@@ -11,7 +11,7 @@
   <meta name="theme-color" content="#111318">
   <script>try{document.documentElement.dataset.theme=localStorage.getItem("izzy_theme")==="dark"?"dark":"light"}catch(e){}</script>
   <meta name="description" content="IzzyDrop — Egypt’s independent dropshipping marketplace.">
-  <link rel="stylesheet" href="styles.css?v=20260924-genericoptions2">
+  <link rel="stylesheet" href="styles.css?v=20260924-izzyshipping1">
 </head>
 <body>
 <div class="wrap">
@@ -326,10 +326,10 @@
                   <input id="p-retail" type="number" step="0.01" min="0" placeholder="0.00" required>
                   <div class="field-help-panel" data-field-help-panel="retail" hidden></div>
                 </div>
-                <div class="field">
-                  <label class="field-label" for="p-shipping">Estimated shipping cost (EGP)</label>
-                  <input id="p-shipping" type="number" step="0.01" min="0" value="0" placeholder="0.00" required>
-                  <small>Typical delivery cost the dropshipper should include when estimating profit.</small>
+                <div class="field izzydrop-delivery-field">
+                  <label class="field-label">Delivery</label>
+                  <div class="delivery-managed-badge">Calculated by IzzyDrop</div>
+                  <small>IzzyDrop sets delivery pricing separately based on the order and destination.</small>
                 </div>
               </div>
             </div>
@@ -389,7 +389,7 @@
             <option value="pending_review">Pending review</option>
           </select>
         </div>
-        <div class="field"><label class="field-label">Estimated shipping cost (EGP)</label><input id="edit-product-shipping" type="number" step="0.01" min="0"></div>
+        <div class="field"><label class="field-label">Delivery</label><div class="delivery-managed-badge">Managed by IzzyDrop</div><small>Suppliers do not set customer delivery fees.</small></div>
       </div>
       <div class="form-two-col">
         <div class="field"><label class="field-label with-info"><span>Your price to dropshippers (EGP)</span><button class="field-info-btn" data-field-help="cost" type="button" aria-label="Explain supplier price">?</button></label><input id="edit-product-cost" type="number" step="0.01" min="0" required><div class="field-help-panel" data-field-help-panel="cost" hidden></div></div>
@@ -406,10 +406,10 @@
 </div>
 
 <script src="config.js"></script>
-<script src="common.js?v=20260924-genericoptions2"></script>
-<script src="i18n.js?v=20260924-genericoptions2"></script>
-<script src="supplier.js?v=20260924-genericoptions2"></script>
+<script src="common.js?v=20260924-izzyshipping1"></script>
+<script src="i18n.js?v=20260924-izzyshipping1"></script>
+<script src="supplier.js?v=20260924-izzyshipping1"></script>
 <script>window.IZZY_SETTINGS_ROLE="supplier"</script>
-<script src="settings.js?v=20260924-genericoptions2"></script>
+<script src="settings.js?v=20260924-izzyshipping1"></script>
 </body>
 </html>
