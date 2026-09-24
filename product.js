@@ -34,6 +34,7 @@
 
     const main=images[0]?.url||(p.variants||[]).find(v=>v.image_url)?.image_url||null;
     const categoryLabel=isAr?(p.category_ar||p.category||'غير مصنف'):(p.category||p.category_ar||'Uncategorized');
+    const variantHtml=(p.variants||[]).map(v=>`<button type="button" class="variant product-variant-choice" data-variant-image="${IZZY.esc(v.image_url||main||'')}"><div><b>${IZZY.esc(variantLabel(v))}</b><small>${IZZY.esc(v.sku||'')}</small></div><span class="tag ${Number(v.stock_quantity)>0?'ok':'warn'}">${Number(v.stock_quantity||0)} ${isAr?'متوفر':'in stock'}</span></button>`).join('') || `<div class="notice">${isAr?'لا توجد خيارات متاحة.':'No variants listed.'}</div>`;
     box.innerHTML=`
       ${from==='app'?`<a class="product-back" href="app.html">${isAr?'العودة إلى المنتجات →':'← Back to products'}</a>`:''}
       <div class="product-detail product-detail-polished">
@@ -59,7 +60,7 @@
 
           <div class="variant-section">
             <h3>${isAr?'الخيارات':'Variants'}</h3>
-            <div class="variant-list">${(p.variants||[]).map(v=>`<button type="button" class="variant product-variant-choice" data-variant-image="${IZZY.esc(v.image_url||main||'')}"><div><b>${IZZY.esc(variantLabel(v))}</b><small>${IZZY.esc(v.sku||'')}</small></div><span class="tag ${Number(v.stock_quantity)>0?'ok':'warn'}">${Number(v.stock_quantity||0)} ${isAr?'متوفر':'in stock'}</span></button>`).join('')||'<div class="notice">'+(isAr?'لا توجد خيارات متاحة.':'No variants listed.')+'</div>'}</div>
+            <div class="variant-list">${variantHtml}</div>
           </div>
 
           <div class="product-detail-actions">
