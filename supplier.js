@@ -482,7 +482,7 @@
   function renderSourcingRequests(){
     const el=$('#supplier-requests');if(!el)return;
     const myQuoteByRequest=new Map((QUOTES||[]).map(q=>[q.request_id,q]));
-    const productOptions='<option value="">No linked product yet</option>'+(PRODUCTS||[]).map(p=>`<option value="${p.id}">${IZZY.esc(p.name||p.sku||'Product')}</option>`).join('');
+    const productOptions='<option value="">'+local('Choose an IzzyDrop product','اختر منتجًا على IzzyDrop')+'</option>'+(PRODUCTS||[]).filter(p=>p.status==='active').map(p=>`<option value="${p.id}">${IZZY.esc(productName(p)||p.sku||local('Product','المنتج'))}</option>`).join('');
     el.innerHTML=(REQUESTS||[]).map(r=>{
       const q=myQuoteByRequest.get(r.id);
       return `<article class="card order-card">
@@ -497,7 +497,7 @@
           <input name="offered_cost" type="number" min="0" step="0.01" placeholder="${local('Your price EGP','سعرك بالجنيه')}" required>
           <input name="available_quantity" type="number" min="0" step="1" placeholder="Available quantity">
           <input name="lead_time_days" type="number" min="0" step="1" placeholder="Lead time days">
-          <select name="product_id">${productOptions}</select>
+          <select name="product_id" required>${productOptions}</select>
           <input name="message" class="span-2" placeholder="Message / MOQ / notes">
           <button class="btn span-2" type="submit">Submit quote</button>
         </form>`}
