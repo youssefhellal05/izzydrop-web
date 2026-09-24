@@ -139,6 +139,12 @@
     'Suggested selling price (EGP)':'سعر البيع المقترح (جنيه)',
     'Available':'متاح',
     'More':'المزيد',
+    'No variants — Skip to final step':'بدون خيارات — انتقل للخطوة الأخيرة',
+    'This product has one version, so you only need one stock number.':'هذا المنتج له نسخة واحدة، لذلك تحتاج فقط إلى رقم مخزون واحد.',
+    'Remove photo':'حذف الصورة',
+    'Photo removed.':'تم حذف الصورة.',
+    'You can add up to 6 product photos.':'يمكنك إضافة حتى 6 صور للمنتج.',
+
     'Requests':'الطلبات',
     'What needs your attention.':'ما يحتاج انتباهك.',
     'Your products and stock.':'منتجاتك ومخزونك.',
