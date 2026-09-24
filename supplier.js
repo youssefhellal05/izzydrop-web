@@ -1,17 +1,17 @@
 (()=>{
   const $=s=>document.querySelector(s);
-  let SUP=null,PRODUCTS=[],VARIANTS=[],IMAGES=[],ORDERS=[],ITEMS=[],REQUESTS=[],QUOTES=[],CATEGORIES=[],SAMPLES=[],SELECTED_IMAGES=[],ORDER_FILTER='all',NEW_CONTENT_LANG='en',NEW_SOURCE_LANGUAGE='en',EDIT_CONTENT_LANG='en',VARIANT_MODE='single';
+  let SUP=null,PRODUCTS=[],VARIANTS=[],IMAGES=[],ORDERS=[],ITEMS=[],REQUESTS=[],QUOTES=[],CATEGORIES=[],SAMPLES=[],SELECTED_IMAGES=[],ORDER_FILTER='all',NEW_CONTENT_LANG='en',NEW_SOURCE_LANGUAGE='en',EDIT_CONTENT_LANG='en',VARIANT_MODE='single',PRODUCT_STEP=1,VARIANT_ADVANCED=false;
   const SELECTED_PRODUCT_IDS=new Set();
   const VARIANT_COMBO_STATE=new Map();
 
   const VIEW_COPY={
-    overview:['Overview','See what needs your attention today.'],
-    products:['My Products','View and edit every product you have listed on IzzyDrop.'],
-    requests:['Sourcing requests','Quote products dropshippers are actively looking for.'],
-    samples:['Samples','Approve sample requests and add tracking when they ship.'],
-    orders:['Orders','Ship customer orders and add tracking when they leave you.'],
-    add:['Add product','Create a complete product listing for dropshippers.'],
-    settings:['Settings','Manage your supplier account, notifications, appearance and security.']
+    overview:['Overview','What needs your attention.'],
+    products:['My Products','Your products and stock.'],
+    orders:['Orders','Ship customer orders.'],
+    requests:['Requests','Products dropshippers want sourced.'],
+    add:['Add product','Create a product in three simple steps.'],
+    samples:['Samples','Sample requests from dropshippers.'],
+    settings:['Settings','Account and preferences.']
   };
 
   const msg=(t,b=false)=>{
@@ -27,6 +27,12 @@
     const copy=VIEW_COPY[v]||VIEW_COPY.overview;
     $('#supplier-page-title').textContent=copy[0];
     $('#supplier-page-subtitle').textContent=copy[1];
+    const more=document.querySelector('.supplier-more');
+    if(more){
+      more.classList.toggle('has-active',['samples','settings'].includes(v));
+      if(!['samples','settings'].includes(v))more.open=false;
+    }
+    if(v==='add')setProductStep(1,false);
     msg('');
   }
 
@@ -114,6 +120,68 @@
       if([...single.options].some(o=>o.value===current))single.value=current;
     }
     if(VARIANT_MODE==='options')renderVariantCombinations();
+  }
+
+  function productWizardSummary(){
+    const name=$('#p-name-'+NEW_CONTENT_LANG)?.value?.trim()||$('#p-name-en')?.value?.trim()||$('#p-name-ar')?.value?.trim()||'—';
+    let variants=[];
+    try{variants=collectVariants()}catch(e){}
+    const enabled=variants.filter(v=>v.enabled!==false);
+    const stock=enabled.reduce((sum,v)=>sum+Number(v.stock||0),0);
+    if($('#publish-product-name'))$('#publish-product-name').textContent=name;
+    if($('#publish-photo-count'))$('#publish-photo-count').textContent=String(SELECTED_IMAGES.length);
+    if($('#publish-variant-count'))$('#publish-variant-count').textContent=String(enabled.length||1);
+    if($('#publish-stock-count'))$('#publish-stock-count').textContent=String(stock);
+  }
+
+  function validateProductStep(step){
+    if(step===1){
+      const nameEn=$('#p-name-en')?.value?.trim(),nameAr=$('#p-name-ar')?.value?.trim();
+      if(!nameEn&&!nameAr){msg(local('Add a product name first.','أضف اسم المنتج أولًا.'),true);return false}
+      if(!$('#p-category')?.value){msg(local('Choose a product category.','اختر فئة للمنتج.'),true);return false}
+      msg('');
+      return true;
+    }
+    if(step===2){
+      try{collectVariants();msg('');return true}
+      catch(e){msg(e.message,true);return false}
+    }
+    return true;
+  }
+
+  function setProductStep(step,scroll=true){
+    PRODUCT_STEP=Math.max(1,Math.min(3,Number(step)||1));
+    document.querySelectorAll('[data-product-step]').forEach(el=>el.hidden=Number(el.dataset.productStep)!==PRODUCT_STEP);
+    document.querySelectorAll('[data-product-step-jump]').forEach(btn=>{
+      const n=Number(btn.dataset.productStepJump);
+      btn.classList.toggle('on',n===PRODUCT_STEP);
+      btn.classList.toggle('done',n<PRODUCT_STEP);
+    });
+    const back=$('#product-step-back'),next=$('#product-step-next'),publish=$('#add-product-btn');
+    if(back)back.hidden=PRODUCT_STEP===1;
+    if(next){
+      next.hidden=PRODUCT_STEP===3;
+      next.textContent=PRODUCT_STEP===1?local('Next: Variants','التالي: الخيارات'):local('Next: Price','التالي: السعر');
+    }
+    if(publish)publish.hidden=PRODUCT_STEP!==3;
+    const title=$('#product-step-title'),help=$('#product-step-help');
+    const copy={
+      1:[local('Product details','بيانات المنتج'),local('Add the name, category and photos.','أضف الاسم والفئة والصور.')],
+      2:[local('Variants & stock','الخيارات والمخزون'),local('Choose one version or create color and size combinations.','اختر نسخة واحدة أو أنشئ تركيبات الألوان والمقاسات.')],
+      3:[local('Price & publish','السعر والنشر'),local('Set the price and publish when everything looks right.','حدد السعر ثم انشر المنتج عندما يصبح جاهزًا.')]
+    }[PRODUCT_STEP];
+    if(title)title.textContent=copy[0];
+    if(help)help.textContent=copy[1];
+    productWizardSummary();
+    if(scroll)document.querySelector('#view-add .section-heading')?.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+
+  function setVariantAdvanced(show){
+    VARIANT_ADVANCED=!!show;
+    const form=$('#add-form');
+    if(form)form.classList.toggle('show-variant-advanced',VARIANT_ADVANCED);
+    const btn=$('#toggle-variant-advanced');
+    if(btn)btn.textContent=VARIANT_ADVANCED?local('Hide advanced details','إخفاء التفاصيل المتقدمة'):local('Advanced details','تفاصيل متقدمة');
   }
 
   function setNewContentLang(lang,userAction=true){
