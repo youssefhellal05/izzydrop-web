@@ -125,29 +125,107 @@
     });
   }
 
+  function clearFormInvalidState(el){
+    if(!el)return;
+    el.closest('.field,.photo-upload,.variant-builder-panel')?.classList.remove('is-invalid');
+    el.removeAttribute?.('aria-invalid');
+  }
+
+  function showFormError(el,message){
+    if(el){
+      el.closest('.field,.photo-upload,.variant-builder-panel')?.classList.add('is-invalid');
+      el.setAttribute?.('aria-invalid','true');
+      el.scrollIntoView?.({behavior:'smooth',block:'center'});
+      setTimeout(()=>el.focus?.({preventScroll:true}),250);
+    }
+    msg(message,true);
+    return false;
+  }
+
+  function updatePricePreview(){
+    const costRaw=$('#p-cost')?.value;
+    const retailRaw=$('#p-retail')?.value;
+    const value=$('#price-margin-value');
+    const note=$('#price-margin-note');
+    const box=$('#price-margin-preview');
+    if(!value||!note||!box)return;
+    const cost=Number(costRaw),retail=Number(retailRaw);
+    const valid=costRaw!==''&&retailRaw!==''&&Number.isFinite(cost)&&Number.isFinite(retail)&&cost>=0&&retail>=0;
+    box.classList.remove('positive','negative');
+    if(!valid){
+      value.textContent='—';
+      note.textContent=local('Enter both prices to preview the margin before delivery.','أدخل السعرين لمعاينة الهامش قبل التوصيل.');
+      return;
+    }
+    const margin=retail-cost;
+    const pct=retail>0?(margin/retail)*100:0;
+    value.textContent=`${IZZY.money(margin,'EGP')} · ${pct.toFixed(1)}%`;
+    box.classList.add(margin>=0?'positive':'negative');
+    note.textContent=margin>=0
+      ? local('Suggested customer price minus your supplier price. Delivery is separate.','سعر البيع المقترح ناقص سعر المورّد. التوصيل منفصل.')
+      : local('Suggested selling price is below your supplier price.','سعر البيع المقترح أقل من سعر المورّد.');
+  }
+
   function productWizardSummary(){
     const name=$('#p-name-'+NEW_CONTENT_LANG)?.value?.trim()||$('#p-name-en')?.value?.trim()||$('#p-name-ar')?.value?.trim()||'—';
-    let variants=[];
-    try{variants=collectVariants()}catch(e){}
+    const categorySelect=$('#p-category');
+    const category=categorySelect?.value?(categorySelect.selectedOptions?.[0]?.textContent?.trim()||'—'):'—';
+    let variants=[],variantsValid=true;
+    try{variants=collectVariants()}catch(e){variantsValid=false}
     const enabled=variants.filter(v=>v.enabled!==false);
     const stock=enabled.reduce((sum,v)=>sum+Number(v.stock||0),0);
+    const baseRetailRaw=$('#p-retail')?.value;
+    const baseRetail=Number(baseRetailRaw);
+    let priceText=baseRetailRaw!==''&&Number.isFinite(baseRetail)?IZZY.money(baseRetail,'EGP'):'—';
+    if(!SIMPLE_PRODUCT_FLOW&&VARIANT_PRICES_VARY&&enabled.length){
+      const prices=enabled.map(v=>Number(v.retail)).filter(Number.isFinite);
+      if(prices.length){
+        const min=Math.min(...prices),max=Math.max(...prices);
+        priceText=min===max?IZZY.money(min,'EGP'):`${IZZY.money(min,'EGP')} – ${IZZY.money(max,'EGP')}`;
+      }
+    }
+
     if($('#publish-product-name'))$('#publish-product-name').textContent=name;
+    if($('#publish-category'))$('#publish-category').textContent=category;
     if($('#publish-photo-count'))$('#publish-photo-count').textContent=String(SELECTED_IMAGES.length);
     if($('#publish-variant-count'))$('#publish-variant-count').textContent=String(SIMPLE_PRODUCT_FLOW?1:enabled.length);
     if($('#publish-stock-count'))$('#publish-stock-count').textContent=String(stock);
+    if($('#publish-price'))$('#publish-price').textContent=priceText;
+
+    const missing=[];
+    if(name==='—')missing.push(local('product name','اسم المنتج'));
+    if(!categorySelect?.value)missing.push(local('category','الفئة'));
+    if(!SELECTED_IMAGES.length)missing.push(local('photo','صورة'));
+    const costRaw=$('#p-cost')?.value,cost=Number(costRaw);
+    if(costRaw===''||!Number.isFinite(cost)||cost<0)missing.push(local('supplier price','سعر المورّد'));
+    if(baseRetailRaw===''||!Number.isFinite(baseRetail)||baseRetail<0)missing.push(local('suggested price','سعر البيع المقترح'));
+    if(!SIMPLE_PRODUCT_FLOW&&!variantsValid)missing.push(local('variants','الخيارات'));
+
+    const readiness=$('#publish-readiness');
+    if(readiness){
+      readiness.classList.toggle('ok',missing.length===0);
+      readiness.classList.toggle('warn',missing.length>0);
+      readiness.textContent=missing.length
+        ? local(`Still needed: ${missing.join(', ')}.`,`ما زال مطلوبًا: ${missing.join('، ')}.`)
+        : local('Everything required is ready.','كل البيانات المطلوبة جاهزة.');
+    }
+    updatePricePreview();
   }
 
   function validateProductStep(step){
+    document.querySelectorAll('#add-form .is-invalid').forEach(el=>el.classList.remove('is-invalid'));
+    document.querySelectorAll('#add-form [aria-invalid="true"]').forEach(el=>el.removeAttribute('aria-invalid'));
     if(step===1){
       const nameEn=$('#p-name-en')?.value?.trim(),nameAr=$('#p-name-ar')?.value?.trim();
-      if(!nameEn&&!nameAr){msg(local('Add a product name first.','أضف اسم المنتج أولًا.'),true);return false}
-      if(!$('#p-category')?.value){msg(local('Choose a product category.','اختر فئة للمنتج.'),true);return false}
+      if(!nameEn&&!nameAr)return showFormError($('#p-name-'+NEW_CONTENT_LANG),local('Add a product name first.','أضف اسم المنتج أولًا.'));
+      if(!$('#p-category')?.value)return showFormError($('#p-category'),local('Choose a product category.','اختر فئة للمنتج.'));
+      if(!SELECTED_IMAGES.length)return showFormError($('#photo-drop-zone'),local('Add at least one product photo.','أضف صورة واحدة على الأقل للمنتج.'));
       msg('');
       return true;
     }
     if(step===2){
       try{collectVariants();msg('');return true}
-      catch(e){msg(e.message,true);return false}
+      catch(e){return showFormError($('#variant-builder-card'),e.message)}
     }
     return true;
   }
@@ -158,19 +236,19 @@
     const builder=$('#variant-builder-card');
     const simpleStock=$('#simple-product-stock-field');
     const choice=$('#variant-choice-card');
-    const toggle=$('#toggle-product-variants');
     if(builder)builder.hidden=!hasVariants;
     if(simpleStock)simpleStock.hidden=hasVariants;
     if(choice)choice.classList.toggle('variants-on',hasVariants);
-    if(toggle){
-      toggle.textContent=hasVariants
-        ? local('Use one stock only','استخدم مخزونًا واحدًا فقط')
-        : local('This product has colors, sizes, or options','هذا المنتج له ألوان أو مقاسات أو خيارات');
-      toggle.classList.toggle('secondary',!hasVariants);
-    }
+    document.querySelectorAll('[data-product-version-mode]').forEach(btn=>{
+      const active=btn.dataset.productVersionMode===(hasVariants?'options':'single');
+      btn.classList.toggle('on',active);
+      btn.setAttribute('aria-pressed',active?'true':'false');
+      const mark=btn.querySelector('.product-version-check');
+      if(mark)mark.textContent=active?'✓':(btn.dataset.productVersionMode==='options'?'+':'○');
+    });
     if(hasVariants)updateCategoryOptionSuggestion();
     productWizardSummary();
-    if(scroll&&hasVariants)builder?.scrollIntoView({behavior:'smooth',block:'start'});
+    if(scroll&&hasVariants)builder?.scrollIntoView({behavior:'smooth',block:'nearest'});
   }
 
   function setProductStep(step,scroll=true){
@@ -184,7 +262,7 @@
     const form=$('#add-form');
     if(form)form.classList.toggle('show-variant-advanced',VARIANT_ADVANCED);
     const btn=$('#toggle-variant-advanced');
-    if(btn)btn.textContent=VARIANT_ADVANCED?local('Hide advanced details','إخفاء التفاصيل المتقدمة'):local('Advanced details','تفاصيل متقدمة');
+    if(btn)btn.textContent=VARIANT_ADVANCED?local('Hide SKU & weight','إخفاء SKU والوزن'):local('Add SKU & weight','إضافة SKU والوزن');
   }
 
   function setNewContentLang(lang,userAction=true){
