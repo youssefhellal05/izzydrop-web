@@ -37,6 +37,7 @@
         options:v.option_values||{},
         image_url:v.variant_image_url||null,
         stock_quantity:v.stock_quantity,
+        suggested_retail_price:v.suggested_retail_price,
         is_enabled:v.is_enabled
       }))
     };
@@ -73,7 +74,15 @@
 
     const main=images[0]?.url||(p.variants||[]).find(v=>v.image_url)?.image_url||null;
     const categoryLabel=isAr?(p.category_ar||p.category||'غير مصنف'):(p.category||p.category_ar||'Uncategorized');
-    const variantHtml=(p.variants||[]).map(v=>`<button type="button" class="variant product-variant-choice" data-variant-image="${IZZY.esc(v.image_url||main||'')}"><div><b>${IZZY.esc(variantLabel(v))}</b><small>${IZZY.esc(v.sku||'')}</small></div><span class="tag ${Number(v.stock_quantity)>0?'ok':'warn'}">${Number(v.stock_quantity||0)} ${isAr?'متوفر':'in stock'}</span></button>`).join('') || `<div class="notice">${isAr?'لا توجد خيارات متاحة.':'No variants listed.'}</div>`;
+    const variantPrices=(p.variants||[]).map(v=>Number(v.suggested_retail_price)).filter(Number.isFinite);
+    const uniqueVariantPrices=[...new Set(variantPrices)];
+    const startingRetail=variantPrices.length?Math.min(...variantPrices):Number(p.suggested_retail_price||0);
+    const pricePrefix=uniqueVariantPrices.length>1?(isAr?'ابتداءً من ':'From '):'';
+    const variantHtml=(p.variants||[]).map(v=>{
+      const vp=Number(v.suggested_retail_price);
+      const priceText=Number.isFinite(vp)?` · ${isAr?'بيع مقترح':'Suggested'} ${IZZY.money(vp,p.currency)}`:'';
+      return `<button type="button" class="variant product-variant-choice" data-variant-image="${IZZY.esc(v.image_url||main||'')}" data-variant-price="${Number.isFinite(vp)?vp:''}"><div><b>${IZZY.esc(variantLabel(v))}</b><small>${IZZY.esc(v.sku||'')}${priceText}</small></div><span class="tag ${Number(v.stock_quantity)>0?'ok':'warn'}">${Number(v.stock_quantity||0)} ${isAr?'متوفر':'in stock'}</span></button>`;
+    }).join('') || `<div class="notice">${isAr?'لا توجد خيارات متاحة.':'No variants listed.'}</div>`;
     box.innerHTML=`
       ${from==='app'?`<a class="product-back" href="app.html">${isAr?'العودة إلى المنتجات →':'← Back to products'}</a>`:from==='admin'?'<a class="product-back" href="admin.html">← Back to Admin</a>':''}
       <div class="product-detail product-detail-polished">
@@ -87,7 +96,7 @@
           <div class="product-detail-badges">${adminView?`<span class="tag">Admin inspection</span><span class="tag ${p.product_status==='active'?'ok':'warn'}">${IZZY.esc(p.product_status||'')}</span>`:'<span class="tag ok">IzzyDrop Verified Supplier</span>'}<span class="tag ${totalStock>0?'ok':'warn'}">${totalStock>0?`${totalStock} in stock`:'Out of stock'}</span></div>
           <h1>${IZZY.esc(displayName)}</h1>
           <p class="product-supplier-name">Sold by <b>${IZZY.esc(p.supplier||'IzzyDrop supplier')}</b></p>
-          <div class="price product-detail-price">${IZZY.money(p.suggested_retail_price,p.currency)}</div>
+          <div id="product-detail-price" class="price product-detail-price">${pricePrefix}${IZZY.money(startingRetail,p.currency)}</div>
           <small class="muted">Suggested selling price</small>
           <p class="muted product-detail-description">${IZZY.esc(displayDescription||(isAr?'لا يوجد وصف للمنتج بعد.':'No product description has been added yet.'))}</p>
 
@@ -117,6 +126,9 @@
     document.querySelectorAll('.product-thumb').forEach(btn=>btn.onclick=()=>setMainImage(btn.dataset.image));
     document.querySelectorAll('.product-variant-choice').forEach(btn=>btn.onclick=()=>{
       setMainImage(btn.dataset.variantImage);
+      const price=Number(btn.dataset.variantPrice);
+      const priceEl=document.getElementById('product-detail-price');
+      if(priceEl&&Number.isFinite(price))priceEl.textContent=IZZY.money(price,p.currency);
       document.querySelectorAll('.product-variant-choice').forEach(x=>x.classList.toggle('on',x===btn));
     });
 
