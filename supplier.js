@@ -196,10 +196,16 @@
       'add-review-section':readyCount===4
     };
     document.querySelectorAll('[data-scroll-add-section]').forEach(btn=>{
-      const done=!!sectionDone[btn.dataset.scrollAddSection];
+      const sectionId=btn.dataset.scrollAddSection;
+      const done=!!sectionDone[sectionId];
       btn.classList.toggle('done',done);
       const badge=btn.querySelector('span');
-      if(badge)badge.textContent=done?'✓':String([...btn.parentElement.children].indexOf(btn)+1);
+      const step=String([...btn.parentElement.children].indexOf(btn)+1);
+      if(badge)badge.textContent=done?'✓':step;
+      const section=document.getElementById(sectionId);
+      section?.classList.toggle('is-complete',done);
+      const sectionBadge=section?.querySelector('.form-section-number');
+      if(sectionBadge)sectionBadge.textContent=done?'✓':step;
     });
 
     if($('#add-preview-name'))$('#add-preview-name').textContent=state.name==='—'?local('Your product','منتجك'):state.name;
@@ -1627,8 +1633,11 @@
         .sort((a,b)=>b.intersectionRatio-a.intersectionRatio)[0];
       if(!visible)return;
       document.querySelectorAll('[data-scroll-add-section]').forEach(btn=>{
-        btn.classList.toggle('active',btn.dataset.scrollAddSection===visible.target.id);
+        const active=btn.dataset.scrollAddSection===visible.target.id;
+        btn.classList.toggle('active',active);
+        if(active)btn.setAttribute('aria-current','step');else btn.removeAttribute('aria-current');
       });
+      addSections.forEach(section=>section.classList.toggle('is-current',section===visible.target));
     },{rootMargin:'-20% 0px -62% 0px',threshold:[0,.2,.45,.7]});
     addSections.forEach(section=>observer.observe(section));
   }
