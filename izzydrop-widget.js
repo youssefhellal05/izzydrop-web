@@ -98,7 +98,7 @@
       shadow.innerHTML=`
         <style>${style()}</style>
         <div class="iz-card" dir="${direction}">
-          <div class="iz-image">${p.image_url?`<img src="${esc(p.image_url)}" alt="${esc(name)}">`:'<b>IZ</b>'}</div>
+          <div class="iz-image">${(p.image_url||variants.find(v=>v.image_url)?.image_url)?`<img class="iz-product-image" src="${esc(p.image_url||variants.find(v=>v.image_url)?.image_url)}" alt="${esc(name)}">`:'<b>IZ</b>'}</div>
           <div class="iz-body">
             <span class="iz-badge">${inStock>0?`${inStock} ${L.stock}`:L.out}</span>
             <h3>${esc(name)}</h3>
@@ -136,10 +136,13 @@
 
       const priceEl=shadow.querySelector('.iz-price');
       const variantSelect=shadow.querySelector('.iz-variant');
+      const productImage=shadow.querySelector('.iz-product-image');
       variantSelect?.addEventListener('change',()=>{
         const option=variantSelect.selectedOptions?.[0];
         if(option?.dataset?.price)priceEl.textContent=money(Number(option.dataset.price),p.currency);
         else priceEl.textContent=(variants.length>1?(ar?'ابتداءً من ':'From '):'')+money(p.retail_price,p.currency);
+        const selected=variants.find(v=>String(v.id)===String(variantSelect.value));
+        if(productImage)productImage.src=selected?.image_url||p.image_url||productImage.src;
       });
       const open=shadow.querySelector('.iz-open');
       const form=shadow.querySelector('.iz-form');
