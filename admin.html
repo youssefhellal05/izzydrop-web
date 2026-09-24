@@ -11,7 +11,7 @@
   <meta name="theme-color" content="#111318">
   <script>try{document.documentElement.dataset.theme=localStorage.getItem("izzy_theme")==="dark"?"dark":"light"}catch(e){}</script>
   <meta name="description" content="IzzyDrop — Admin Control Center.">
-  <link rel="stylesheet" href="styles.css?v=20260924-finish4">
+  <link rel="stylesheet" href="styles.css?v=20260924-adminqa1">
 </head>
 <body>
 <div class="wrap">
@@ -165,8 +165,8 @@
         <section id="view-admins" class="view" hidden>
           <div class="section-heading"><div><h2>Admins</h2><p class="muted">Invite trusted people and review who has Control Center access.</p></div></div>
           <div class="admin-access-grid">
-            <div class="card admin-invite-card">
-              <div class="form-section-title"><span class="form-section-number">+</span><div><h3>Invite admin</h3><p>Send a secure IzzyDrop invitation by email.</p></div></div>
+            <div id="admin-invite-card" class="card admin-invite-card">
+              <div class="form-section-title"><span class="form-section-number">+</span><div><h3>Invite admin</h3><p>Only the IzzyDrop super admin can grant new admin access.</p></div></div>
               <form id="admin-invite-form" class="form">
                 <label class="field-label" for="admin-email-input">Email address</label>
                 <input id="admin-email-input" type="email" placeholder="name@company.com" required>
@@ -188,9 +188,9 @@
 </div>
 
 <script src="config.js"></script>
-<script src="common.js?v=20260924-finish4"></script><script src="i18n.js?v=20260924-finish4"></script>
-<script src="admin.js?v=20260924-finish4"></script>
+<script src="common.js?v=20260924-adminqa1"></script><script src="i18n.js?v=20260924-adminqa1"></script>
+<script src="admin.js?v=20260924-adminqa1"></script>
 <script>window.IZZY_SETTINGS_ROLE="admin"</script>
-<script src="settings.js?v=20260924-finish4"></script>
+<script src="settings.js?v=20260924-adminqa1"></script>
 </body>
 </html>
