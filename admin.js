@@ -281,7 +281,7 @@
       const productNames=items.map(i=>productFor(i.supplier_product_id).name).join(' ');
       const supplierNames=items.map(i=>supplierFor(i.supplier_id).business_name).join(' ');
       const hay=[o.external_order_ref,o.shopify_order_name,o.customer_name,o.customer_phone,productNames,supplierNames].filter(Boolean).join(' ').toLowerCase();
-      const statusOk=ORDER_OPEN_ONLY?['pending','processing'].includes(o.status):(!status||o.status===status);
+      const statusOk=ORDER_OPEN_ONLY?['pending','processing','shipped','in_transit'].includes(o.status):(!status||o.status===status);
       const supplierOk=!sid||items.some(i=>i.supplier_id===sid);
       return (!q||hay.includes(q))&&statusOk&&supplierOk;
     });
@@ -296,13 +296,13 @@
       const dp=profileFor(d?.profile_id);
       const itemHtml=items.map(i=>{
         const p=productFor(i.supplier_product_id),s=supplierFor(i.supplier_id);
-        return `<div class="admin-order-item"><div><b>${IZZY.esc(productName(p)||'Product')} × ${Number(i.quantity||1)}</b><small>${IZZY.esc(s.business_name||'Supplier')}</small></div><div><span class="tag ${i.fulfillment_status==='fulfilled'?'ok':i.fulfillment_status==='cancelled'?'bad':''}">${IZZY.esc(i.fulfillment_status)}</span>${i.tracking_number?`<small>${IZZY.esc(i.shipping_carrier||'Carrier')} · ${IZZY.esc(i.tracking_number)}</small>`:''}</div></div>`;
+        return `<div class="admin-order-item"><div><b>${IZZY.esc(productName(p)||'Product')} × ${Number(i.quantity||1)}</b><small>${IZZY.esc(s.business_name||'Supplier')}</small></div><div><span class="tag ${i.fulfillment_status==='fulfilled'?'ok':i.fulfillment_status==='cancelled'?'bad':''}">${IZZY.esc(i.fulfillment_status==='fulfilled'?(window.IZZY_I18N?.status?.('shipped')||'shipped'):(window.IZZY_I18N?.status?.(i.fulfillment_status)||i.fulfillment_status))}</span>${i.tracking_number?`<small>${IZZY.esc(i.shipping_carrier||'Carrier')} · ${IZZY.esc(i.tracking_number)}</small>`:''}</div></div>`;
       }).join('')||'<div class="notice">No order items found.</div>';
 
       return `<article class="card admin-order-card">
         <div class="admin-order-head">
           <div><b>${IZZY.esc(o.external_order_ref||o.shopify_order_name||('Order '+String(o.id).slice(0,8)))}</b><small>${fmtDateTime(o.created_at)} · ${IZZY.esc(o.source||'manual')}</small></div>
-          <div class="admin-order-statuses"><span class="tag ${o.status==='fulfilled'?'ok':o.status==='pending'?'warn':o.status==='cancelled'||o.status==='refunded'?'bad':''}">${IZZY.esc(o.status)}</span><span class="tag">${IZZY.esc(o.payment_status||'')}</span></div>
+          <div class="admin-order-statuses"><span class="tag ${['shipped','in_transit','delivered'].includes(o.status)?'ok':['pending','processing'].includes(o.status)?'warn':['cancelled','refunded','refused','returned'].includes(o.status)?'bad':''}">${IZZY.esc(window.IZZY_I18N?.status?.(o.status)||o.status)}</span><span class="tag">${IZZY.esc(window.IZZY_I18N?.status?.(o.payment_status)||o.payment_status||'')}</span></div>
         </div>
         <div class="admin-order-summary">
           <div><small>Customer</small><b>${IZZY.esc(o.customer_name||'—')}</b><span>${IZZY.esc(o.customer_phone||'')}</span></div>
