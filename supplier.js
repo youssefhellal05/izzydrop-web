@@ -852,7 +852,7 @@
           <label class="field-label">${local('Stock','المخزون')}</label>
           <input data-size-stock type="number" min="0" step="1" value="${IZZY.esc(prefill.stock??'0')}">
         </div>
-        <div class="field">
+        <div class="field variant-advanced-field">
           <label class="field-label">${local('Different supplier price','سعر مورد مختلف')} <span class="muted">(${local('optional','اختياري')})</span></label>
           <input data-size-cost type="number" min="0" step="0.01" value="${IZZY.esc(prefill.cost??'')}" placeholder="${local('Use product price','استخدم سعر المنتج')}">
         </div>
@@ -874,6 +874,34 @@
     row.querySelectorAll('input').forEach(el=>el.addEventListener('input',productWizardSummary));
     list.appendChild(row);
     renumberSizes(group);
+  }
+
+  function updateColorGroupCopy(group){
+    if(!group)return;
+    const color=group.querySelector('[data-color-name]')?.value?.trim();
+    const title=group.querySelector('[data-sizes-title]');
+    if(title)title.textContent=color
+      ? local(`Sizes for ${color}`,`مقاسات ${color}`)
+      : local('Sizes & stock','المقاسات والمخزون');
+  }
+
+  function quickAddSize(group,size){
+    const rows=sizeRows(group);
+    const existing=rows.find(row=>row.querySelector('[data-size-name]')?.value?.trim().toLowerCase()===String(size).toLowerCase());
+    if(existing){
+      existing.querySelector('[data-size-stock]')?.focus();
+      return;
+    }
+    const empty=rows.find(row=>!row.querySelector('[data-size-name]')?.value?.trim());
+    if(empty){
+      empty.querySelector('[data-size-name]').value=size;
+      empty.querySelector('[data-size-stock]')?.focus();
+      productWizardSummary();
+      return;
+    }
+    addSizeRow(group,{size,stock:0});
+    const last=sizeRows(group).at(-1);
+    last?.querySelector('[data-size-stock]')?.focus();
   }
 
   function addColorGroup(prefill={}){
@@ -906,8 +934,15 @@
 
       <div class="color-sizes-section">
         <div class="color-sizes-head">
-          <div><b>${local('Sizes & stock','المقاسات والمخزون')}</b><small>${local('Each size has its own stock.','لكل مقاس مخزونه الخاص.')}</small></div>
+          <div><b data-sizes-title>${local('Sizes & stock','المقاسات والمخزون')}</b><small>${local('Each size has its own stock.','لكل مقاس مخزونه الخاص.')}</small></div>
           <button class="btn secondary" data-add-size type="button">+ ${local('Add size','أضف مقاسًا')}</button>
+        </div>
+        <div class="quick-size-block">
+          <small>${local('Quick add common sizes','إضافة سريعة للمقاسات الشائعة')}</small>
+          <div class="quick-size-buttons">
+            ${['S','M','L','XL','XXL'].map(size=>`<button type="button" data-quick-size="${size}">${size}</button>`).join('')}
+            <button type="button" data-quick-size="One size">${local('One size','مقاس واحد')}</button>
+          </div>
         </div>
         <div data-size-list class="color-size-list"></div>
       </div>
@@ -918,7 +953,10 @@
       renumberColorGroups();
     };
 
-    group.querySelector('[data-color-name]').addEventListener('input',productWizardSummary);
+    group.querySelector('[data-color-name]').addEventListener('input',()=>{
+      updateColorGroupCopy(group);
+      productWizardSummary();
+    });
     group.querySelector('[data-color-image]').onchange=()=>{
       updateColorPhoto(group);
       productWizardSummary();
@@ -951,11 +989,13 @@
     };
 
     group.querySelector('[data-add-size]').onclick=()=>addSizeRow(group);
+    group.querySelectorAll('[data-quick-size]').forEach(btn=>btn.onclick=()=>quickAddSize(group,btn.dataset.quickSize));
     box.appendChild(group);
 
     const startingSizes=Array.isArray(prefill.sizes)&&prefill.sizes.length?prefill.sizes:[{}];
     startingSizes.forEach(size=>addSizeRow(group,size));
     updateColorPhoto(group);
+    updateColorGroupCopy(group);
     renumberColorGroups();
   }
 
