@@ -11,7 +11,7 @@
   <meta name="theme-color" content="#111318">
   <script>try{document.documentElement.dataset.theme=localStorage.getItem("izzy_theme")==="dark"?"dark":"light"}catch(e){}</script>
   <meta name="description" content="IzzyDrop — Egypt’s independent dropshipping marketplace.">
-  <link rel="stylesheet" href="styles.css?v=20260924-manualvariants2">
+  <link rel="stylesheet" href="styles.css?v=20260924-colorsizes1">
 </head>
 <body>
 <div class="wrap">
@@ -287,17 +287,17 @@
 
             <div class="card form-section variant-wizard-section" data-product-step="2">
               <div class="form-section-title form-section-title-row">
-                <div><h3>Add variants one by one</h3><p>Create only the exact versions you actually sell. Add a photo, color, size, stock, and optional different price for each one.</p></div>
+                <div><h3>Add colors and sizes</h3><p>Add a color once, then list every size you have with its own stock.</p></div>
                 <button id="toggle-variant-advanced" class="auth-text-button" type="button">Advanced details</button>
               </div>
 
-              <div id="manual-variant-list" class="manual-variant-list"></div>
+              <div id="variant-color-list" class="variant-color-list"></div>
 
-              <button id="add-manual-variant" class="btn secondary add-manual-variant" type="button">
-                + Add next variant
+              <button id="add-variant-color" class="btn secondary add-variant-color" type="button">
+                + Add another color
               </button>
 
-              <div class="variant-example-note">Example: Black · M · 12 in stock, then Black · L, then White · S. IzzyDrop will not create combinations you did not add.</div>
+              <div class="variant-example-note">Example: Black → S: 5, M: 12, L: 8. Then add White with its own sizes and stock.</div>
             </div>
 
             <div class="card product-publish-summary" data-product-step="3">
@@ -377,10 +377,10 @@
 </div>
 
 <script src="config.js"></script>
-<script src="common.js?v=20260924-manualvariants2"></script>
-<script src="i18n.js?v=20260924-manualvariants2"></script>
-<script src="supplier.js?v=20260924-manualvariants2"></script>
+<script src="common.js?v=20260924-colorsizes1"></script>
+<script src="i18n.js?v=20260924-colorsizes1"></script>
+<script src="supplier.js?v=20260924-colorsizes1"></script>
 <script>window.IZZY_SETTINGS_ROLE="supplier"</script>
-<script src="settings.js?v=20260924-manualvariants2"></script>
+<script src="settings.js?v=20260924-colorsizes1"></script>
 </body>
 </html>
