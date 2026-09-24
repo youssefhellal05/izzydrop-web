@@ -116,7 +116,7 @@
           </div>
           <div class="product-card-actions">
             <a class="btn secondary details-btn" href="${productDetailsUrl(p)}">${local('View details','عرض التفاصيل')}</a>
-            <button class="btn sample-btn" data-id="${p.product_id}">${local('Request sample','طلب عينة')}</button>
+            <button class="btn sample-btn" data-id="${p.product_id}" ${stock>0?'':'disabled'}>${local('Request sample','طلب عينة')}</button>
             <button class="btn link-btn" data-id="${p.product_id}" data-slug="${IZZY.esc(p.public_slug)}" data-linked="${isLinked?'1':'0'}">${isLinked?local('Add to your web','أضفه إلى موقعك'):local('Add to My Products','أضف إلى منتجاتي')}</button>
           </div>
         </div>
