@@ -1651,3 +1651,9 @@ html[dir="rtl"] .product-version-button{text-align:right}
   .polished-photo-preview{grid-template-rows:190px auto}
   .product-version-button{grid-template-columns:30px minmax(0,1fr);padding:12px}
 }
+
+.product-core-meta,.pricing-input-grid{margin-top:14px}
+.variant-stale-note{padding:10px 12px;border:1px solid var(--line);border-radius:11px;background:var(--card);color:var(--warn);font-size:11px;font-weight:800}
+.variant-combination-list{transition:opacity .16s ease}
+.variant-combination-list.is-stale{opacity:.52}
+html[dir="rtl"] .polished-photo-preview .photo-remove-btn{right:auto;left:7px}
