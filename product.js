@@ -32,7 +32,8 @@
       }catch{}
     }
 
-    const main=images[0]?.url;
+    const main=images[0]?.url||(p.variants||[]).find(v=>v.image_url)?.image_url||null;
+    const categoryLabel=isAr?(p.category_ar||p.category||'غير مصنف'):(p.category||p.category_ar||'Uncategorized');
     box.innerHTML=`
       ${from==='app'?`<a class="product-back" href="app.html">${isAr?'العودة إلى المنتجات →':'← Back to products'}</a>`:''}
       <div class="product-detail product-detail-polished">
@@ -52,13 +53,13 @@
 
           <div class="product-facts">
             <div><small>SKU</small><b>${IZZY.esc(p.sku||'—')}</b></div>
-            <div><small>Category</small><b>${IZZY.esc(p.category||'Uncategorized')}</b></div>
+            <div><small>${isAr?'الفئة':'Category'}</small><b>${IZZY.esc(categoryLabel)}</b></div>
             <div><small>Available stock</small><b>${totalStock}</b></div>
           </div>
 
           <div class="variant-section">
-            <h3>Variants</h3>
-            <div class="variant-list">${(p.variants||[]).map(v=>`<div class="variant"><div><b>${IZZY.esc(variantLabel(v))}</b><small>${IZZY.esc(v.sku||'')}</small></div><span class="tag ${Number(v.stock_quantity)>0?'ok':'warn'}">${Number(v.stock_quantity||0)} in stock</span></div>`).join('')||'<div class="notice">No variants listed.</div>'}</div>
+            <h3>${isAr?'الخيارات':'Variants'}</h3>
+            <div class="variant-list">${(p.variants||[]).map(v=>`<button type="button" class="variant product-variant-choice" data-variant-image="${IZZY.esc(v.image_url||main||'')}"><div><b>${IZZY.esc(variantLabel(v))}</b><small>${IZZY.esc(v.sku||'')}</small></div><span class="tag ${Number(v.stock_quantity)>0?'ok':'warn'}">${Number(v.stock_quantity||0)} ${isAr?'متوفر':'in stock'}</span></button>`).join('')||'<div class="notice">'+(isAr?'لا توجد خيارات متاحة.':'No variants listed.')+'</div>'}</div>
           </div>
 
           <div class="product-detail-actions">
@@ -68,10 +69,15 @@
         </section>
       </div>`;
 
-    document.querySelectorAll('.product-thumb').forEach(btn=>btn.onclick=()=>{
+    const setMainImage=url=>{
       const img=document.getElementById('main-product-image');
-      if(img)img.src=btn.dataset.image;
-      document.querySelectorAll('.product-thumb').forEach(x=>x.classList.toggle('on',x===btn));
+      if(img&&url)img.src=url;
+      document.querySelectorAll('.product-thumb').forEach(x=>x.classList.toggle('on',x.dataset.image===url));
+    };
+    document.querySelectorAll('.product-thumb').forEach(btn=>btn.onclick=()=>setMainImage(btn.dataset.image));
+    document.querySelectorAll('.product-variant-choice').forEach(btn=>btn.onclick=()=>{
+      setMainImage(btn.dataset.variantImage);
+      document.querySelectorAll('.product-variant-choice').forEach(x=>x.classList.toggle('on',x===btn));
     });
 
     const use=document.getElementById('use-product');
