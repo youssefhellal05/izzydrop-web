@@ -1298,3 +1298,51 @@ html[data-theme="dark"] .manual-variant-photo{background:#181d24}
   .simple-product-wizard:not(.show-variant-advanced) .manual-variant-grid{grid-template-columns:1fr}
   .manual-variant-photo-field{grid-column:auto}
 }
+
+
+/* Color -> sizes supplier variant builder */
+.variant-color-list{display:grid;gap:16px}
+.variant-color-card{border:1px solid var(--line);border-radius:16px;padding:16px;background:var(--card)}
+.variant-color-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
+.variant-color-head>div{display:grid;gap:3px}
+.variant-color-head b{font-size:15px}
+.variant-color-head small{font-size:11px;color:var(--muted)}
+.variant-color-main{display:grid;grid-template-columns:minmax(180px,.8fr) minmax(200px,1.2fr);gap:14px;align-items:end}
+.variant-color-photo-field{grid-row:span 2}
+.color-sizes-section{margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+.color-sizes-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.color-sizes-head>div{display:grid;gap:3px}
+.color-sizes-head small{font-size:11px;color:var(--muted)}
+.color-size-list{display:grid;gap:9px}
+.color-size-row{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;padding:11px;border:1px solid var(--line);border-radius:12px;background:var(--soft)}
+.color-size-row-head{display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:8px;min-width:54px;padding:4px 2px}
+.color-size-row-head b{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.color-size-fields{display:grid;grid-template-columns:minmax(90px,.8fr) minmax(85px,.65fr) minmax(150px,1fr) minmax(130px,.9fr) minmax(100px,.7fr);gap:9px;align-items:end}
+.simple-product-wizard:not(.show-variant-advanced) .color-size-fields{grid-template-columns:minmax(90px,.8fr) minmax(85px,.65fr) minmax(150px,1fr)}
+.add-variant-color{width:100%;min-height:50px;margin-top:14px}
+html[data-theme="dark"] .variant-color-card{background:var(--card)}
+html[data-theme="dark"] .color-size-row{background:#181d24}
+@media(max-width:850px){
+  .color-size-fields,
+  .simple-product-wizard:not(.show-variant-advanced) .color-size-fields{grid-template-columns:1fr 1fr}
+  .color-size-fields .field:nth-child(3){grid-column:1/-1}
+}
+@media(max-width:680px){
+  .variant-color-card{padding:14px}
+  .variant-color-main{grid-template-columns:1fr}
+  .variant-color-photo-field{grid-row:auto}
+  .color-sizes-head{align-items:flex-start}
+  .color-sizes-head .btn{min-width:110px}
+  .color-size-row{grid-template-columns:1fr;padding:12px}
+  .color-size-row-head{flex-direction:row;min-width:0;padding:0}
+  .color-size-fields,
+  .simple-product-wizard:not(.show-variant-advanced) .color-size-fields{grid-template-columns:1fr 1fr}
+  .color-size-fields .field:nth-child(3){grid-column:1/-1}
+}
+@media(max-width:430px){
+  .color-size-fields,
+  .simple-product-wizard:not(.show-variant-advanced) .color-size-fields{grid-template-columns:1fr}
+  .color-size-fields .field:nth-child(3){grid-column:auto}
+  .color-sizes-head{display:grid}
+  .color-sizes-head .btn{width:100%}
+}
