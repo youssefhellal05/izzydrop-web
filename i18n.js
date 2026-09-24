@@ -140,6 +140,12 @@
     'Available':'متاح',
     'More':'المزيد',
     'Add colors and sizes':'أضف الألوان والمقاسات',
+    'Colors & sizes':'الألوان والمقاسات',
+    'Start with a color and its photo, then add every available size with separate stock.':'ابدأ باللون وصورته، ثم أضف كل المقاسات المتاحة مع مخزون منفصل لكل مقاس.',
+    'Quick add common sizes':'إضافة سريعة للمقاسات الشائعة',
+    'One size':'مقاس واحد',
+    'Sizes for':'مقاسات',
+
     'Add a color once, then list every size you have with its own stock.':'أضف اللون مرة واحدة، ثم أضف كل المقاسات المتوفرة ومخزون كل مقاس.',
     'Add another color':'أضف لونًا آخر',
     'One photo and one color, with as many sizes as you need.':'صورة ولون واحد مع أي عدد من المقاسات التي تحتاجها.',
