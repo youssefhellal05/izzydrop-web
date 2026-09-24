@@ -139,6 +139,8 @@
     'Suggested selling price (EGP)':'سعر البيع المقترح (جنيه)',
     'Available':'متاح',
     'More':'المزيد',
+    'Options changed. Rebuild the variants below before publishing.':'تم تغيير الخيارات. أعد إنشاء خيارات المنتج بالأسفل قبل النشر.',
+    'Build a clean marketplace listing.':'أنشئ عرضًا واضحًا للمنتج في السوق.',
     'Make main':'اجعلها الرئيسية',
     'Marketplace cover':'صورة الغلاف',
     'IzzyDrop will generate missing SKUs automatically and keep delivery pricing separate.':'سيُنشئ IzzyDrop أكواد SKU الناقصة تلقائيًا وسيبقي تسعير التوصيل منفصلًا.',
