@@ -11,7 +11,7 @@
   <meta name="theme-color" content="#111318">
   <script>try{document.documentElement.dataset.theme=localStorage.getItem("izzy_theme")==="dark"?"dark":"light"}catch(e){}</script>
   <meta name="description" content="IzzyDrop — Egypt’s independent dropshipping marketplace.">
-  <link rel="stylesheet" href="styles.css?v=20260923-webauto4">
+  <link rel="stylesheet" href="styles.css?v=20260924-variants1">
 </head>
 <body>
 <div class="wrap">
@@ -208,7 +208,12 @@
               <div id="p-translation-status" class="status translation-status"></div>
 
               <div class="form form-two-col product-meta-fields">
-                <div class="field"><label class="field-label" for="p-sku">SKU <span class="muted">(optional)</span></label><input id="p-sku" placeholder="Leave blank for IzzyDrop to create one"><small>IzzyDrop will generate an SKU automatically if you leave this blank.</small></div>
+                <div class="field">
+  <label class="field-label with-info" for="p-sku"><span>SKU <span class="muted">(optional)</span></span><button class="field-info-btn" data-field-help="sku" type="button" aria-label="Explain SKU">?</button></label>
+  <input id="p-sku" placeholder="Leave blank for IzzyDrop to create one">
+  <small>IzzyDrop will generate an SKU automatically if you leave this blank.</small>
+  <div class="field-help-panel" data-field-help-panel="sku" hidden></div>
+</div>
                 <div class="field"><label class="field-label">Currency</label><input value="EGP" disabled></div>
               </div>
             </div>
@@ -223,21 +228,57 @@
             </div>
 
             <div class="card form-section">
-              <div class="form-section-title"><span class="form-section-number">3</span><div><h3>Pricing</h3><p>Your cost stays private from dropshippers.</p></div></div>
+              <div class="form-section-title"><span class="form-section-number">3</span><div><h3>Pricing</h3><p>Set what dropshippers pay you and the customer price you recommend.</p></div></div>
               <div class="form form-two-col">
-                <div class="field"><label class="field-label" for="p-cost">Your cost (EGP)</label><input id="p-cost" type="number" step="0.01" min="0" placeholder="0.00" required></div>
-                <div class="field"><label class="field-label" for="p-retail">Suggested selling price (EGP)</label><input id="p-retail" type="number" step="0.01" min="0" placeholder="0.00" required></div>
+                <div class="field">
+                  <label class="field-label with-info" for="p-cost"><span>Your price to dropshippers (EGP)</span><button class="field-info-btn" data-field-help="cost" type="button" aria-label="Explain supplier price">?</button></label>
+                  <input id="p-cost" type="number" step="0.01" min="0" placeholder="0.00" required>
+                  <div class="field-help-panel" data-field-help-panel="cost" hidden></div>
+                </div>
+                <div class="field">
+                  <label class="field-label with-info" for="p-retail"><span>Suggested selling price (EGP)</span><button class="field-info-btn" data-field-help="retail" type="button" aria-label="Explain suggested selling price">?</button></label>
+                  <input id="p-retail" type="number" step="0.01" min="0" placeholder="0.00" required>
+                  <div class="field-help-panel" data-field-help-panel="retail" hidden></div>
+                </div>
               </div>
             </div>
 
             <div class="card form-section">
-              <div class="form-section-title form-section-title-row">
-                <div class="form-section-title-left"><span class="form-section-number">4</span><div><h3>Inventory & variants</h3><p>Add sizes, colors, models, or keep one default variant.</p></div></div>
-                <button id="add-variant-row" type="button" class="btn secondary">Add variant</button>
+              <div class="form-section-title">
+                <span class="form-section-number">4</span>
+                <div><h3>Inventory & variants</h3><p>Choose whether this product has one version or options such as color and size.</p></div>
               </div>
-              <div class="variant-editor">
-                <div class="variant-editor-head"><span>Variant</span><span>SKU</span><span>Stock</span><span>Cost override</span><span>Weight (g)</span><span></span></div>
-                <div id="variant-rows"></div>
+
+              <div class="variant-mode-picker" role="group" aria-label="Variant type">
+                <button class="variant-mode-btn on" data-variant-mode="single" type="button">One version</button>
+                <button class="variant-mode-btn" data-variant-mode="options" type="button">Has options</button>
+              </div>
+
+              <div id="single-variant-panel" class="single-variant-panel">
+                <div class="variant-single-grid">
+                  <div class="field"><label class="field-label">Variant SKU <span class="muted">(optional)</span></label><input id="single-variant-sku" placeholder="Auto if blank"></div>
+                  <div class="field"><label class="field-label">Stock</label><input id="single-variant-stock" type="number" min="0" step="1" value="0"></div>
+                  <div class="field"><label class="field-label">Supplier price override <span class="muted">(optional)</span></label><input id="single-variant-cost" type="number" min="0" step="0.01" placeholder="Use product price"></div>
+                  <div class="field"><label class="field-label">Weight (g) <span class="muted">(optional)</span></label><input id="single-variant-weight" type="number" min="0" step="1" placeholder="Optional"></div>
+                </div>
+              </div>
+
+              <div id="variant-options-panel" class="variant-options-panel" hidden>
+                <div class="variant-options-head">
+                  <div><b>Product options</b><small>Add values separated by commas. IzzyDrop will create every combination automatically.</small></div>
+                  <button id="add-variant-option" class="btn secondary" type="button">Add option</button>
+                </div>
+                <div id="variant-option-rows" class="variant-option-rows"></div>
+                <div class="variant-example-note">Example: Color = Black, White · Size = S, M, L. Then turn off any combination you do not sell.</div>
+
+                <div class="variant-combinations-head">
+                  <div><b>Combinations</b><small>Turn a combination off when that color/size does not exist.</small></div>
+                  <span id="variant-combination-count" class="muted">0 combinations</span>
+                </div>
+                <div class="variant-combination-table">
+                  <div class="variant-combination-row variant-combination-header"><span>Sell</span><span>Variant</span><span>SKU</span><span>Stock</span><span>Supplier price</span><span>Weight (g)</span></div>
+                  <div id="variant-combination-rows"></div>
+                </div>
               </div>
             </div>
 
@@ -278,7 +319,7 @@
       </div>
       <div id="edit-translation-status" class="status translation-status"></div>
 
-      <label class="field-label">SKU</label><input id="edit-product-sku" required>
+      <label class="field-label with-info"><span>SKU</span><button class="field-info-btn" data-field-help="sku" type="button" aria-label="Explain SKU">?</button></label><input id="edit-product-sku" required><div class="field-help-panel" data-field-help-panel="sku" hidden></div>
       <div class="form-two-col">
         <div class="field"><label class="field-label">Marketplace status</label>
           <select id="edit-product-market-status">
@@ -291,8 +332,8 @@
         <div class="field"><label class="field-label">Estimated shipping cost (EGP)</label><input id="edit-product-shipping" type="number" step="0.01" min="0"></div>
       </div>
       <div class="form-two-col">
-        <div class="field"><label class="field-label">Your cost (EGP)</label><input id="edit-product-cost" type="number" step="0.01" min="0" required></div>
-        <div class="field"><label class="field-label">Suggested retail (EGP)</label><input id="edit-product-retail" type="number" step="0.01" min="0"></div>
+        <div class="field"><label class="field-label with-info"><span>Your price to dropshippers (EGP)</span><button class="field-info-btn" data-field-help="cost" type="button" aria-label="Explain supplier price">?</button></label><input id="edit-product-cost" type="number" step="0.01" min="0" required><div class="field-help-panel" data-field-help-panel="cost" hidden></div></div>
+        <div class="field"><label class="field-label with-info"><span>Suggested selling price (EGP)</span><button class="field-info-btn" data-field-help="retail" type="button" aria-label="Explain suggested selling price">?</button></label><input id="edit-product-retail" type="number" step="0.01" min="0"><div class="field-help-panel" data-field-help-panel="retail" hidden></div></div>
       </div>
       <div class="edit-variants-section">
         <div class="row"><div><b>Variants & stock</b><small>Update inventory for each variant.</small></div></div>
@@ -305,9 +346,9 @@
 </div>
 
 <script src="config.js"></script>
-<script src="common.js?v=20260923-webauto4"></script>
-<script src="i18n.js?v=20260923-webauto4"></script>
-<script src="supplier.js?v=20260923-webauto4"></script>
+<script src="common.js?v=20260924-variants1"></script>
+<script src="i18n.js?v=20260924-variants1"></script>
+<script src="supplier.js?v=20260924-variants1"></script>
 <script>window.IZZY_SETTINGS_ROLE="supplier"</script>
 <script src="settings.js?v=20260923-webauto4"></script>
 </body>
