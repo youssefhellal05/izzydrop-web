@@ -471,7 +471,8 @@
           ${pname?`<small>${local('Matched product','المنتج المطابق')}: ${IZZY.esc(pname)}</small>`:''}
           <div class="sourcing-quote-actions">
             ${q.public_slug?`<a class="btn secondary" href="product.html?slug=${encodeURIComponent(q.public_slug)}&from=app">${local('View product','عرض المنتج')}</a>`:''}
-            ${!accepted&&!declined&&r.status!=='accepted'?`<button class="btn accept-quote" data-id="${q.id}">${local('Accept quote','قبول العرض')}</button>`:''}
+            ${!accepted&&!declined&&r.status!=='accepted'&&q.product_id?`<button class="btn accept-quote" data-id="${q.id}">${local('Accept quote','قبول العرض')}</button>`:''}
+            ${!accepted&&!declined&&!q.product_id?`<span class="muted">${local('Waiting for supplier to link a product.','في انتظار أن يربط المورّد منتجًا بالعرض.')}</span>`:''}
             ${accepted?`<span class="tag ok">${local('Accepted','تم القبول')}</span>`:''}
             ${declined?`<span class="tag">${local('Not selected','لم يتم اختياره')}</span>`:''}
           </div>
@@ -489,7 +490,7 @@
       btn.disabled=true;
       try{
         await IZZY.rpc('accept_product_request_quote',{_quote_id:btn.dataset.id});
-        status(local('Supplier quote accepted.','تم قبول عرض المورّد.'));
+        status(local('Supplier quote accepted and product added to My Products.','تم قبول عرض المورّد وإضافة المنتج إلى منتجاتي.'));
         await load(false);
       }catch(e){status(e.message,true);btn.disabled=false}
     });
