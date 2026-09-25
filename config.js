@@ -18,3 +18,13 @@ if (/\/supplier\.html$/i.test(location.pathname)) {
     document.body.appendChild(flow);
   }, { once: true });
 }
+
+// Keep sourcing requests simple: dropshippers pick an image file instead of pasting an image URL.
+if (/\/app\.html$/i.test(location.pathname)) {
+  window.addEventListener('load', () => {
+    const script = document.createElement('script');
+    script.src = 'app-request-image-upload.js?v=20260925-fileupload1';
+    script.async = false;
+    document.body.appendChild(script);
+  }, { once: true });
+}
