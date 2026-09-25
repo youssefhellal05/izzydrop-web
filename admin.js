@@ -1,6 +1,6 @@
 (()=>{
   const $=s=>document.querySelector(s);
-  let SUPPLIERS=[],PROFILES=[],PRODUCTS=[],VARIANTS=[],IMAGES=[],ORDERS=[],ITEMS=[],DROPSHIPPERS=[],AUDIT=[],ADMINS=[],DEFAULT_COMMISSION=0,SELECTED_SUPPLIER=null,SESSION=null,ORDER_OPEN_ONLY=false;
+  let SUPPLIERS=[],PROFILES=[],PRODUCTS=[],VARIANTS=[],IMAGES=[],ORDERS=[],ITEMS=[],DROPSHIPPERS=[],AUDIT=[],ADMINS=[],SHIPPING_SETTINGS={},ORDER_SHIPPING=[],DEFAULT_COMMISSION=0,SELECTED_SUPPLIER=null,SESSION=null,ORDER_OPEN_ONLY=false;
 
   const VIEW_COPY={
     overview:['Overview','Monitor the marketplace and handle what needs attention.'],
@@ -8,6 +8,7 @@
     products:['Products','Inspect and moderate products across the marketplace.'],
     orders:['Orders','Inspect marketplace orders, fulfillment and tracking.'],
     commissions:['Commissions','Control marketplace, supplier, and product commission rules.'],
+    shipping:['Shipping','Control Cairo delivery pricing and the shipping-company cost.'],
     admins:['Admins','Invite trusted people and review Control Center access.'],
     settings:['Settings','Manage your IzzyDrop account, appearance, and security.']
   };
@@ -31,6 +32,7 @@
     $('#admin-page-title').textContent=copy[0];
     $('#admin-page-subtitle').textContent=copy[1];
     if(v==='commissions')renderCommissions();
+    if(v==='shipping')renderShipping();
     msg('');
   }
 
@@ -39,6 +41,7 @@
   function productFor(id){return PRODUCTS.find(p=>p.id===id)||{}}
   function itemsForOrder(id){return ITEMS.filter(i=>i.order_id===id)}
   function variantsForProduct(id){return VARIANTS.filter(v=>v.product_id===id)}
+  function shippingForOrder(id){return ORDER_SHIPPING.find(x=>x.order_id===id)||{}}
   function totalStock(id){return variantsForProduct(id).reduce((n,v)=>n+Number(v.stock_quantity||0),0)}
   function imageFor(id){return IMAGES.filter(i=>i.product_id===id).sort((a,b)=>Number(a.position)-Number(b.position))[0]}
   function productCountForSupplier(id){return PRODUCTS.filter(p=>p.supplier_id===id).length}
@@ -294,6 +297,7 @@
       const items=itemsForOrder(o.id);
       const d=DROPSHIPPERS.find(x=>x.id===o.dropshipper_id);
       const dp=profileFor(d?.profile_id);
+      const shipping=shippingForOrder(o.id);
       const itemHtml=items.map(i=>{
         const p=productFor(i.supplier_product_id),s=supplierFor(i.supplier_id);
         return `<div class="admin-order-item"><div><b>${IZZY.esc(productName(p)||'Product')} × ${Number(i.quantity||1)}</b><small>${IZZY.esc(s.business_name||'Supplier')}</small></div><div><span class="tag ${i.fulfillment_status==='fulfilled'?'ok':i.fulfillment_status==='cancelled'?'bad':''}">${IZZY.esc(i.fulfillment_status==='fulfilled'?(window.IZZY_I18N?.status?.('shipped')||'shipped'):(window.IZZY_I18N?.status?.(i.fulfillment_status)||i.fulfillment_status))}</span>${i.tracking_number?`<small>${IZZY.esc(i.shipping_carrier||'Carrier')} · ${IZZY.esc(i.tracking_number)}</small>`:''}</div></div>`;
@@ -308,14 +312,26 @@
           <div><small>Customer</small><b>${IZZY.esc(o.customer_name||'—')}</b><span>${IZZY.esc(o.customer_phone||'')}</span></div>
           <div><small>Dropshipper</small><b>${IZZY.esc(d?.business_name||dp.full_name||'—')}</b></div>
           <div><small>Suppliers</small><b>${IZZY.esc(orderSupplierIds(o.id).map(id=>supplierFor(id).business_name||'Supplier').join(', ')||'—')}</b></div>
-          <div><small>Total</small><b>${IZZY.money(o.total_amount,o.currency)}</b></div>
+          <div><small>Product subtotal</small><b>${IZZY.money(o.product_subtotal_amount??Math.max(0,Number(o.total_amount||0)-Number(o.shipping_fee_at_purchase||0)),o.currency)}</b></div>
+          <div><small>Customer delivery</small><b>${IZZY.money(o.shipping_fee_at_purchase||0,o.currency)}</b><span>Cairo</span></div>
+          <div><small>Customer total</small><b>${IZZY.money(o.total_amount,o.currency)}</b></div>
         </div>
-        <details class="order-details"><summary>View order items</summary><div class="admin-order-items">${itemHtml}</div></details>
+        <details class="order-details"><summary>View order items & shipping</summary><div class="admin-order-items">${itemHtml}</div><div class="notice"><b>Shipping company</b><span>${IZZY.esc(shipping.shipping_partner_name||'Not set')} · Internal courier cost: ${shipping.courier_cost_at_purchase==null?'—':IZZY.money(shipping.courier_cost_at_purchase,o.currency)}</span></div></details>
       </article>`;
     }).join('')||'<div class="empty-state"><div class="empty-icon">□</div><h3>No orders found</h3><p>Try changing the order filters.</p></div>';
   }
 
   function effectiveRate(p,s){return p?.commission_rate_override??s?.commission_rate_override??DEFAULT_COMMISSION}
+
+  function renderShipping(){
+    const s=SHIPPING_SETTINGS||{};
+    const fee=s.customer_delivery_fee==null?null:Number(s.customer_delivery_fee);
+    $('#shipping-public-fee').textContent=fee==null?'Not set':IZZY.money(fee,'EGP');
+    $('#shipping-customer-fee').value=fee==null?'':fee;
+    $('#shipping-partner-name').value=s.shipping_partner_name||'';
+    $('#shipping-internal-cost').value=s.internal_courier_cost==null?'':Number(s.internal_courier_cost);
+    $('#shipping-active').checked=s.is_active===true;
+  }
 
   function renderCommissions(){
     const select=$('#commission-supplier');
@@ -404,7 +420,7 @@
   }
 
   async function load(showMessage=true){
-    const [suppliers,profiles,products,variants,orders,items,dropshippers,settings,audit,admins]=await Promise.all([
+    const [suppliers,profiles,products,variants,orders,items,dropshippers,settings,audit,admins,shippingSettings,orderShipping]=await Promise.all([
       IZZY.request('/rest/v1/suppliers?select=*&order=created_at.desc'),
       IZZY.request('/rest/v1/profiles?select=id,full_name,phone,business_name,created_at'),
       IZZY.request('/rest/v1/supplier_products?select=*&order=created_at.desc'),
@@ -414,7 +430,9 @@
       IZZY.request('/rest/v1/dropshippers?select=id,profile_id,business_name,status,created_at'),
       IZZY.request('/rest/v1/marketplace_settings?select=default_commission_rate&id=eq.true&limit=1'),
       IZZY.request('/rest/v1/audit_log?select=*&order=created_at.desc&limit=50'),
-      IZZY.rpc('admin_list_accounts')
+      IZZY.rpc('admin_list_accounts'),
+      IZZY.rpc('admin_shipping_settings'),
+      IZZY.rpc('admin_order_shipping_costs')
     ]);
 
     SUPPLIERS=suppliers||[];
@@ -427,6 +445,8 @@
     DEFAULT_COMMISSION=Number(settings?.[0]?.default_commission_rate??0);
     AUDIT=audit||[];
     ADMINS=Array.isArray(admins)?admins:[];
+    SHIPPING_SETTINGS=shippingSettings||{};
+    ORDER_SHIPPING=Array.isArray(orderShipping)?orderShipping:[];
 
     if(PRODUCTS.length){
       const ids=PRODUCTS.map(p=>p.id).join(',');
@@ -440,6 +460,7 @@
     renderProducts();
     renderOrders();
     renderCommissions();
+    renderShipping();
     renderAdmins();
     if(showMessage)msg('');
   }
@@ -454,6 +475,30 @@
   $('#admin-order-supplier').onchange=()=>renderOrders();
 
   $('#commission-supplier').onchange=e=>{SELECTED_SUPPLIER=e.target.value;renderCommissions()};
+
+  $('#shipping-settings-form').onsubmit=async e=>{
+    e.preventDefault();
+    const st=$('#shipping-status'),btn=$('#shipping-save');
+    const feeRaw=$('#shipping-customer-fee').value.trim();
+    const costRaw=$('#shipping-internal-cost').value.trim();
+    const fee=feeRaw===''?null:Number(feeRaw);
+    const internalCost=costRaw===''?null:Number(costRaw);
+    if(fee!==null&&(!Number.isFinite(fee)||fee<0)){st.textContent='Enter a valid Cairo delivery fee.';st.className='status bad';return}
+    if(internalCost!==null&&(!Number.isFinite(internalCost)||internalCost<0)){st.textContent='Enter a valid courier cost.';st.className='status bad';return}
+    btn.disabled=true;btn.textContent='Saving…';st.textContent='';
+    try{
+      SHIPPING_SETTINGS=await IZZY.rpc('admin_update_shipping_settings',{
+        _customer_delivery_fee:fee,
+        _shipping_partner_name:$('#shipping-partner-name').value.trim()||null,
+        _internal_courier_cost:internalCost,
+        _is_active:$('#shipping-active').checked
+      });
+      renderShipping();
+      st.textContent=SHIPPING_SETTINGS?.is_active?'Cairo delivery is active.':'Shipping settings saved. Cairo delivery is still off.';
+      st.className='status';
+    }catch(err){st.textContent=err.message;st.className='status bad'}
+    finally{btn.disabled=false;btn.textContent='Save shipping settings'}
+  };
 
   $('#global-commission-form').onsubmit=async e=>{
     e.preventDefault();
