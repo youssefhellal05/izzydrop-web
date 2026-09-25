@@ -1,6 +1,6 @@
 (()=>{
   const $=s=>document.querySelector(s);
-  let PRODUCTS=[],LINKED_PRODUCTS=[],LINKS=[],INTEGRATIONS=[],INTEGRATION_VARIANTS=[],ORDERS=[],ITEMS=[],REQUESTS=[],QUOTES=[],SAMPLES=[],ALERTS=[],COD={},SESSION=null,DROPSHIPPER=null,ORDER_FILTER='all',CURRENT_WEB_TOKEN=null;
+  let PRODUCTS=[],LINKED_PRODUCTS=[],LINKS=[],INTEGRATIONS=[],INTEGRATION_VARIANTS=[],ORDERS=[],ITEMS=[],REQUESTS=[],QUOTES=[],SAMPLES=[],ALERTS=[],COD={},SHIPPING={},ORDER_VARIANTS=[],SESSION=null,DROPSHIPPER=null,ORDER_FILTER='all',CURRENT_WEB_TOKEN=null;
 
   const VIEW_COPY={
     products:['Products','Find products to sell.'],
@@ -97,6 +97,8 @@
       const supplierPrice=Number(p.supplier_cost||0);
       const suggested=Number(p.suggested_retail_price||0);
       const profit=suggested-supplierPrice;
+      const delivery=Number(SHIPPING?.delivery_fee);
+      const shippingReady=SHIPPING?.available===true&&Number.isFinite(delivery);
       return `<article class="card product-card dropshipper-product-card simple-product-card">
         <a class="product-image product-open" href="${productDetailsUrl(p)}">
           ${p.primary_image_url?`<img src="${IZZY.esc(p.primary_image_url)}" alt="${IZZY.esc(name)}">`:'<span>IZ</span>'}
@@ -112,7 +114,8 @@
           <div class="simple-product-prices">
             <div><small>${local('Supplier price','سعر المورّد')}</small><b>${IZZY.money(supplierPrice,p.currency)}</b></div>
             <div><small>${local('Suggested sell','سعر البيع المقترح')}</small><b>${IZZY.money(suggested,p.currency)}</b></div>
-            <div><small>${local('Product margin','هامش المنتج')}</small><b class="${profit>=0?'positive':'negative'}">${IZZY.money(profit,p.currency)}</b><span class="price-note">${local('before IzzyDrop delivery','قبل توصيل IzzyDrop')}</span></div>
+            <div><small>${local('Product margin','هامش المنتج')}</small><b class="${profit>=0?'positive':'negative'}">${IZZY.money(profit,p.currency)}</b><span class="price-note">${local('before IzzyDrop fee','قبل رسوم IzzyDrop')}</span></div>
+            <div><small>${local('Cairo delivery','توصيل القاهرة')}</small><b>${shippingReady?IZZY.money(delivery,SHIPPING.currency||p.currency):local('Setup pending','قيد الإعداد')}</b><span class="price-note">${local('paid separately by customer','يدفعه العميل بشكل منفصل')}</span></div>
           </div>
 
           <div class="product-card-actions simple-product-actions">
@@ -144,6 +147,8 @@
     const selling=Number(l.retail_price??p.suggested_retail_price??0);
     const suggested=Number(p.suggested_retail_price||0);
     const difference=selling-suggested;
+    const delivery=Number(SHIPPING?.delivery_fee);
+    const shippingReady=SHIPPING?.available===true&&Number.isFinite(delivery);
     const integration=INTEGRATIONS.find(x=>x.link_id===l.id);
     const available=p.available!==false;
     const reason=p.availability_reason||local('This product is currently unavailable.','هذا المنتج غير متاح حاليًا.');
@@ -160,6 +165,7 @@
             <div><small>${local('Suggested','المقترح')}</small><b>${IZZY.money(suggested,p.currency)}</b></div>
             <label><small>${local('Your selling price','سعر بيعك')}</small><div class="price-editor"><input class="linked-price-input" data-link-id="${l.id}" type="number" min="0" step="0.01" value="${selling}" ${available?'':'disabled'}><span>${IZZY.esc(p.currency||'EGP')}</span></div></label>
             <div><small>${local('Vs suggested','مقارنة بالمقترح')}</small><b class="${difference>=0?'positive':'negative'}">${difference===0?'—':(difference>0?'+':'')+IZZY.money(difference,p.currency)}</b></div>
+            <div><small>${local('Cairo delivery','توصيل القاهرة')}</small><b>${shippingReady?IZZY.money(delivery,SHIPPING.currency||p.currency):local('Setup pending','قيد الإعداد')}</b></div>
           </div>
         </div>
       </div>
@@ -244,7 +250,9 @@
         <div class="order-summary-grid">
           <div><small>${local('Customer','العميل')}</small><b>${IZZY.esc(o.customer_name||'—')}</b><span>${IZZY.esc(o.customer_phone||'')}</span></div>
           <div><small>${local('Products','المنتجات')}</small><b>${productText}</b></div>
-          <div><small>${local('Total','الإجمالي')}</small><b>${IZZY.money(o.total_amount,o.currency)}</b><span>${IZZY.esc(window.IZZY_I18N?.status?.(o.payment_status)||o.payment_status||'')}</span></div>
+          <div><small>${local('Product subtotal','إجمالي المنتجات')}</small><b>${IZZY.money(o.product_subtotal_amount??Math.max(0,Number(o.total_amount||0)-Number(o.shipping_fee_at_purchase||0)),o.currency)}</b></div>
+          <div><small>${local('Delivery','التوصيل')}</small><b>${IZZY.money(o.shipping_fee_at_purchase||0,o.currency)}</b><span>${local('Cairo','القاهرة')}</span></div>
+          <div><small>${local('Customer total','إجمالي العميل')}</small><b>${IZZY.money(o.total_amount,o.currency)}</b><span>${IZZY.esc(window.IZZY_I18N?.status?.(o.payment_status)||o.payment_status||'')}</span></div>
         </div>
         <details class="order-details">
           <summary>${local('Order details','تفاصيل الطلب')}</summary>
@@ -286,14 +294,67 @@
     if([...el.options].some(o=>o.value===current))el.value=current;
   }
 
+  function orderSellingPrice(productId,v){
+    const p=LINKED_PRODUCTS.find(x=>x.product_id===productId)||PRODUCTS.find(x=>x.product_id===productId)||{};
+    const link=LINKS.find(x=>x.supplier_product_id===productId);
+    const linkPrice=link?.retail_price==null?null:Number(link.retail_price);
+    const productSuggested=p.suggested_retail_price==null?null:Number(p.suggested_retail_price);
+    const variantSuggested=v?.suggested_retail_price==null?null:Number(v.suggested_retail_price);
+    if(linkPrice==null||(productSuggested!=null&&linkPrice===productSuggested))return variantSuggested??productSuggested??linkPrice??0;
+    return linkPrice;
+  }
+
+  function renderOrderPreview(){
+    const box=$('#order-price-preview'),note=$('#order-shipping-note'),btn=$('#order-submit');
+    if(!box||!note||!btn)return;
+    const delivery=Number(SHIPPING?.delivery_fee);
+    const shippingReady=SHIPPING?.available===true&&Number.isFinite(delivery);
+    if(!shippingReady){
+      box.innerHTML='';
+      note.innerHTML=`<b>${local('Cairo delivery is not configured yet.','توصيل القاهرة لم يتم إعداده بعد.')}</b><span>${local('An admin needs to set the delivery fee before orders can be created.','يجب على المشرف تحديد سعر التوصيل قبل إنشاء الطلبات.')}</span>`;
+      note.className='notice bad span-2';
+      btn.disabled=true;
+      return;
+    }
+
+    note.innerHTML=`<b>${local('Cairo only','القاهرة فقط')}</b><span>${local('IzzyDrop delivery','توصيل IzzyDrop')}: ${IZZY.money(delivery,SHIPPING.currency||'EGP')} · ${local('paid separately by the customer','يدفعه العميل بشكل منفصل')}</span>`;
+    note.className='notice span-2';
+    btn.disabled=false;
+
+    const productId=$('#order-product')?.value;
+    const variantId=$('#order-variant')?.value;
+    const qty=Math.max(1,Number($('#order-qty')?.value||1));
+    const v=ORDER_VARIANTS.find(x=>String(x.id)===String(variantId));
+    if(!productId||!v){
+      box.innerHTML=`<div><small>${local('Delivery','التوصيل')}</small><b>${IZZY.money(delivery,SHIPPING.currency||'EGP')}</b></div><div><small>${local('Customer total','إجمالي العميل')}</small><b>—</b><span>${local('Choose a variant','اختر خيارًا')}</span></div>`;
+      return;
+    }
+
+    const supplier=Number(v.supplier_cost||0);
+    const selling=orderSellingPrice(productId,v);
+    const subtotal=selling*qty;
+    const supplierTotal=supplier*qty;
+    const margin=subtotal-supplierTotal;
+    box.innerHTML=`
+      <div><small>${local('Supplier price','سعر المورّد')}</small><b>${IZZY.money(supplierTotal,'EGP')}</b><span>${qty>1?qty+' × '+IZZY.money(supplier,'EGP'):local('for this variant','لهذا الخيار')}</span></div>
+      <div><small>${local('Product price','سعر المنتج')}</small><b>${IZZY.money(subtotal,'EGP')}</b><span>${qty>1?qty+' × '+IZZY.money(selling,'EGP'):local('customer product price','سعر المنتج للعميل')}</span></div>
+      <div><small>${local('Cairo delivery','توصيل القاهرة')}</small><b>${IZZY.money(delivery,SHIPPING.currency||'EGP')}</b><span>${local('separate from product price','منفصل عن سعر المنتج')}</span></div>
+      <div><small>${local('Customer COD total','إجمالي الدفع عند الاستلام')}</small><b>${IZZY.money(subtotal+delivery,'EGP')}</b><span class="${margin>=0?'positive':'negative'}">${local('Product margin','هامش المنتج')}: ${IZZY.money(margin,'EGP')} · ${local('before IzzyDrop fee','قبل رسوم IzzyDrop')}</span></div>
+    `;
+  }
+
   async function loadOrderVariants(){
     const productId=$('#order-product').value,el=$('#order-variant');
+    ORDER_VARIANTS=[];
     el.innerHTML='<option value="">Choose variant</option>';el.disabled=true;
+    renderOrderPreview();
     if(!productId)return;
     try{
       const vs=await IZZY.rpc('marketplace_variants_v3',{_product_id:productId});
-      el.innerHTML='<option value="">Choose variant</option>'+vs.map(v=>`<option value="${IZZY.esc(v.id)}" ${Number(v.stock_quantity)<=0?'disabled':''}>${IZZY.esc(variantLabel(v))} · ${v.stock_quantity} in stock</option>`).join('');
+      ORDER_VARIANTS=vs||[];
+      el.innerHTML='<option value="">Choose variant</option>'+ORDER_VARIANTS.map(v=>`<option value="${IZZY.esc(v.id)}" ${Number(v.stock_quantity)<=0?'disabled':''}>${IZZY.esc(variantLabel(v))} · ${IZZY.money(orderSellingPrice(productId,v),'EGP')} · ${v.stock_quantity} in stock</option>`).join('');
       el.disabled=false;
+      renderOrderPreview();
     }catch(e){$('#order-status').textContent=e.message;$('#order-status').className='status bad'}
   }
 
@@ -495,7 +556,7 @@
 
   async function load(showMessage=false){
     try{
-      [PRODUCTS,LINKED_PRODUCTS,LINKS,INTEGRATIONS,INTEGRATION_VARIANTS,ORDERS,ITEMS,REQUESTS,QUOTES,SAMPLES,ALERTS,COD]=await Promise.all([
+      [PRODUCTS,LINKED_PRODUCTS,LINKS,INTEGRATIONS,INTEGRATION_VARIANTS,ORDERS,ITEMS,REQUESTS,QUOTES,SAMPLES,ALERTS,COD,SHIPPING]=await Promise.all([
         IZZY.rpc('marketplace_catalog_v3'),
         IZZY.rpc('dropshipper_linked_catalog'),
         IZZY.request('/rest/v1/dropshipper_product_links?select=*&order=created_at.desc'),
@@ -507,13 +568,15 @@
         IZZY.rpc('dropshipper_sourcing_quotes'),
         IZZY.rpc('dropshipper_samples'),
         IZZY.request('/rest/v1/dropshipper_alerts?select=*&order=created_at.desc&limit=50'),
-        IZZY.rpc('dropshipper_cod_metrics')
+        IZZY.rpc('dropshipper_cod_metrics'),
+        IZZY.rpc('marketplace_shipping_quote',{},false)
       ]);
       populateCategories();
       renderProducts();
       renderLinked();
       renderOrders();
       renderOrderProducts();
+      renderOrderPreview();
       renderCod();
       renderRequests();
       renderSamples();
@@ -736,6 +799,8 @@
   };
 
   $('#order-product').onchange=loadOrderVariants;
+  $('#order-variant').onchange=renderOrderPreview;
+  $('#order-qty').oninput=renderOrderPreview;
   $('#order-form').onsubmit=async e=>{
     e.preventDefault();
     const s=$('#order-status'),btn=$('#order-submit');
@@ -759,7 +824,7 @@
       $('#toggle-order-form').hidden=false;
       await load();
     }catch(err){s.textContent=err.message;s.className='status bad'}
-    finally{btn.disabled=false;btn.textContent='Send order to IzzyDrop'}
+    finally{btn.disabled=SHIPPING?.available!==true;btn.textContent='Send order to IzzyDrop';renderOrderPreview()}
   };
 
   showDash().catch(e=>{
