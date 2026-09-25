@@ -43,11 +43,12 @@
     async updatePassword(password){const s=this.session();if(!s?.access_token)throw Error('Your session has expired. Please log in again.');const r=await fetch(C.supabaseUrl+'/auth/v1/user',{method:'PUT',headers:jsonHeaders(s.access_token),body:JSON.stringify({password})});const d=await readJson(r);if(!r.ok)throw Error(d?.message||d?.error_description||'Could not set password');s.user=d;this.saveSession(s);return d},
     async updateEmail(email){const s=this.session();if(!s?.access_token)throw Error('Your session has expired. Please log in again.');const redirectTo=new URL('login.html',location.href).href;const r=await fetch(C.supabaseUrl+'/auth/v1/user?redirect_to='+encodeURIComponent(redirectTo),{method:'PUT',headers:jsonHeaders(s.access_token),body:JSON.stringify({email})});const d=await readJson(r);if(!r.ok)throw Error(d?.message||d?.error_description||'Could not update email');if(d?.email===email){s.user=d;this.saveSession(s)}return d},
     async logoutEverywhere(){const s=this.session();if(!s?.access_token){this.logout();return}const r=await fetch(C.supabaseUrl+'/auth/v1/logout?scope=global',{method:'POST',headers:{apikey:C.supabaseKey,Authorization:`Bearer ${s.access_token}`}});if(!r.ok){const d=await readJson(r);throw Error(d?.message||d?.error_description||'Could not sign out all devices')}this.logout()},
-    async signup({email,password,fullName,businessName,type}){const redirectTo=new URL('login.html',location.href).href;const r=await fetch(C.supabaseUrl+'/auth/v1/signup?redirect_to='+encodeURIComponent(redirectTo),{method:'POST',headers:jsonHeaders(),body:JSON.stringify({email,password,data:{full_name:fullName,business_name:businessName,requested_account_type:type}})});const d=await readJson(r);if(!r.ok)throw Error(d?.msg||d?.message||d?.error_description||'Sign up failed');if(d?.access_token)this.saveSession(d);return d},
     request,
     async uploadProductImage(path,file){
       const s=this.session();if(!s?.access_token)throw Error('Please log in.');
-      const clean=String(path).split('/').map(encodeURIComponent).join('/');
+      const parts=String(path).split('/');
+      parts[0]=s.user?.id||parts[0];
+      const clean=parts.map(encodeURIComponent).join('/');
       let res=await fetch(C.supabaseUrl+'/storage/v1/object/product-images/'+clean,{
         method:'POST',
         headers:{apikey:C.supabaseKey,Authorization:`Bearer ${s.access_token}`,'Content-Type':file.type||'application/octet-stream','x-upsert':'false'},
@@ -91,6 +92,47 @@
       wrap.appendChild(btn);
     });
   }
+
+  function installSupplierVariantFlowSeparation(){
+    const choice=document.getElementById('variant-choice-card');
+    const simple=document.getElementById('simple-product-stock-field');
+    const builder=document.getElementById('variant-builder-card');
+    if(!choice||!simple||!builder||document.getElementById('variant-flow-entry'))return;
+    choice.hidden=true;
+    const entry=document.createElement('div');
+    entry.id='variant-flow-entry';
+    entry.className='card';
+    entry.style.marginTop='16px';
+    entry.innerHTML='<div class="row"><div><b>Does this product have multiple variants?</b><small>Only use this for products with choices like color, size, model, storage, or material.</small></div><button type="button" class="btn secondary" id="open-variant-flow">Create variant product</button></div>';
+    simple.insertAdjacentElement('afterend',entry);
+    const back=document.createElement('button');
+    back.id='back-to-simple-product';
+    back.type='button';
+    back.className='btn secondary';
+    back.style.marginBottom='16px';
+    back.textContent='Back to single product';
+    builder.insertBefore(back,builder.firstChild);
+    const sync=()=>{
+      const variantsOn=!builder.hidden;
+      entry.hidden=variantsOn;
+      back.hidden=!variantsOn;
+    };
+    entry.querySelector('#open-variant-flow').onclick=()=>{
+      choice.querySelector('[data-product-version-mode="options"]')?.click();
+      sync();
+      builder.scrollIntoView({behavior:'smooth',block:'start'});
+    };
+    back.onclick=()=>{
+      choice.querySelector('[data-product-version-mode="single"]')?.click();
+      sync();
+      simple.scrollIntoView({behavior:'smooth',block:'center'});
+    };
+    const observer=new MutationObserver(sync);
+    observer.observe(builder,{attributes:true,attributeFilter:['hidden']});
+    sync();
+  }
+
   IZZY.installPasswordToggles=installPasswordToggles;
   installPasswordToggles();
+  installSupplierVariantFlowSeparation();
 })();
