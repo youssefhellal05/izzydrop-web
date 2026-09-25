@@ -8,18 +8,27 @@
   urlInput.value='';
   urlInput.removeAttribute('placeholder');
 
+  const imageField=document.createElement('div');
+  imageField.className='field';
+
+  const label=document.createElement('label');
+  label.className='field-label';
+  label.htmlFor='request-image-file';
+  label.textContent='Product image (optional)';
+
   const fileInput=document.createElement('input');
   fileInput.id='request-image-file';
   fileInput.type='file';
   fileInput.accept='image/jpeg,image/png,image/webp';
   fileInput.setAttribute('aria-label','Product image');
-  fileInput.className=urlInput.className;
-  urlInput.parentNode.insertBefore(fileInput,urlInput);
 
   const hint=document.createElement('small');
   hint.className='muted';
-  hint.textContent='Product image (optional) · JPG, PNG or WebP · max 5 MB';
-  fileInput.insertAdjacentElement('afterend',hint);
+  hint.textContent='Choose a JPG, PNG or WebP image · max 5 MB';
+
+  imageField.append(label,fileInput,hint);
+  urlInput.parentNode.insertBefore(imageField,urlInput);
+  fileInput.addEventListener('change',()=>{urlInput.value=''});
 
   async function readJson(response){
     const text=await response.text();
