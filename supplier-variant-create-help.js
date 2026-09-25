@@ -2,9 +2,11 @@
   const toggle=document.getElementById('v-vary-prices');
   if(!toggle)return;
 
+  const setText=(el,text)=>{if(el&&el.textContent!==text)el.textContent=text};
+
   const pricingSection=toggle.closest('.variant-section');
   const pricingCopy=pricingSection?.querySelector('.variant-section-head p');
-  if(pricingCopy)pricingCopy.textContent='Choose whether every version uses the same price or each variant has its own price.';
+  setText(pricingCopy,'Choose whether every version uses the same price or each variant has its own price.');
 
   function setFieldLabel(id,text){
     const label=document.querySelector(`label[for="${id}"]`);
@@ -19,8 +21,8 @@
   const toggleRow=toggle.closest('.toggle-row');
   const toggleTitle=toggleRow?.querySelector('b');
   const toggleHelp=toggleRow?.querySelector('small');
-  if(toggleTitle)toggleTitle.textContent='Each variant has its own price';
-  if(toggleHelp)toggleHelp.textContent='Turn this on when Black, White, Large, Small, or any other version can have a different price.';
+  setText(toggleTitle,'Each variant has its own price');
+  setText(toggleHelp,'Turn this on when Black, White, Large, Small, or any other version can have a different price.');
 
   let modeNote=document.getElementById('variant-price-mode-note');
   if(!modeNote&&toggleRow){
@@ -32,7 +34,7 @@
 
   const optionSection=[...document.querySelectorAll('.variant-section')].find(section=>section.querySelector('#v-option-list'));
   const optionCopy=optionSection?.querySelector('.variant-section-head p');
-  if(optionCopy)optionCopy.textContent='Add colors, sizes, or other options. Then build the variants and edit the stock, photo, and price for every version.';
+  setText(optionCopy,'Add colors, sizes, or other options. Then build the variants and edit the stock, photo, and price for every version.');
 
   const style=document.createElement('style');
   style.textContent=`
@@ -50,7 +52,7 @@
       if(cost){
         const label=cost.closest('label');
         const span=label?.querySelector('span');
-        if(span)span.textContent='Dropshipper pays you';
+        setText(span,'Dropshipper pays you');
         if(label&&!label.querySelector('.variant-row-price-help')){
           const help=document.createElement('small');
           help.className='variant-row-price-help';
@@ -61,7 +63,7 @@
       if(retail){
         const label=retail.closest('label');
         const span=label?.querySelector('span');
-        if(span)span.textContent='Suggested customer price';
+        setText(span,'Suggested customer price');
         if(label&&!label.querySelector('.variant-row-price-help')){
           const help=document.createElement('small');
           help.className='variant-row-price-help';
@@ -74,15 +76,16 @@
 
   function updateModeNote(){
     if(modeNote){
-      modeNote.textContent=toggle.checked
+      const text=toggle.checked
         ? 'The two prices above are starting values. After you build the variants, each variant gets its own price boxes so you can change them one by one.'
         : 'All variants will use the two prices above. Turn on “Each variant has its own price” only when the versions need different prices.';
+      setText(modeNote,text);
     }
     decorateVariantRows();
   }
 
   const list=document.getElementById('v-variant-list');
-  if(list)new MutationObserver(()=>decorateVariantRows()).observe(list,{childList:true,subtree:true});
+  if(list)new MutationObserver(()=>decorateVariantRows()).observe(list,{childList:true});
   toggle.addEventListener('change',updateModeNote);
   updateModeNote();
 })();
