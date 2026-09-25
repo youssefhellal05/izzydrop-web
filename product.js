@@ -153,8 +153,10 @@
     document.querySelectorAll('.product-thumb').forEach(btn=>btn.onclick=()=>setMainImage(btn.dataset.image));
     document.querySelectorAll('.product-variant-choice').forEach(btn=>btn.onclick=()=>{
       setMainImage(btn.dataset.variantImage);
-      const price=Number(btn.dataset.variantPrice);
-      const supplier=Number(btn.dataset.variantSupplier);
+      const rawPrice=btn.dataset.variantPrice;
+      const rawSupplier=btn.dataset.variantSupplier;
+      const price=rawPrice===''?NaN:Number(rawPrice);
+      const supplier=rawSupplier===''?NaN:Number(rawSupplier);
       const priceEl=document.getElementById('product-detail-price');
       const suggestedEl=document.getElementById('product-suggested-price');
       const supplierEl=document.getElementById('product-supplier-price');
