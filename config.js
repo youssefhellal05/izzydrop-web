@@ -3,6 +3,16 @@ window.IZZY_CONFIG = {
   supabaseKey: 'sb_publishable_7zwBJFyaTcCrIG8hvmUQuQ_IzPEfZA7'
 };
 
+// One visual language across every IzzyDrop surface.
+(()=>{
+  if (document.querySelector('link[data-izzydrop-design]')) return;
+  const design = document.createElement('link');
+  design.rel = 'stylesheet';
+  design.href = 'izzydrop-design.css?v=20260925-cohesion1';
+  design.dataset.izzydropDesign = '1';
+  document.head.appendChild(design);
+})();
+
 // Supplier-only UI refinements are isolated from the shared app scripts.
 if (/\/supplier\.html$/i.test(location.pathname)) {
   window.addEventListener('load', () => {
