@@ -157,9 +157,11 @@
               <input id="order-customer-phone" placeholder="Customer phone" required>
               <input id="order-customer-email" type="email" placeholder="Customer email (optional)">
               <input id="order-address1" class="span-2" placeholder="Street / address" required>
-              <input id="order-city" placeholder="City" required>
-              <input id="order-governorate" placeholder="Governorate">
+              <input id="order-city" placeholder="Area / district (e.g. New Cairo)" required>
+              <input id="order-governorate" value="Cairo" readonly aria-label="Governorate">
               <input id="order-ref" class="span-2" placeholder="Your order reference (optional)">
+              <div id="order-price-preview" class="order-summary-grid span-2"></div>
+              <div id="order-shipping-note" class="notice span-2"></div>
               <button id="order-submit" class="btn span-2" type="submit">Send order to IzzyDrop</button>
             </form>
             <div id="order-status" class="status"></div>
