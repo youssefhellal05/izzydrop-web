@@ -353,11 +353,11 @@
               <div class="form-section-title">
                 <div class="form-section-title-left">
                   <span class="form-section-number">4</span>
-                  <div><h3>Inventory & options</h3><p>Choose the simplest setup that matches how this product is actually sold.</p></div>
+                  <div><h3>Inventory</h3><p>Enter stock for the normal product. Only open the variant builder when this product genuinely has multiple versions.</p></div>
                 </div>
               </div>
 
-              <div id="variant-choice-card" class="product-version-selector">
+              <div id="variant-choice-card" class="product-version-selector" hidden>
                 <div class="product-version-selector-head">
                   <b>How many versions does this product have?</b>
                   <small>Most products only need one stock number. Use options only when the customer chooses between versions.</small>
@@ -380,9 +380,17 @@
                   <input id="simple-product-stock" type="number" inputmode="numeric" min="0" step="1" value="0">
                   <small>Enter the number of units currently ready to sell.</small>
                 </div>
+                <div class="variant-flow-entry">
+                  <div><b>This product has multiple variants?</b><small>Use the separate variant builder for choices like color, size, model, storage, or material.</small></div>
+                  <button type="button" class="btn secondary" data-product-version-mode="options">Create multiple-variant product</button>
+                </div>
               </div>
 
               <div id="variant-builder-card" class="variant-builder-panel" hidden>
+                <div class="variant-flow-back-row">
+                  <button type="button" class="btn secondary" data-product-version-mode="single">← Back to single product</button>
+                  <small>You are now building a multiple-variant product.</small>
+                </div>
                 <div class="variant-builder-heading">
                   <div><h4>Options & variants</h4><p>Tell IzzyDrop what customers can choose. We will build the exact sellable versions.</p></div>
                   <button id="toggle-variant-advanced" class="auth-text-button" type="button">Add SKU & weight</button>
