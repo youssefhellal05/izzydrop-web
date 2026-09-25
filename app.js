@@ -1,6 +1,6 @@
 (()=>{
   const $=s=>document.querySelector(s);
-  let PRODUCTS=[],LINKED_PRODUCTS=[],LINKS=[],INTEGRATIONS=[],INTEGRATION_VARIANTS=[],ORDERS=[],ITEMS=[],REQUESTS=[],QUOTES=[],SAMPLES=[],ALERTS=[],COD={},SHIPPING={},ORDER_VARIANTS=[],SESSION=null,DROPSHIPPER=null,ORDER_FILTER='all',CURRENT_WEB_TOKEN=null;
+  let PRODUCTS=[],LINKED_PRODUCTS=[],LINKS=[],INTEGRATIONS=[],INTEGRATION_VARIANTS=[],ORDERS=[],ITEMS=[],REQUESTS=[],QUOTES=[],SAMPLES=[],ALERTS=[],COD={},SHIPPING={},PRICE_RANGES=[],ORDER_VARIANTS=[],SESSION=null,DROPSHIPPER=null,ORDER_FILTER='all',CURRENT_WEB_TOKEN=null;
 
   const VIEW_COPY={
     products:['Products','Find products to sell.'],
@@ -18,6 +18,13 @@
   const variantLabel=v=>{
     const entries=Object.entries(v?.option_values||v?.options||{}).filter(([,value])=>String(value??'').trim());
     return entries.length?entries.map(([name,value])=>`${name}: ${value}`).join(' · '):(v?.variant_name||v?.name||v?.sku||'Default');
+  };
+  const priceRangeFor=id=>PRICE_RANGES.find(x=>String(x.product_id)===String(id))||null;
+  const rangeMoney=(min,max,currency='EGP')=>{
+    const a=Number(min),b=Number(max);
+    if(!Number.isFinite(a)&&!Number.isFinite(b))return '—';
+    if(!Number.isFinite(b)||a===b)return IZZY.money(Number.isFinite(a)?a:b,currency);
+    return `${IZZY.money(a,currency)} – ${IZZY.money(b,currency)}`;
   };
 
   const status=(t,b=false)=>{
@@ -68,8 +75,8 @@
       const hay=[p.name,p.name_en,p.name_ar,p.description,p.description_en,p.description_ar,p.sku,p.supplier_name,p.category_name].filter(Boolean).join(' ').toLowerCase();
       return (!q||hay.includes(q))&&(!category||String(p.category_name||'')===category)&&(!inStock||Number(p.stock_quantity)>0)&&(!trending||p.trending===true);
     });
-    if(sort==='price-low')a.sort((a,b)=>Number(a.suggested_retail_price||0)-Number(b.suggested_retail_price||0));
-    else if(sort==='price-high')a.sort((a,b)=>Number(b.suggested_retail_price||0)-Number(a.suggested_retail_price||0));
+    if(sort==='price-low')a.sort((a,b)=>Number(priceRangeFor(a.product_id)?.retail_min??a.suggested_retail_price??0)-Number(priceRangeFor(b.product_id)?.retail_min??b.suggested_retail_price??0));
+    else if(sort==='price-high')a.sort((a,b)=>Number(priceRangeFor(b.product_id)?.retail_max??b.suggested_retail_price??0)-Number(priceRangeFor(a.product_id)?.retail_max??a.suggested_retail_price??0));
     else if(sort==='stock-high')a.sort((a,b)=>Number(b.stock_quantity||0)-Number(a.stock_quantity||0));
     else a.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
     return a;
@@ -94,9 +101,14 @@
       const isLinked=linked.has(p.product_id);
       const stock=Number(p.stock_quantity||0);
       const name=productName(p);
+      const range=priceRangeFor(p.product_id);
       const supplierPrice=Number(p.supplier_cost||0);
       const suggested=Number(p.suggested_retail_price||0);
-      const profit=suggested-supplierPrice;
+      const supplierDisplay=range?rangeMoney(range.supplier_min,range.supplier_max,p.currency):IZZY.money(supplierPrice,p.currency);
+      const suggestedDisplay=range?rangeMoney(range.retail_min,range.retail_max,p.currency):IZZY.money(suggested,p.currency);
+      const profitMin=range?Number(range.margin_min):suggested-supplierPrice;
+      const profitMax=range?Number(range.margin_max):suggested-supplierPrice;
+      const profitDisplay=range?rangeMoney(profitMin,profitMax,p.currency):IZZY.money(profitMin,p.currency);
       const delivery=Number(SHIPPING?.delivery_fee);
       const shippingReady=SHIPPING?.available===true&&Number.isFinite(delivery);
       return `<article class="card product-card dropshipper-product-card simple-product-card">
@@ -112,9 +124,9 @@
           <p class="supplier-line">${local('Sold by','يباع بواسطة')} <b>${IZZY.esc(p.supplier_name||local('IzzyDrop supplier','مورّد IzzyDrop'))}</b></p>
 
           <div class="simple-product-prices">
-            <div><small>${local('Supplier price','سعر المورّد')}</small><b>${IZZY.money(supplierPrice,p.currency)}</b></div>
-            <div><small>${local('Suggested sell','سعر البيع المقترح')}</small><b>${IZZY.money(suggested,p.currency)}</b></div>
-            <div><small>${local('Product margin','هامش المنتج')}</small><b class="${profit>=0?'positive':'negative'}">${IZZY.money(profit,p.currency)}</b><span class="price-note">${local('before IzzyDrop fee','قبل رسوم IzzyDrop')}</span></div>
+            <div><small>${local('Supplier price','سعر المورّد')}</small><b>${supplierDisplay}</b></div>
+            <div><small>${local('Suggested sell','سعر البيع المقترح')}</small><b>${suggestedDisplay}</b></div>
+            <div><small>${local('Product margin','هامش المنتج')}</small><b class="${profitMin>=0?'positive':'negative'}">${profitDisplay}</b><span class="price-note">${local('before IzzyDrop fee','قبل رسوم IzzyDrop')}</span></div>
             <div><small>${local('Cairo delivery','توصيل القاهرة')}</small><b>${shippingReady?IZZY.money(delivery,SHIPPING.currency||p.currency):local('Setup pending','قيد الإعداد')}</b><span class="price-note">${local('paid separately by customer','يدفعه العميل بشكل منفصل')}</span></div>
           </div>
 
@@ -144,8 +156,10 @@
   }
 
   function linkedProductCard(l,p){
+    const range=priceRangeFor(p.product_id);
     const selling=Number(l.retail_price??p.suggested_retail_price??0);
     const suggested=Number(p.suggested_retail_price||0);
+    const suggestedDisplay=range?rangeMoney(range.retail_min,range.retail_max,p.currency):IZZY.money(suggested,p.currency);
     const difference=selling-suggested;
     const delivery=Number(SHIPPING?.delivery_fee);
     const shippingReady=SHIPPING?.available===true&&Number.isFinite(delivery);
@@ -162,7 +176,7 @@
           <div class="row linked-title-row"><div><h3>${IZZY.esc(productName(p)||local('Product','المنتج'))}</h3><small>${IZZY.esc(p.supplier_name||local('IzzyDrop supplier','مورّد IzzyDrop'))} · ${Number(p.stock_quantity||0)} ${local('in stock','متوفر')}</small></div><span class="tag ${available?(integration?.enabled?'ok':''):'bad'}">${available?(integration?.enabled?local('Web connected','الموقع متصل'):local('My product','منتجي')):local('Unavailable','غير متاح')}</span></div>
           ${available?'':`<div class="notice bad linked-unavailable-note"><b>${local('Unavailable','غير متاح')}</b><span>${IZZY.esc(reason)}</span></div>`}
           <div class="linked-price-grid">
-            <div><small>${local('Suggested','المقترح')}</small><b>${IZZY.money(suggested,p.currency)}</b></div>
+            <div><small>${local('Suggested','المقترح')}</small><b>${suggestedDisplay}</b></div>
             <label><small>${local('Your selling price','سعر بيعك')}</small><div class="price-editor"><input class="linked-price-input" data-link-id="${l.id}" type="number" min="0" step="0.01" value="${selling}" ${available?'':'disabled'}><span>${IZZY.esc(p.currency||'EGP')}</span></div></label>
             <div><small>${local('Vs suggested','مقارنة بالمقترح')}</small><b class="${difference>=0?'positive':'negative'}">${difference===0?'—':(difference>0?'+':'')+IZZY.money(difference,p.currency)}</b></div>
             <div><small>${local('Cairo delivery','توصيل القاهرة')}</small><b>${shippingReady?IZZY.money(delivery,SHIPPING.currency||p.currency):local('Setup pending','قيد الإعداد')}</b></div>
@@ -556,7 +570,7 @@
 
   async function load(showMessage=false){
     try{
-      [PRODUCTS,LINKED_PRODUCTS,LINKS,INTEGRATIONS,INTEGRATION_VARIANTS,ORDERS,ITEMS,REQUESTS,QUOTES,SAMPLES,ALERTS,COD,SHIPPING]=await Promise.all([
+      [PRODUCTS,LINKED_PRODUCTS,LINKS,INTEGRATIONS,INTEGRATION_VARIANTS,ORDERS,ITEMS,REQUESTS,QUOTES,SAMPLES,ALERTS,COD,SHIPPING,PRICE_RANGES]=await Promise.all([
         IZZY.rpc('marketplace_catalog_v3'),
         IZZY.rpc('dropshipper_linked_catalog'),
         IZZY.request('/rest/v1/dropshipper_product_links?select=*&order=created_at.desc'),
@@ -569,7 +583,8 @@
         IZZY.rpc('dropshipper_samples'),
         IZZY.request('/rest/v1/dropshipper_alerts?select=*&order=created_at.desc&limit=50'),
         IZZY.rpc('dropshipper_cod_metrics'),
-        IZZY.rpc('marketplace_shipping_quote',{},false)
+        IZZY.rpc('marketplace_shipping_quote',{},false),
+        IZZY.rpc('marketplace_variant_price_ranges')
       ]);
       populateCategories();
       renderProducts();
