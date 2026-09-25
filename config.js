@@ -14,8 +14,23 @@ if (/\/supplier\.html$/i.test(location.pathname)) {
       sync.src = 'supplier-photo-sync.js?v=20260925-simpleflows2';
       sync.async = false;
       document.body.appendChild(sync);
+
+      const variantEdit = document.createElement('script');
+      variantEdit.src = 'supplier-variant-edit.js?v=20260925-variantedit1';
+      variantEdit.async = false;
+      document.body.appendChild(variantEdit);
     };
     document.body.appendChild(flow);
+  }, { once: true });
+}
+
+// Make variant creation explain pricing in plain language and expose per-variant prices clearly.
+if (/\/supplier-variant\.html$/i.test(location.pathname)) {
+  window.addEventListener('load', () => {
+    const script = document.createElement('script');
+    script.src = 'supplier-variant-create-help.js?v=20260925-variantpricing1';
+    script.async = false;
+    document.body.appendChild(script);
   }, { once: true });
 }
 
