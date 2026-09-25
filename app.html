@@ -11,7 +11,7 @@
   <meta name="theme-color" content="#111318">
   <script>try{document.documentElement.dataset.theme=localStorage.getItem("izzy_theme")==="dark"?"dark":"light"}catch(e){}</script>
   <meta name="description" content="IzzyDrop — Egypt’s independent dropshipping marketplace.">
-  <link rel="stylesheet" href="styles.css?v=20260924-variantpricing2">
+  <link rel="stylesheet" href="styles.css?v=20260925-shipping1">
 </head>
 <body>
 <div class="wrap">
@@ -157,9 +157,11 @@
               <input id="order-customer-phone" placeholder="Customer phone" required>
               <input id="order-customer-email" type="email" placeholder="Customer email (optional)">
               <input id="order-address1" class="span-2" placeholder="Street / address" required>
-              <input id="order-city" placeholder="City" required>
-              <input id="order-governorate" placeholder="Governorate">
+              <input id="order-city" placeholder="Area / district (e.g. New Cairo)" required>
+              <input id="order-governorate" value="Cairo" readonly aria-label="Governorate">
               <input id="order-ref" class="span-2" placeholder="Your order reference (optional)">
+              <div id="order-price-preview" class="order-summary-grid span-2"></div>
+              <div id="order-shipping-note" class="notice span-2"></div>
               <button id="order-submit" class="btn span-2" type="submit">Send order to IzzyDrop</button>
             </form>
             <div id="order-status" class="status"></div>
@@ -260,9 +262,9 @@
 </div>
 
 <script src="config.js"></script>
-<script src="common.js?v=20260924-variantpricing2"></script><script src="i18n.js?v=20260924-variantpricing2"></script>
-<script src="app.js?v=20260924-variantpricing2"></script>
+<script src="common.js?v=20260925-shipping1"></script><script src="i18n.js?v=20260925-shipping1"></script>
+<script src="app.js?v=20260925-shipping1"></script>
 <script>window.IZZY_SETTINGS_ROLE="dropshipper"</script>
-<script src="settings.js?v=20260924-variantpricing2"></script>
+<script src="settings.js?v=20260925-shipping1"></script>
 </body>
 </html>
