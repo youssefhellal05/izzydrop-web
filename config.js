@@ -38,7 +38,7 @@ if (/\/supplier\.html$/i.test(location.pathname)) {
 if (/\/supplier-variant\.html$/i.test(location.pathname)) {
   window.addEventListener('load', () => {
     const script = document.createElement('script');
-    script.src = 'supplier-variant-create-help.js?v=20260925-variantpricing1';
+    script.src = 'supplier-variant-create-help.js?v=20260925-variantfreeze1';
     script.async = false;
     document.body.appendChild(script);
   }, { once: true });
