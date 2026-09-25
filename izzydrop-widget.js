@@ -8,12 +8,12 @@
   function labels(ar){
     return ar?{
       order:'اطلب الآن',variant:'اختر الخيار',qty:'الكمية',name:'اسمك',phone:'رقم الهاتف',email:'البريد الإلكتروني (اختياري)',
-      address:'العنوان',city:'المدينة',gov:'المحافظة',submit:'تأكيد الطلب',sending:'جارٍ إرسال الطلب…',
+      address:'العنوان',city:'المنطقة / الحي',gov:'المحافظة',submit:'تأكيد الطلب',sending:'جارٍ إرسال الطلب…',
       supplier:'المورّد',stock:'متوفر',out:'نفد المخزون',success:'تم استلام طلبك بنجاح',error:'تعذر إرسال الطلب',
       close:'إغلاق',cod:'الدفع عند الاستلام',powered:'مدعوم من IzzyDrop'
     }:{
       order:'Order now',variant:'Choose variant',qty:'Quantity',name:'Your name',phone:'Phone number',email:'Email (optional)',
-      address:'Delivery address',city:'City',gov:'Governorate',submit:'Place order',sending:'Sending order…',
+      address:'Delivery address',city:'Area / district',gov:'Governorate',submit:'Place order',sending:'Sending order…',
       supplier:'Supplier',stock:'in stock',out:'Out of stock',success:'Your order was received',error:'Could not place order',
       close:'Close',cod:'Cash on delivery',powered:'Powered by IzzyDrop'
     };
@@ -82,6 +82,9 @@
 
     try{
       const p=await getProduct(token);
+      const shipping=p.shipping||{};
+      const delivery=Number(shipping.delivery_fee);
+      const shippingReady=shipping.available===true&&Number.isFinite(delivery);
       const requested=(host.dataset.lang||document.documentElement.lang||navigator.language||'en').toLowerCase();
       const ar=requested.startsWith('ar');
       const L=labels(ar);
@@ -107,7 +110,7 @@
               <div class="iz-price">${variants.length>1?(ar?'ابتداءً من ':'From '):''}${money(p.retail_price,p.currency)}</div>
               <div class="iz-supplier">${L.supplier}<br><b>${esc(p.supplier_name||'IzzyDrop')}</b></div>
             </div>
-            <button class="iz-primary iz-open" ${inStock<=0?'disabled':''}>${L.order}</button>
+            <button class="iz-primary iz-open" ${inStock<=0||!shippingReady?'disabled':''}>${L.order}</button>
             <div class="iz-form" hidden>
               <select class="iz-variant" required>
                 <option value="">${L.variant}</option>
@@ -122,10 +125,10 @@
               <input class="iz-address" placeholder="${L.address}" autocomplete="street-address">
               <div class="iz-grid">
                 <input class="iz-city" placeholder="${L.city}" autocomplete="address-level2">
-                <input class="iz-gov" placeholder="${L.gov}" autocomplete="address-level1">
+                <input class="iz-gov" value="${ar?'القاهرة':'Cairo'}" readonly aria-label="${L.gov}" autocomplete="address-level1">
               </div>
               <input class="iz-hp" tabindex="-1" autocomplete="off" name="website">
-              <div class="iz-note">${L.cod}</div>
+              <div class="iz-note">${shippingReady?(ar?'توصيل القاهرة: ':'Cairo delivery: ')+money(delivery,shipping.currency||p.currency)+' · '+L.cod:(ar?'توصيل القاهرة قيد الإعداد':'Cairo delivery is not configured yet')}</div>
               <button class="iz-primary iz-submit">${L.submit}</button>
               <button class="iz-secondary iz-close" type="button">${L.close}</button>
               <div class="iz-status"></div>
@@ -137,13 +140,27 @@
       const priceEl=shadow.querySelector('.iz-price');
       const variantSelect=shadow.querySelector('.iz-variant');
       const productImage=shadow.querySelector('.iz-product-image');
-      variantSelect?.addEventListener('change',()=>{
-        const option=variantSelect.selectedOptions?.[0];
-        if(option?.dataset?.price)priceEl.textContent=money(Number(option.dataset.price),p.currency);
+      const note=shadow.querySelector('.iz-note');
+      const qtyInput=shadow.querySelector('.iz-qty');
+      function refreshPrice(){
+        const option=variantSelect?.selectedOptions?.[0];
+        const selectedPrice=option?.dataset?.price?Number(option.dataset.price):Number(p.retail_price||0);
+        const qty=Math.max(1,Number(qtyInput?.value||1));
+        if(option?.dataset?.price)priceEl.textContent=money(selectedPrice,p.currency);
         else priceEl.textContent=(variants.length>1?(ar?'ابتداءً من ':'From '):'')+money(p.retail_price,p.currency);
+        if(note){
+          note.textContent=shippingReady
+            ? (ar?'توصيل القاهرة: ':'Cairo delivery: ')+money(delivery,shipping.currency||p.currency)+' · '+(ar?'إجمالي الدفع عند الاستلام: ':'COD total: ')+money(selectedPrice*qty+delivery,p.currency)
+            : (ar?'توصيل القاهرة قيد الإعداد':'Cairo delivery is not configured yet');
+        }
+      }
+      variantSelect?.addEventListener('change',()=>{
+        refreshPrice();
         const selected=variants.find(v=>String(v.id)===String(variantSelect.value));
         if(productImage)productImage.src=selected?.image_url||p.image_url||productImage.src;
       });
+      qtyInput?.addEventListener('input',refreshPrice);
+      refreshPrice();
       const open=shadow.querySelector('.iz-open');
       const form=shadow.querySelector('.iz-form');
       const close=shadow.querySelector('.iz-close');
