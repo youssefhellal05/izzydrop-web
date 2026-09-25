@@ -3,6 +3,9 @@
   if(!toggle)return;
 
   const setText=(el,text)=>{if(el&&el.textContent!==text)el.textContent=text};
+  const costInput=document.getElementById('v-cost');
+  const retailInput=document.getElementById('v-retail');
+  const form=document.getElementById('variant-form');
 
   const pricingSection=toggle.closest('.variant-section');
   const pricingCopy=pricingSection?.querySelector('.variant-section-head p');
@@ -42,6 +45,7 @@
     .variant-row.show-price .variant-pricing-fields{padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--card)}
     .variant-row.show-price .variant-pricing-fields label{gap:4px}
     .variant-row-price-help{display:block;color:var(--muted);font-size:8px;font-weight:650;line-height:1.35}
+    .variant-section.per-variant-pricing #v-cost,.variant-section.per-variant-pricing #v-retail{opacity:.72}
   `;
   document.head.appendChild(style);
 
@@ -74,15 +78,46 @@
     });
   }
 
+  function syncPriceRequirements(){
+    const varying=toggle.checked;
+    if(costInput)costInput.required=!varying;
+    if(retailInput)retailInput.required=!varying;
+    pricingSection?.classList.toggle('per-variant-pricing',varying);
+    ['v-cost','v-retail'].forEach(id=>{
+      const mark=document.querySelector(`label[for="${id}"] .required-mark`);
+      if(mark)mark.hidden=varying;
+    });
+  }
+
   function updateModeNote(){
+    syncPriceRequirements();
     if(modeNote){
       const text=toggle.checked
-        ? 'The two prices above are starting values. After you build the variants, each variant gets its own price boxes so you can change them one by one.'
+        ? 'Set the price inside each variant below. The two prices above are optional starting values and will not block publishing.'
         : 'All variants will use the two prices above. Turn on “Each variant has its own price” only when the versions need different prices.';
       setText(modeNote,text);
     }
     decorateVariantRows();
   }
+
+  // The product record still needs a summary price. When per-variant pricing is on
+  // and the shared fields are blank, use the cheapest enabled variant as that summary.
+  if(form)form.addEventListener('submit',()=>{
+    if(!toggle.checked||!costInput||!retailInput)return;
+    if(costInput.value!==''&&retailInput.value!=='')return;
+    const rows=[...document.querySelectorAll('[data-v-variant-row]')]
+      .filter(row=>row.querySelector('[data-v-enabled]')?.checked)
+      .map(row=>({
+        cost:Number(row.querySelector('[data-v-cost]')?.value),
+        retail:Number(row.querySelector('[data-v-retail]')?.value)
+      }))
+      .filter(x=>Number.isFinite(x.cost)&&x.cost>=0&&Number.isFinite(x.retail)&&x.retail>=x.cost)
+      .sort((a,b)=>a.cost-b.cost);
+    if(rows.length){
+      if(costInput.value==='')costInput.value=String(rows[0].cost);
+      if(retailInput.value==='')retailInput.value=String(rows[0].retail);
+    }
+  },true);
 
   const list=document.getElementById('v-variant-list');
   if(list)new MutationObserver(()=>decorateVariantRows()).observe(list,{childList:true});
