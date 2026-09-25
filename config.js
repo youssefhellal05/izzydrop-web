@@ -6,9 +6,15 @@ window.IZZY_CONFIG = {
 // Supplier-only UI refinements are isolated from the shared app scripts.
 if (/\/supplier\.html$/i.test(location.pathname)) {
   window.addEventListener('load', () => {
-    const script = document.createElement('script');
-    script.src = 'supplier-overrides.js?v=20260925-simpleflows1';
-    script.async = false;
-    document.body.appendChild(script);
+    const flow = document.createElement('script');
+    flow.src = 'supplier-overrides.js?v=20260925-simpleflows2';
+    flow.async = false;
+    flow.onload = () => {
+      const sync = document.createElement('script');
+      sync.src = 'supplier-photo-sync.js?v=20260925-simpleflows2';
+      sync.async = false;
+      document.body.appendChild(sync);
+    };
+    document.body.appendChild(flow);
   }, { once: true });
 }
