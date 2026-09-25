@@ -38,6 +38,7 @@
           <button data-view="products"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h8M8 17h5"/></svg><span>Products</span></button>
           <button data-view="orders"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v14H4zM8 3v6M16 3v6M8 13h8M8 17h5"/></svg><span>Orders</span></button>
           <button data-view="commissions"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5M8 8h.01M16 16h.01"/><circle cx="8" cy="8" r="2"/><circle cx="16" cy="16" r="2"/></svg><span>Commissions</span></button>
+          <button data-view="shipping"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h11v10H3zM14 10h4l3 3v4h-7zM7 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM18 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg><span>Shipping</span></button>
           <button data-view="admins"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21v-3a5 5 0 0 1 10 0v3M17 8v6M14 11h6"/></svg><span>Admins</span></button>
           <button data-view="settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM19 12l2-1-2-4-2 1a8 8 0 0 0-2-1l-1-3h-4L9 7a8 8 0 0 0-2 1L5 7l-2 4 2 1v2l-2 1 2 4 2-1a8 8 0 0 0 2 1l1 3h4l1-3a8 8 0 0 0 2-1l2 1 2-4-2-1z"/></svg><span>Settings</span></button>
         </nav>
@@ -160,6 +161,29 @@
             </div>
           </div>
           <div id="commission-products" class="commission-product-grid"></div>
+        </section>
+
+        <section id="view-shipping" class="view" hidden>
+          <div class="section-heading"><div><h2>Shipping</h2><p class="muted">Cairo-only launch delivery settings. The customer fee is public; courier cost stays internal.</p></div></div>
+          <form id="shipping-settings-form" class="commission-control-grid">
+            <div class="card commission-global-card">
+              <div class="commission-source-label">CAIRO V1</div>
+              <div class="commission-big-rate"><strong id="shipping-public-fee">—</strong><span>customer delivery fee</span></div>
+              <label class="field-label" for="shipping-customer-fee">Customer delivery fee (EGP)</label>
+              <input id="shipping-customer-fee" type="number" min="0" step="0.01" placeholder="e.g. 70">
+              <label class="field-label" style="margin-top:12px"><input id="shipping-active" type="checkbox"> Turn Cairo delivery on</label>
+              <small class="muted">Orders are blocked until shipping is turned on with a delivery fee.</small>
+            </div>
+            <div class="card commission-supplier-card">
+              <label class="field-label" for="shipping-partner-name">Shipping company</label>
+              <input id="shipping-partner-name" placeholder="Company name (optional)">
+              <label class="field-label" for="shipping-internal-cost">Courier cost to IzzyDrop (EGP)</label>
+              <input id="shipping-internal-cost" type="number" min="0" step="0.01" placeholder="Internal cost (optional)">
+              <small class="muted">This courier cost is internal and is never shown to dropshippers or customers.</small>
+              <button id="shipping-save" class="btn" type="submit" style="margin-top:14px">Save shipping settings</button>
+              <div id="shipping-status" class="status"></div>
+            </div>
+          </form>
         </section>
 
         <section id="view-admins" class="view" hidden>
