@@ -160,7 +160,26 @@
     const selling=Number(l.retail_price??p.suggested_retail_price??0);
     const suggested=Number(p.suggested_retail_price||0);
     const suggestedDisplay=range?rangeMoney(range.retail_min,range.retail_max,p.currency):IZZY.money(suggested,p.currency);
-    const difference=selling-suggested;
+    const signedMoney=value=>{
+      const n=Number(value);
+      if(!Number.isFinite(n))return '—';
+      if(n===0)return IZZY.money(0,p.currency);
+      return `${n>0?'+':''}${IZZY.money(n,p.currency)}`;
+    };
+    let differenceLabel=local('Vs suggested','مقارنة بالمقترح');
+    let differenceDisplay;
+    let differenceClassValue;
+    if(range&&Number.isFinite(Number(range.retail_min))&&Number.isFinite(Number(range.retail_max))){
+      const diffLow=selling-Number(range.retail_max);
+      const diffHigh=selling-Number(range.retail_min);
+      differenceLabel=local('Vs suggested range','مقارنة بنطاق السعر المقترح');
+      differenceDisplay=diffLow===diffHigh?signedMoney(diffLow):`${signedMoney(diffLow)} – ${signedMoney(diffHigh)}`;
+      differenceClassValue=diffLow<0&&diffHigh<0?-1:diffLow>0&&diffHigh>0?1:0;
+    }else{
+      const difference=selling-suggested;
+      differenceDisplay=signedMoney(difference);
+      differenceClassValue=difference;
+    }
     const delivery=Number(SHIPPING?.delivery_fee);
     const shippingReady=SHIPPING?.available===true&&Number.isFinite(delivery);
     const integration=INTEGRATIONS.find(x=>x.link_id===l.id);
@@ -178,7 +197,7 @@
           <div class="linked-price-grid">
             <div><small>${local('Suggested','المقترح')}</small><b>${suggestedDisplay}</b></div>
             <label><small>${local('Your selling price','سعر بيعك')}</small><div class="price-editor"><input class="linked-price-input" data-link-id="${l.id}" type="number" min="0" step="0.01" value="${selling}" ${available?'':'disabled'}><span>${IZZY.esc(p.currency||'EGP')}</span></div></label>
-            <div><small>${local('Vs suggested','مقارنة بالمقترح')}</small><b class="${difference>=0?'positive':'negative'}">${difference===0?'—':(difference>0?'+':'')+IZZY.money(difference,p.currency)}</b></div>
+            <div><small>${differenceLabel}</small><b class="${differenceClassValue>0?'positive':differenceClassValue<0?'negative':''}">${differenceDisplay}</b></div>
             <div><small>${local('Cairo delivery','توصيل القاهرة')}</small><b>${shippingReady?IZZY.money(delivery,SHIPPING.currency||p.currency):local('Setup pending','قيد الإعداد')}</b></div>
           </div>
         </div>
