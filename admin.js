@@ -1,12 +1,13 @@
 (()=>{
   const $=s=>document.querySelector(s);
-  let SUPPLIERS=[],PROFILES=[],PRODUCTS=[],VARIANTS=[],IMAGES=[],ORDERS=[],ITEMS=[],DROPSHIPPERS=[],AUDIT=[],ADMINS=[],SHIPPING_SETTINGS={},ORDER_SHIPPING=[],DEFAULT_COMMISSION=0,SELECTED_SUPPLIER=null,SESSION=null,ORDER_OPEN_ONLY=false;
+  let SUPPLIERS=[],PROFILES=[],PRODUCTS=[],VARIANTS=[],IMAGES=[],ORDERS=[],ITEMS=[],DROPSHIPPERS=[],AUDIT=[],ADMINS=[],SETTLEMENTS=[],SHIPPING_SETTINGS={},ORDER_SHIPPING=[],DEFAULT_COMMISSION=0,SELECTED_SUPPLIER=null,SESSION=null,ORDER_OPEN_ONLY=false;
 
   const VIEW_COPY={
     overview:['Overview','Monitor the marketplace and handle what needs attention.'],
     suppliers:['Suppliers','Review applications and manage supplier access.'],
     products:['Products','Inspect and moderate products across the marketplace.'],
     orders:['Orders','Inspect marketplace orders, fulfillment and tracking.'],
+    settlements:['Settlements','Confirm courier remittance and release payouts.'],
     commissions:['Commissions','Control marketplace, supplier, and product commission rules.'],
     shipping:['Shipping','Control Cairo delivery pricing and the shipping-company cost.'],
     admins:['Admins','Invite trusted people and review Control Center access.'],
@@ -33,6 +34,7 @@
     $('#admin-page-subtitle').textContent=copy[1];
     if(v==='commissions')renderCommissions();
     if(v==='shipping')renderShipping();
+    if(v==='settlements')renderSettlements();
     msg('');
   }
 
@@ -142,7 +144,10 @@
       supplier_commission_changed:()=>`${d.supplier_name||'Supplier'} commission changed from ${d.from??'inherit'} to ${d.to??'inherit'}`,
       product_commission_changed:()=>`${d.product_name||'Product'} commission changed from ${d.from??'inherit'} to ${d.to??'inherit'}`,
       product_status_changed:()=>`${d.product_name||'Product'} changed from ${d.from||'—'} to ${d.to||'—'}`,
-      admin_access_revoked:()=>`Admin access revoked for ${d.target_name||'user'}`
+      admin_access_revoked:()=>`Admin access revoked for ${d.target_name||'user'}`,
+      cod_remittance_confirmed:()=>`COD remittance confirmed for ${d.external_order_ref||'order'}`,
+      supplier_payout_paid:()=>`Supplier payout marked paid · ${IZZY.money(d.amount||0,'EGP')}`,
+      dropshipper_payout_paid:()=>`Dropshipper payout marked paid · ${IZZY.money(d.amount||0,'EGP')}`
     };
     return map[a.action]?map[a.action]():String(a.action||'Admin action').replaceAll('_',' ');
   }
@@ -323,6 +328,128 @@
 
   function effectiveRate(p,s){return p?.commission_rate_override??s?.commission_rate_override??DEFAULT_COMMISSION}
 
+  function renderSettlements(){
+    const summary=$('#settlement-summary'),el=$('#settlements');
+    if(!summary||!el)return;
+
+    const rows=Array.isArray(SETTLEMENTS)?SETTLEMENTS:[];
+    const groups=[...rows.reduce((m,row)=>{
+      if(!m.has(row.order_id))m.set(row.order_id,[]);
+      m.get(row.order_id).push(row);
+      return m;
+    },new Map()).values()];
+
+    const awaiting=groups.filter(g=>g[0]?.settlement_status==='ready'&&g[0]?.cod_remittance_status!=='remitted');
+    const supplierPending=rows.filter(x=>x.supplier_payout_status==='pending').reduce((n,x)=>n+Number(x.supplier_net_amount||0),0);
+    const dropshipperPending=rows.filter(x=>x.dropshipper_payout_status==='pending').reduce((n,x)=>n+Number(x.dropshipper_profit_amount||0),0);
+    const commissionReady=rows.filter(x=>x.cod_remittance_status==='remitted'&&x.settlement_status==='ready').reduce((n,x)=>n+Number(x.platform_commission_amount||0),0);
+
+    summary.innerHTML=[
+      ['Awaiting courier remittance',awaiting.length],
+      ['Supplier payouts pending',IZZY.money(supplierPending,'EGP')],
+      ['Dropshipper payouts pending',IZZY.money(dropshipperPending,'EGP')],
+      ['IzzyDrop commission ready',IZZY.money(commissionReady,'EGP')]
+    ].map(([k,v])=>`<div class="card cod-stat"><small>${k}</small><strong>${v}</strong></div>`).join('');
+
+    el.innerHTML=groups.map(group=>{
+      const x=group[0];
+      const remitReady=x.settlement_status==='ready'&&x.cod_remittance_status!=='remitted';
+      const remitted=x.cod_remittance_status==='remitted';
+      const reversal=x.cod_remittance_status==='reversal_required';
+      const itemRows=group.map(i=>`<div class="admin-order-item">
+        <div>
+          <b>${IZZY.esc(i.supplier_name||'Supplier')}</b>
+          <small>Supplier gross ${IZZY.money(i.supplier_gross_amount||0,'EGP')} · IzzyDrop ${IZZY.money(i.platform_commission_amount||0,'EGP')}</small>
+        </div>
+        <div>
+          <b>Supplier payout ${IZZY.money(i.supplier_net_amount||0,'EGP')}</b>
+          <span class="tag ${i.supplier_payout_status==='paid'?'ok':i.supplier_payout_status==='pending'?'warn':i.supplier_payout_status==='reversal_required'?'bad':''}">${IZZY.esc(i.supplier_payout_status||'')}</span>
+          ${i.supplier_payout_status==='pending'?`<button class="btn secondary supplier-payout-paid" data-item-id="${i.order_item_id}">Mark supplier paid</button>`:''}
+        </div>
+        <div>
+          <b>${IZZY.esc(i.dropshipper_name||'Dropshipper')}</b>
+          <small>Profit ${IZZY.money(i.dropshipper_profit_amount||0,'EGP')}</small>
+        </div>
+        <div>
+          <span class="tag ${i.dropshipper_payout_status==='paid'?'ok':i.dropshipper_payout_status==='pending'?'warn':i.dropshipper_payout_status==='reversal_required'?'bad':''}">${IZZY.esc(i.dropshipper_payout_status||'')}</span>
+          ${i.dropshipper_payout_status==='pending'?`<button class="btn secondary dropshipper-payout-paid" data-item-id="${i.order_item_id}">Mark dropshipper paid</button>`:''}
+        </div>
+      </div>`).join('');
+
+      return `<article class="card admin-order-card">
+        <div class="admin-order-head">
+          <div><b>${IZZY.esc(x.external_order_ref||String(x.order_id).slice(0,8))}</b><small>${fmtDateTime(x.created_at)}</small></div>
+          <div class="admin-order-statuses">
+            <span class="tag ${x.settlement_status==='ready'?'ok':x.settlement_status==='pending'?'warn':'bad'}">${IZZY.esc(x.settlement_status||'')}</span>
+            <span class="tag ${remitted?'ok':remitReady?'warn':reversal?'bad':''}">${IZZY.esc(x.cod_remittance_status||'')}</span>
+          </div>
+        </div>
+        <div class="admin-order-summary">
+          <div><small>COD collected from customer</small><b>${IZZY.money(x.customer_collected_amount||0,'EGP')}</b></div>
+          <div><small>Courier remitted</small><b>${x.cod_remitted_amount==null?'—':IZZY.money(x.cod_remitted_amount,'EGP')}</b></div>
+          <div><small>Customer delivery fee</small><b>${IZZY.money(x.customer_shipping_fee_amount||0,'EGP')}</b></div>
+          <div><small>Courier cost</small><b>${x.courier_cost_amount==null?'—':IZZY.money(x.courier_cost_amount,'EGP')}</b></div>
+          <div><small>Shipping margin</small><b>${x.shipping_margin_amount==null?'—':IZZY.money(x.shipping_margin_amount,'EGP')}</b></div>
+          <div><small>Payment</small><b>${IZZY.esc(x.payment_status||'')}</b><span>${IZZY.esc(x.order_status||'')}</span></div>
+        </div>
+        ${remitReady?`<div class="fulfillment-box">
+          <div><b>Courier COD remittance</b><small>Confirm only after the courier has transferred the money to IzzyDrop.</small></div>
+          <div class="fulfillment-fields">
+            <button class="btn confirm-remittance" data-order-id="${x.order_id}" data-collected="${Number(x.customer_collected_amount||0)}">Confirm COD remitted</button>
+          </div>
+        </div>`:''}
+        ${reversal?'<div class="notice">This order was reversed after remittance. Manual reconciliation is required.</div>':''}
+        <div class="admin-order-items">${itemRows}</div>
+      </article>`;
+    }).join('')||'<div class="empty-state"><div class="empty-icon">EGP</div><h3>No settlements yet</h3><p>Delivered COD orders will appear here.</p></div>';
+
+    document.querySelectorAll('.confirm-remittance').forEach(b=>b.onclick=()=>confirmCodRemittance(b));
+    document.querySelectorAll('.supplier-payout-paid').forEach(b=>b.onclick=()=>markSupplierPayoutPaid(b));
+    document.querySelectorAll('.dropshipper-payout-paid').forEach(b=>b.onclick=()=>markDropshipperPayoutPaid(b));
+  }
+
+  async function confirmCodRemittance(btn){
+    const collected=Number(btn.dataset.collected||0);
+    const amountRaw=prompt('Amount the courier remitted to IzzyDrop (EGP):',String(collected));
+    if(amountRaw===null)return;
+    const amount=Number(amountRaw);
+    if(!Number.isFinite(amount)||amount<0){msg('Enter a valid remitted amount.',true);return}
+    const costRaw=prompt('Courier cost for this order (EGP). Leave blank if not known yet:','');
+    if(costRaw===null)return;
+    const cost=costRaw.trim()===''?null:Number(costRaw);
+    if(cost!==null&&(!Number.isFinite(cost)||cost<0)){msg('Enter a valid courier cost.',true);return}
+    if(!confirm('Confirm that this COD money has actually reached IzzyDrop?'))return;
+    btn.disabled=true;
+    try{
+      await IZZY.rpc('admin_confirm_cod_remittance',{_order_id:btn.dataset.orderId,_remitted_amount:amount,_courier_cost:cost});
+      msg('COD remittance confirmed. Supplier and dropshipper payouts are now ready.');
+      await load(false);
+      go('settlements');
+    }catch(e){msg(e.message,true);btn.disabled=false}
+  }
+
+  async function markSupplierPayoutPaid(btn){
+    if(!confirm('Confirm the supplier payout was actually sent?'))return;
+    btn.disabled=true;
+    try{
+      await IZZY.rpc('admin_mark_supplier_payout_paid',{_order_item_id:btn.dataset.itemId});
+      msg('Supplier payout marked paid.');
+      await load(false);
+      go('settlements');
+    }catch(e){msg(e.message,true);btn.disabled=false}
+  }
+
+  async function markDropshipperPayoutPaid(btn){
+    if(!confirm('Confirm the dropshipper payout was actually sent?'))return;
+    btn.disabled=true;
+    try{
+      await IZZY.rpc('admin_mark_dropshipper_payout_paid',{_order_item_id:btn.dataset.itemId});
+      msg('Dropshipper payout marked paid.');
+      await load(false);
+      go('settlements');
+    }catch(e){msg(e.message,true);btn.disabled=false}
+  }
+
   function renderShipping(){
     const s=SHIPPING_SETTINGS||{};
     const fee=s.customer_delivery_fee==null?null:Number(s.customer_delivery_fee);
@@ -420,7 +547,7 @@
   }
 
   async function load(showMessage=true){
-    const [suppliers,profiles,products,variants,orders,items,dropshippers,settings,audit,admins,shippingSettings,orderShipping]=await Promise.all([
+    const [suppliers,profiles,products,variants,orders,items,dropshippers,settings,audit,admins,shippingSettings,orderShipping,settlements]=await Promise.all([
       IZZY.request('/rest/v1/suppliers?select=*&order=created_at.desc'),
       IZZY.request('/rest/v1/profiles?select=id,full_name,phone,business_name,created_at'),
       IZZY.request('/rest/v1/supplier_products?select=*&order=created_at.desc'),
@@ -432,7 +559,8 @@
       IZZY.request('/rest/v1/audit_log?select=*&order=created_at.desc&limit=50'),
       IZZY.rpc('admin_list_accounts'),
       IZZY.rpc('admin_shipping_settings'),
-      IZZY.rpc('admin_order_shipping_costs')
+      IZZY.rpc('admin_order_shipping_costs'),
+      IZZY.rpc('admin_settlements')
     ]);
 
     SUPPLIERS=suppliers||[];
@@ -447,6 +575,7 @@
     ADMINS=Array.isArray(admins)?admins:[];
     SHIPPING_SETTINGS=shippingSettings||{};
     ORDER_SHIPPING=Array.isArray(orderShipping)?orderShipping:[];
+    SETTLEMENTS=Array.isArray(settlements)?settlements:[];
 
     if(PRODUCTS.length){
       const ids=PRODUCTS.map(p=>p.id).join(',');
@@ -459,6 +588,7 @@
     renderSuppliers();
     renderProducts();
     renderOrders();
+    renderSettlements();
     renderCommissions();
     renderShipping();
     renderAdmins();
