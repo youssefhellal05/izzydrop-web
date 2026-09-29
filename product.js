@@ -58,7 +58,8 @@
     st.textContent='';
 
     const images=(p.images||[]).filter(x=>x?.url);
-    const totalStock=(p.variants||[]).reduce((n,v)=>n+Number(v.stock_quantity||0),0);
+    const visibleVariants=(p.variants||[]).filter(v=>v?.is_enabled!==false);
+    const totalStock=visibleVariants.reduce((n,v)=>n+Number(v.stock_quantity||0),0);
     const session=IZZY.session();
     let isDropshipper=false,alreadyLinked=false;
     if(!adminView&&session?.user?.id){
@@ -84,24 +85,25 @@
       }catch{}
     }
 
-    const main=images[0]?.url||(p.variants||[]).find(v=>v.image_url)?.image_url||null;
+    const main=images[0]?.url||visibleVariants.find(v=>v.image_url)?.image_url||null;
     const categoryLabel=isAr?(p.category_ar||p.category||'غير مصنف'):(p.category||p.category_ar||'Uncategorized');
     const delivery=Number(shipping?.delivery_fee);
     const shippingReady=shipping?.available===true&&Number.isFinite(delivery);
-    const variantPrices=(p.variants||[]).map(v=>Number(v.suggested_retail_price)).filter(Number.isFinite);
+    const variantPrices=visibleVariants.map(v=>Number(v.suggested_retail_price)).filter(Number.isFinite);
     const uniqueVariantPrices=[...new Set(variantPrices)];
     const startingRetail=variantPrices.length?Math.min(...variantPrices):Number(p.suggested_retail_price||0);
     const pricePrefix=uniqueVariantPrices.length>1?(isAr?'ابتداءً من ':'From '):'';
-    const singleVariant=(p.variants||[]).length===1?(p.variants||[])[0]:null;
+    const singleVariant=visibleVariants.length===1?visibleVariants[0]:null;
     const singleSupplier=singleVariant?.supplier_cost==null?null:Number(singleVariant.supplier_cost);
     const singleRetail=singleVariant?.suggested_retail_price==null?null:Number(singleVariant.suggested_retail_price);
     const singleMargin=singleSupplier!=null&&Number.isFinite(singleRetail)?singleRetail-singleSupplier:null;
     const initialCustomerTotal=shippingReady?startingRetail+delivery:null;
-    const variantHtml=(p.variants||[]).map(v=>{
+    const variantHtml=visibleVariants.map(v=>{
       const vp=Number(v.suggested_retail_price);
       const sp=v.supplier_cost==null?null:Number(v.supplier_cost);
       const priceText=Number.isFinite(vp)?` · ${isAr?'بيع مقترح':'Suggested'} ${IZZY.money(vp,p.currency)}`:'';
-      return `<button type="button" class="variant product-variant-choice" data-variant-image="${IZZY.esc(v.image_url||main||'')}" data-variant-price="${Number.isFinite(vp)?vp:''}" data-variant-supplier="${Number.isFinite(sp)?sp:''}"><div><b>${IZZY.esc(variantLabel(v))}</b><small>${IZZY.esc(v.sku||'')}${priceText}</small></div><span class="tag ${Number(v.stock_quantity)>0?'ok':'warn'}">${Number(v.stock_quantity||0)} ${isAr?'متوفر':'in stock'}</span></button>`;
+      const inStock=Number(v.stock_quantity)>0;
+      return `<button type="button" class="variant product-variant-choice ${inStock?'':'is-unavailable'}" data-variant-image="${IZZY.esc(v.image_url||main||'')}" data-variant-price="${Number.isFinite(vp)?vp:''}" data-variant-supplier="${Number.isFinite(sp)?sp:''}" ${inStock?'':'disabled aria-disabled="true"'}><div><b>${IZZY.esc(variantLabel(v))}</b><small>${IZZY.esc(v.sku||'')}${priceText}</small></div><span class="tag ${inStock?'ok':'warn'}">${inStock?`${Number(v.stock_quantity||0)} ${isAr?'متوفر':'in stock'}`:(isAr?'نفد المخزون':'Out of stock')}</span></button>`;
     }).join('') || `<div class="notice">${isAr?'لا توجد خيارات متاحة.':'No variants listed.'}</div>`;
     box.innerHTML=`
       ${from==='app'?`<a class="product-back" href="app.html">${isAr?'العودة إلى المنتجات →':'← Back to products'}</a>`:from==='admin'?'<a class="product-back" href="admin.html">← Back to Admin</a>':''}
@@ -145,10 +147,42 @@
         </section>
       </div>`;
 
+    let imageRequestId=0;
     const setMainImage=url=>{
       const img=document.getElementById('main-product-image');
-      if(img&&url)img.src=url;
-      document.querySelectorAll('.product-thumb').forEach(x=>x.classList.toggle('on',x.dataset.image===url));
+      const gallery=document.getElementById('main-gallery');
+      if(!img||!url||img.getAttribute('src')===url)return;
+
+      const requestId=++imageRequestId;
+      img.style.opacity='0';
+      img.setAttribute('aria-busy','true');
+
+      let loader=gallery?.querySelector('.product-image-loading');
+      if(gallery&&!loader){
+        loader=document.createElement('div');
+        loader.className='product-image-loading';
+        loader.textContent=isAr?'جارٍ تحميل الصورة…':'Loading image…';
+        loader.style.cssText='position:absolute;inset:0;display:grid;place-items:center;font-weight:700;color:#6b7280;background:rgba(255,255,255,.82);z-index:2;';
+        gallery.style.position='relative';
+        gallery.appendChild(loader);
+      }
+
+      const preload=new Image();
+      preload.onload=()=>{
+        if(requestId!==imageRequestId)return;
+        img.src=url;
+        img.style.opacity='1';
+        img.removeAttribute('aria-busy');
+        loader?.remove();
+        document.querySelectorAll('.product-thumb').forEach(x=>x.classList.toggle('on',x.dataset.image===url));
+      };
+      preload.onerror=()=>{
+        if(requestId!==imageRequestId)return;
+        img.style.opacity='1';
+        img.removeAttribute('aria-busy');
+        loader?.remove();
+      };
+      preload.src=url;
     };
     document.querySelectorAll('.product-thumb').forEach(btn=>btn.onclick=()=>setMainImage(btn.dataset.image));
     document.querySelectorAll('.product-variant-choice').forEach(btn=>btn.onclick=()=>{
