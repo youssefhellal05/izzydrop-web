@@ -750,7 +750,7 @@
     const rows=Array.isArray(SETTLEMENTS)?SETTLEMENTS:[];
     const pending=rows.filter(x=>x.payout_status==='pending').reduce((n,x)=>n+Number(x.supplier_net_amount||0),0);
     const paid=rows.filter(x=>x.payout_status==='paid').reduce((n,x)=>n+Number(x.supplier_net_amount||0),0);
-    const commission=rows.filter(x=>['ready','refunded','void'].includes(x.settlement_status)).reduce((n,x)=>n+Number(x.platform_commission_amount||0),0);
+    const commission=rows.filter(x=>x.settlement_status==='ready').reduce((n,x)=>n+Number(x.platform_commission_amount||0),0);
     const blocked=rows.filter(x=>['blocked','reversal_required'].includes(x.payout_status)).reduce((n,x)=>n+Number(x.supplier_net_amount||0),0);
     summary.innerHTML=[
       [local('Pending payout','مستحق قيد الدفع'),IZZY.money(pending,'EGP')],
