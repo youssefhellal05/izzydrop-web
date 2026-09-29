@@ -1,11 +1,12 @@
 (()=>{
   const $=s=>document.querySelector(s);
-  let PRODUCTS=[],LINKED_PRODUCTS=[],LINKS=[],INTEGRATIONS=[],INTEGRATION_VARIANTS=[],ORDERS=[],ITEMS=[],REQUESTS=[],QUOTES=[],SAMPLES=[],ALERTS=[],COD={},SHIPPING={},PRICE_RANGES=[],ORDER_VARIANTS=[],SESSION=null,DROPSHIPPER=null,ORDER_FILTER='all',CURRENT_WEB_TOKEN=null;
+  let PRODUCTS=[],LINKED_PRODUCTS=[],LINKS=[],INTEGRATIONS=[],INTEGRATION_VARIANTS=[],ORDERS=[],ITEMS=[],REQUESTS=[],QUOTES=[],SAMPLES=[],ALERTS=[],SETTLEMENTS=[],COD={},SHIPPING={},PRICE_RANGES=[],ORDER_VARIANTS=[],SESSION=null,DROPSHIPPER=null,ORDER_FILTER='all',CURRENT_WEB_TOKEN=null;
 
   const VIEW_COPY={
     products:['Products','Find products to sell.'],
     linked:['My products','Products you chose to sell.'],
     orders:['Orders','Create and track customer orders.'],
+    money:['Money','Track actual COD profit and payout status.'],
     requests:['Find a product','Ask suppliers to source something you need.'],
     samples:['Samples','Track product samples.'],
     settings:['Settings','Account and preferences.']
@@ -547,6 +548,36 @@
     ].map(([k,v])=>`<div class="card cod-stat"><small>${k}</small><strong>${v}</strong></div>`).join('');
   }
 
+  function renderMoney(){
+    const summary=$('#money-summary'),list=$('#money-list');
+    if(!summary||!list)return;
+    const rows=Array.isArray(SETTLEMENTS)?SETTLEMENTS:[];
+    const pending=rows.filter(x=>x.payout_status==='pending').reduce((n,x)=>n+Number(x.dropshipper_profit_amount||0),0);
+    const paid=rows.filter(x=>x.payout_status==='paid').reduce((n,x)=>n+Number(x.dropshipper_profit_amount||0),0);
+    const blocked=rows.filter(x=>['blocked','reversal_required'].includes(x.payout_status)).reduce((n,x)=>n+Number(x.dropshipper_profit_amount||0),0);
+    summary.innerHTML=[
+      [local('Pending payout','مستحق قيد الدفع'),IZZY.money(pending,'EGP')],
+      [local('Paid out','تم دفعه'),IZZY.money(paid,'EGP')],
+      [local('Blocked / reversed','محجوب / معكوس'),IZZY.money(blocked,'EGP')]
+    ].map(([k,v])=>`<div class="card cod-stat"><small>${k}</small><strong>${v}</strong></div>`).join('');
+
+    list.innerHTML=rows.map(x=>{
+      const tagClass=x.payout_status==='paid'?'ok':x.payout_status==='pending'?'warn':'bad';
+      return `<article class="card order-card">
+        <div class="order-card-head">
+          <div><span class="order-id">${IZZY.esc(x.external_order_ref||String(x.order_id).slice(0,8))}</span><small>${new Date(x.created_at).toLocaleString()}</small></div>
+          <span class="tag ${tagClass}">${IZZY.esc(x.payout_status||x.settlement_status||'')}</span>
+        </div>
+        <div class="order-summary-grid">
+          <div><small>${local('Actual selling amount','قيمة البيع الفعلية')}</small><b>${IZZY.money(x.retail_amount||0,x.currency||'EGP')}</b></div>
+          <div><small>${local('Supplier price','سعر المورّد')}</small><b>${IZZY.money(x.supplier_gross_amount||0,x.currency||'EGP')}</b></div>
+          <div><small>${local('Your profit','ربحك')}</small><b>${IZZY.money(x.dropshipper_profit_amount||0,x.currency||'EGP')}</b></div>
+          <div><small>${local('Order status','حالة الطلب')}</small><b>${IZZY.esc(window.IZZY_I18N?.status?.(x.order_status)||x.order_status||'')}</b><span>${IZZY.esc(window.IZZY_I18N?.status?.(x.payment_status)||x.payment_status||'')}</span></div>
+        </div>
+      </article>`;
+    }).join('')||`<div class="empty-state"><div class="empty-icon">EGP</div><h3>${local('No payout records yet','لا توجد سجلات أرباح بعد')}</h3><p>${local('Delivered COD orders will appear here automatically.','ستظهر طلبات الدفع عند الاستلام التي تم توصيلها هنا تلقائيًا.')}</p></div>`;
+  }
+
   function renderRequests(){
     const el=$('#product-requests');if(!el)return;
     const byRequest=new Map();
@@ -601,7 +632,7 @@
 
   async function load(showMessage=false){
     try{
-      [PRODUCTS,LINKED_PRODUCTS,LINKS,INTEGRATIONS,INTEGRATION_VARIANTS,ORDERS,ITEMS,REQUESTS,QUOTES,SAMPLES,ALERTS,COD,SHIPPING,PRICE_RANGES]=await Promise.all([
+      [PRODUCTS,LINKED_PRODUCTS,LINKS,INTEGRATIONS,INTEGRATION_VARIANTS,ORDERS,ITEMS,REQUESTS,QUOTES,SAMPLES,ALERTS,COD,SHIPPING,PRICE_RANGES,SETTLEMENTS]=await Promise.all([
         IZZY.rpc('marketplace_catalog_v3'),
         IZZY.rpc('dropshipper_linked_catalog'),
         IZZY.request('/rest/v1/dropshipper_product_links?select=*&order=created_at.desc'),
@@ -615,7 +646,8 @@
         IZZY.request('/rest/v1/dropshipper_alerts?select=*&order=created_at.desc&limit=50'),
         IZZY.rpc('dropshipper_cod_metrics'),
         IZZY.rpc('marketplace_shipping_quote',{},false),
-        IZZY.rpc('marketplace_variant_price_ranges')
+        IZZY.rpc('marketplace_variant_price_ranges'),
+        IZZY.rpc('dropshipper_settlements')
       ]);
       populateCategories();
       renderProducts();
@@ -624,6 +656,7 @@
       renderOrderProducts();
       renderOrderPreview();
       renderCod();
+      renderMoney();
       renderRequests();
       renderSamples();
       renderAlerts();
