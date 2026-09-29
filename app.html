@@ -45,6 +45,10 @@
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v14H4zM8 3v6M16 3v6M8 13h8M8 17h5"/></svg>
             <span>Orders</span>
           </button>
+          <button data-view="money">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16v12H4zM4 10h16M8 15h4"/></svg>
+            <span>Money</span>
+          </button>
           <button data-view="requests">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h5"/></svg>
             <span>Find product</span>
@@ -182,6 +186,14 @@
           <div id="orders" class="orders-list"></div>
         </section>
 
+        <section id="view-money" class="view" hidden>
+          <div class="section-heading">
+            <div><h2>Money</h2><p class="muted">See your actual profit from completed COD orders. Suggested retail prices are not used here.</p></div>
+          </div>
+          <div id="money-summary" class="cod-summary-grid"></div>
+          <div id="money-list" class="orders-list"></div>
+        </section>
+
         <section id="view-settings" class="view" hidden><div id="settings-root"></div></section>
       </main>
     </div>
@@ -263,7 +275,7 @@
 
 <script src="config.js"></script>
 <script src="common.js?v=20260925-shipping1"></script><script src="i18n.js?v=20260925-shipping1"></script>
-<script src="app.js?v=20260930-cancel1"></script>
+<script src="app.js?v=20260930-money1"></script>
 <script>window.IZZY_SETTINGS_ROLE="dropshipper"</script>
 <script src="settings.js?v=20260925-shipping1"></script>
 </body>
