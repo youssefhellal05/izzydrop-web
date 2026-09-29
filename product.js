@@ -58,8 +58,6 @@
     st.textContent='';
 
     const images=(p.images||[]).filter(x=>x?.url);
-    const visibleVariants=(p.variants||[]).filter(v=>v?.is_enabled!==false);
-    const totalStock=visibleVariants.reduce((n,v)=>n+Number(v.stock_quantity||0),0);
     const session=IZZY.session();
     let isDropshipper=false,alreadyLinked=false;
     if(!adminView&&session?.user?.id){
@@ -85,6 +83,8 @@
       }catch{}
     }
 
+    const visibleVariants=(p.variants||[]).filter(v=>v?.is_enabled!==false);
+    const totalStock=visibleVariants.reduce((n,v)=>n+Number(v.stock_quantity||0),0);
     const main=images[0]?.url||visibleVariants.find(v=>v.image_url)?.image_url||null;
     const categoryLabel=isAr?(p.category_ar||p.category||'غير مصنف'):(p.category||p.category_ar||'Uncategorized');
     const delivery=Number(shipping?.delivery_fee);
