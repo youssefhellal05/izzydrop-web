@@ -1,6 +1,6 @@
 (()=>{
   const $=s=>document.querySelector(s);
-  let SUP=null,PRODUCTS=[],VARIANTS=[],IMAGES=[],ORDERS=[],ITEMS=[],REQUESTS=[],QUOTES=[],CATEGORIES=[],SAMPLES=[],SELECTED_IMAGES=[],ORDER_FILTER='all',NEW_CONTENT_LANG='en',NEW_SOURCE_LANGUAGE='en',EDIT_CONTENT_LANG='en',VARIANT_MODE='single',PRODUCT_STEP=3,VARIANT_ADVANCED=false,SIMPLE_PRODUCT_FLOW=true,VARIANT_PRICES_VARY=false;
+  let SUP=null,PRODUCTS=[],VARIANTS=[],IMAGES=[],ORDERS=[],ITEMS=[],REQUESTS=[],QUOTES=[],CATEGORIES=[],SAMPLES=[],SETTLEMENTS=[],SELECTED_IMAGES=[],ORDER_FILTER='all',NEW_CONTENT_LANG='en',NEW_SOURCE_LANGUAGE='en',EDIT_CONTENT_LANG='en',VARIANT_MODE='single',PRODUCT_STEP=3,VARIANT_ADVANCED=false,SIMPLE_PRODUCT_FLOW=true,VARIANT_PRICES_VARY=false;
   const SELECTED_PRODUCT_IDS=new Set();
   const VARIANT_COMBO_STATE=new Map();
   const VARIANT_IMAGE_STATE=new Map();
@@ -11,6 +11,7 @@
     overview:['Overview','What needs your attention.'],
     products:['My Products','Your products and stock.'],
     orders:['Orders','Ship customer orders.'],
+    money:['Payouts','Track supplier earnings and IzzyDrop commission.'],
     requests:['Requests','Products dropshippers want sourced.'],
     add:['Add product','Build a clean marketplace listing.'],
     samples:['Samples','Sample requests from dropshippers.'],
@@ -743,6 +744,38 @@
     }
   }
 
+  function renderMoney(){
+    const summary=$('#supplier-money-summary'),list=$('#supplier-money-list');
+    if(!summary||!list)return;
+    const rows=Array.isArray(SETTLEMENTS)?SETTLEMENTS:[];
+    const pending=rows.filter(x=>x.payout_status==='pending').reduce((n,x)=>n+Number(x.supplier_net_amount||0),0);
+    const paid=rows.filter(x=>x.payout_status==='paid').reduce((n,x)=>n+Number(x.supplier_net_amount||0),0);
+    const commission=rows.filter(x=>['ready','refunded','void'].includes(x.settlement_status)).reduce((n,x)=>n+Number(x.platform_commission_amount||0),0);
+    const blocked=rows.filter(x=>['blocked','reversal_required'].includes(x.payout_status)).reduce((n,x)=>n+Number(x.supplier_net_amount||0),0);
+    summary.innerHTML=[
+      [local('Pending payout','مستحق قيد الدفع'),IZZY.money(pending,'EGP')],
+      [local('Paid out','تم دفعه'),IZZY.money(paid,'EGP')],
+      [local('IzzyDrop commission','عمولة IzzyDrop'),IZZY.money(commission,'EGP')],
+      [local('Blocked / reversed','محجوب / معكوس'),IZZY.money(blocked,'EGP')]
+    ].map(([k,v])=>`<div class="card cod-stat"><small>${k}</small><strong>${v}</strong></div>`).join('');
+
+    list.innerHTML=rows.map(x=>{
+      const tagClass=x.payout_status==='paid'?'ok':x.payout_status==='pending'?'warn':'bad';
+      return `<article class="card order-card">
+        <div class="order-card-head">
+          <div><span class="order-id">${IZZY.esc(x.external_order_ref||String(x.order_id).slice(0,8))}</span><small>${new Date(x.created_at).toLocaleString()}</small></div>
+          <span class="tag ${tagClass}">${IZZY.esc(x.payout_status||x.settlement_status||'')}</span>
+        </div>
+        <div class="order-summary-grid">
+          <div><small>${local('Your supplier price','سعر المورّد الخاص بك')}</small><b>${IZZY.money(x.supplier_gross_amount||0,x.currency||'EGP')}</b></div>
+          <div><small>${local('IzzyDrop commission','عمولة IzzyDrop')}</small><b>${IZZY.money(x.platform_commission_amount||0,x.currency||'EGP')}</b><span>${Number(x.commission_rate||0).toFixed(2)}%</span></div>
+          <div><small>${local('Your payout','مستحقك')}</small><b>${IZZY.money(x.supplier_net_amount||0,x.currency||'EGP')}</b></div>
+          <div><small>${local('Order status','حالة الطلب')}</small><b>${IZZY.esc(window.IZZY_I18N?.status?.(x.order_status)||x.order_status||'')}</b><span>${IZZY.esc(window.IZZY_I18N?.status?.(x.payment_status)||x.payment_status||'')}</span></div>
+        </div>
+      </article>`;
+    }).join('')||`<div class="empty-state"><div class="empty-icon">EGP</div><h3>${local('No payout records yet','لا توجد سجلات مستحقات بعد')}</h3><p>${local('Delivered COD orders will appear here automatically.','ستظهر طلبات الدفع عند الاستلام التي تم توصيلها هنا تلقائيًا.')}</p></div>`;
+  }
+
   async function fulfill(btn){
     const id=btn.dataset.id;
     const carrier=document.querySelector(`[data-carrier="${id}"]`)?.value?.trim()||null;
@@ -847,7 +880,7 @@
   }
 
   async function load(showMessage=false){
-    const [supplierRows,products,variants,orders,items,requests,quotes,categories,samples]=await Promise.all([
+    const [supplierRows,products,variants,orders,items,requests,quotes,categories,samples,settlements]=await Promise.all([
       IZZY.request(`/rest/v1/suppliers?select=id,business_name,status,low_stock_threshold,notification_preferences&id=eq.${encodeURIComponent(SUP.id)}&limit=1`),
       IZZY.request(`/rest/v1/supplier_products?select=*&supplier_id=eq.${encodeURIComponent(SUP.id)}&order=created_at.desc`),
       IZZY.request('/rest/v1/product_variants?select=*&order=created_at.asc'),
@@ -856,7 +889,8 @@
       IZZY.request('/rest/v1/product_requests?select=*&status=in.(open,matched,accepted)&order=created_at.desc&limit=100'),
       IZZY.request(`/rest/v1/product_request_quotes?select=*&supplier_id=eq.${encodeURIComponent(SUP.id)}&order=created_at.desc&limit=100`),
       IZZY.request('/rest/v1/categories?select=id,name,name_ar&order=name.asc'),
-      IZZY.rpc('supplier_samples')
+      IZZY.rpc('supplier_samples'),
+      IZZY.rpc('supplier_settlements')
     ]);
 
     if(supplierRows?.[0]){
@@ -871,6 +905,7 @@
     QUOTES=quotes||[];
     CATEGORIES=categories||[];
     SAMPLES=Array.isArray(samples)?samples:[];
+    SETTLEMENTS=Array.isArray(settlements)?settlements:[];
 
     if(PRODUCTS.length){
       const ids=PRODUCTS.map(p=>p.id).join(',');
@@ -884,6 +919,7 @@
     renderSourcingRequests();
     renderSamples();
     renderOrders();
+    renderMoney();
     if(showMessage)msg('Supplier workspace updated.');
   }
 
