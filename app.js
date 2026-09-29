@@ -271,7 +271,8 @@
       }).join(' · ')||local('Order items','عناصر الطلب');
       const tracking=items.map(i=>i.tracking_number?`${IZZY.esc(i.shipping_carrier||local('Carrier','شركة الشحن'))}: ${IZZY.esc(i.tracking_number)}`:'').filter(Boolean).join(' · ');
       let actions='';
-      if(o.status==='shipped')actions=`<div class="order-delivery-actions"><button class="btn secondary delivery-status-btn" data-id="${o.id}" data-next="in_transit">${local('Mark in transit','تحديد قيد التوصيل')}</button><button class="btn delivery-status-btn" data-id="${o.id}" data-next="delivered">${local('Delivered','تم التوصيل')}</button><button class="btn secondary delivery-status-btn" data-id="${o.id}" data-next="refused">${local('Customer refused','رفض العميل')}</button></div>`;
+      if(['pending','processing'].includes(o.status))actions=`<div class="order-delivery-actions"><button class="btn secondary cancel-order-btn" data-id="${o.id}">${local('Cancel order','إلغاء الطلب')}</button></div>`;
+      else if(o.status==='shipped')actions=`<div class="order-delivery-actions"><button class="btn secondary delivery-status-btn" data-id="${o.id}" data-next="in_transit">${local('Mark in transit','تحديد قيد التوصيل')}</button><button class="btn delivery-status-btn" data-id="${o.id}" data-next="delivered">${local('Delivered','تم التوصيل')}</button><button class="btn secondary delivery-status-btn" data-id="${o.id}" data-next="refused">${local('Customer refused','رفض العميل')}</button></div>`;
       else if(o.status==='in_transit')actions=`<div class="order-delivery-actions"><button class="btn delivery-status-btn" data-id="${o.id}" data-next="delivered">${local('Delivered','تم التوصيل')}</button><button class="btn secondary delivery-status-btn" data-id="${o.id}" data-next="refused">${local('Customer refused','رفض العميل')}</button><button class="btn secondary delivery-status-btn" data-id="${o.id}" data-next="returned">${local('Returned','مرتجع')}</button></div>`;
       else if(['delivered','refused'].includes(o.status))actions=`<div class="order-delivery-actions"><button class="auth-text-button delivery-status-btn" data-id="${o.id}" data-next="returned">${local('Mark returned','تحديد كمرتجع')}</button></div>`;
 
@@ -300,6 +301,17 @@
     }).join('')||`<div class="empty-state"><div class="empty-icon">□</div><h3>${local('No orders found','لا توجد طلبات')}</h3><p>${local('Create your first order when a customer buys one of your products.','أنشئ أول طلب عندما يشتري عميل أحد منتجاتك.')}</p></div>`;
 
     document.querySelectorAll('.delivery-status-btn').forEach(b=>b.onclick=()=>updateDeliveryStatus(b));
+    document.querySelectorAll('.cancel-order-btn').forEach(b=>b.onclick=()=>cancelOrder(b));
+  }
+
+  async function cancelOrder(btn){
+    if(!confirm(local('Cancel this order? Reserved stock will be returned to inventory.','إلغاء هذا الطلب؟ سيتم إرجاع المخزون المحجوز إلى المخزون المتاح.')))return;
+    btn.disabled=true;
+    try{
+      await IZZY.rpc('dropshipper_cancel_order',{_order_id:btn.dataset.id});
+      status(local('Order cancelled and stock restored.','تم إلغاء الطلب وإرجاع المخزون.'));
+      await load(false);
+    }catch(e){status(e.message,true);btn.disabled=false}
   }
 
   async function updateDeliveryStatus(btn){
