@@ -553,20 +553,23 @@
     if(!summary||!list)return;
     const rows=Array.isArray(SETTLEMENTS)?SETTLEMENTS:[];
     const pending=rows.filter(x=>x.payout_status==='pending').reduce((n,x)=>n+Number(x.dropshipper_profit_amount||0),0);
+    const awaiting=rows.filter(x=>x.payout_status==='not_ready'&&x.settlement_status==='ready').reduce((n,x)=>n+Number(x.dropshipper_profit_amount||0),0);
     const paid=rows.filter(x=>x.payout_status==='paid').reduce((n,x)=>n+Number(x.dropshipper_profit_amount||0),0);
     const blocked=rows.filter(x=>['blocked','reversal_required'].includes(x.payout_status)).reduce((n,x)=>n+Number(x.dropshipper_profit_amount||0),0);
     summary.innerHTML=[
+      [local('Awaiting courier remittance','في انتظار تحويل شركة الشحن'),IZZY.money(awaiting,'EGP')],
       [local('Pending payout','مستحق قيد الدفع'),IZZY.money(pending,'EGP')],
       [local('Paid out','تم دفعه'),IZZY.money(paid,'EGP')],
-      [local('Blocked / reversed','محجوب / معكوس'),IZZY.money(blocked,'EGP')]
+      [local('Not payable','غير مستحق للدفع'),IZZY.money(blocked,'EGP')]
     ].map(([k,v])=>`<div class="card cod-stat"><small>${k}</small><strong>${v}</strong></div>`).join('');
 
     list.innerHTML=rows.map(x=>{
-      const tagClass=x.payout_status==='paid'?'ok':x.payout_status==='pending'?'warn':'bad';
+      const tagClass=x.payout_status==='paid'?'ok':x.payout_status==='pending'?'warn':['blocked','reversal_required'].includes(x.payout_status)?'bad':'';
+      const payoutLabel=x.payout_status==='not_ready'&&x.settlement_status==='ready'?local('Awaiting courier remittance','في انتظار تحويل شركة الشحن'):x.payout_status;
       return `<article class="card order-card">
         <div class="order-card-head">
           <div><span class="order-id">${IZZY.esc(x.external_order_ref||String(x.order_id).slice(0,8))}</span><small>${new Date(x.created_at).toLocaleString()}</small></div>
-          <span class="tag ${tagClass}">${IZZY.esc(x.payout_status||x.settlement_status||'')}</span>
+          <span class="tag ${tagClass}">${IZZY.esc(payoutLabel||x.settlement_status||'')}</span>
         </div>
         <div class="order-summary-grid">
           <div><small>${local('Actual selling amount','قيمة البيع الفعلية')}</small><b>${IZZY.money(x.retail_amount||0,x.currency||'EGP')}</b></div>
