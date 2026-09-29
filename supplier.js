@@ -713,7 +713,7 @@
         <div class="supplier-order-grid">
           <div><small>${local('Customer','العميل')}</small><b>${IZZY.esc(o.customer_name||'—')}</b><span>${IZZY.esc(o.customer_phone||'—')}</span></div>
           <div><small>${local('Delivery address','عنوان التوصيل')}</small><b>${IZZY.esc([addr.address1,addr.city,addr.governorate].filter(Boolean).join(', ')||'—')}</b></div>
-          <div><small>${local('Quantity','الكمية')}</small><b>${Number(i.quantity||1)}</b><span>${IZZY.money(i.retail_price_at_purchase,o.currency||'EGP')} ${local('each','للوحدة')}</span></div>
+          <div><small>${local('Quantity','الكمية')}</small><b>${Number(i.quantity||1)}</b><span>${local('Supplier price','سعر المورّد')}: ${IZZY.money(i.cost_price_at_purchase,o.currency||'EGP')} ${local('each','للوحدة')}</span></div>
         </div>
 
         ${fulfillmentUi}
