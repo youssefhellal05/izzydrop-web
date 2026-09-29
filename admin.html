@@ -37,6 +37,7 @@
           <button data-view="suppliers"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20v-9l8-5 8 5v9M8 20v-6h8v6"/></svg><span>Suppliers</span></button>
           <button data-view="products"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h8M8 17h5"/></svg><span>Products</span></button>
           <button data-view="orders"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v14H4zM8 3v6M16 3v6M8 13h8M8 17h5"/></svg><span>Orders</span></button>
+          <button data-view="settlements"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16v12H4zM4 10h16M8 15h4M16 15h.01"/></svg><span>Settlements</span></button>
           <button data-view="commissions"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5M8 8h.01M16 16h.01"/><circle cx="8" cy="8" r="2"/><circle cx="16" cy="16" r="2"/></svg><span>Commissions</span></button>
           <button data-view="shipping"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h11v10H3zM14 10h4l3 3v4h-7zM7 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM18 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg><span>Shipping</span></button>
           <button data-view="admins"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21v-3a5 5 0 0 1 10 0v3M17 8v6M14 11h6"/></svg><span>Admins</span></button>
@@ -136,6 +137,12 @@
           <div id="orders" class="orders-list admin-orders-list"></div>
         </section>
 
+        <section id="view-settlements" class="view" hidden>
+          <div class="section-heading"><div><h2>Settlements</h2><p class="muted">Confirm courier COD remittance, then release supplier and dropshipper payouts.</p></div></div>
+          <div id="settlement-summary" class="cod-summary-grid"></div>
+          <div id="settlements" class="orders-list"></div>
+        </section>
+
         <section id="view-commissions" class="view" hidden>
           <div class="section-heading"><div><h2>Commissions</h2><p class="muted">Control the marketplace default, supplier overrides, and product overrides.</p></div></div>
 
@@ -213,7 +220,7 @@
 
 <script src="config.js"></script>
 <script src="common.js?v=20260925-shipping1"></script><script src="i18n.js?v=20260925-shipping1"></script>
-<script src="admin.js?v=20260925-shipping1"></script>
+<script src="admin.js?v=20260930-settlements1"></script>
 <script>window.IZZY_SETTINGS_ROLE="admin"</script>
 <script src="settings.js?v=20260925-shipping1"></script>
 </body>
