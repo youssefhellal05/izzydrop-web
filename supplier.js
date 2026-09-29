@@ -671,8 +671,36 @@
     $('#orders').innerHTML=list.map(i=>{
       const o=orderFor(i.order_id),p=productFor(i.supplier_product_id),addr=o.shipping_address||{},state=supplierOrderState(i);
       const shipped=i.fulfillment_status==='fulfilled',cancelled=state==='cancelled';
+      const returnPending=state==='returned'&&!i.return_received_at;
+      const returnProcessed=state==='returned'&&!!i.return_received_at;
       const stateBad=['cancelled','refused','returned'].includes(state);
       const stateOk=['shipped','in_transit','delivered'].includes(state);
+      let fulfillmentUi='';
+      if(returnPending){
+        fulfillmentUi=`<div class="fulfillment-box">
+          <div><b>${local('Return received?','هل وصل المرتجع؟')}</b><small>${local('Only confirm this after the package is physically back with you.','أكد فقط بعد وصول الشحنة المرتجعة إليك فعليًا.')}</small></div>
+          <div class="fulfillment-fields">
+            <button class="btn return-receive-btn" data-id="${i.id}" data-disposition="restocked">${local('Return received — Restock','تم استلام المرتجع — إعادة للمخزون')}</button>
+            <button class="btn secondary return-receive-btn" data-id="${i.id}" data-disposition="damaged">${local('Return received — Damaged','تم استلام المرتجع — تالف')}</button>
+          </div>
+        </div>`;
+      }else if(returnProcessed){
+        const restocked=i.return_disposition==='restocked';
+        fulfillmentUi=`<div class="fulfilled-strip"><span>${local('Return received','تم استلام المرتجع')}</span><b>${restocked?local('Restocked','أعيد للمخزون'):local('Damaged / not restocked','تالف / لم يُعد للمخزون')} · ${new Date(i.return_received_at).toLocaleString()}</b></div>`;
+      }else if(shipped){
+        fulfillmentUi=`<div class="fulfilled-strip"><span>${local('Shipped','تم الشحن')}</span><b>${IZZY.esc(i.shipping_carrier||local('Carrier','شركة الشحن'))} ${IZZY.esc(i.tracking_number||'')}</b></div>`;
+      }else if(cancelled){
+        fulfillmentUi='<div class="notice">'+local('This order item was cancelled.','تم إلغاء هذا العنصر.')+'</div>';
+      }else{
+        fulfillmentUi=`<div class="fulfillment-box">
+          <div><b>${local('Shipping','الشحن')}</b><small>${local('Add tracking when the order leaves you.','أضف بيانات التتبع عندما يخرج الطلب للشحن.')}</small></div>
+          <div class="fulfillment-fields">
+            <input data-carrier="${i.id}" placeholder="${local('Shipping carrier','شركة الشحن')}">
+            <input data-tracking="${i.id}" placeholder="${local('Tracking number','رقم التتبع')}">
+            <button class="btn fulfill-btn" data-id="${i.id}">${local('Mark shipped','تحديد كمشحون')}</button>
+          </div>
+        </div>`;
+      }
       return `<article class="card supplier-order-card ${state==='new'?'is-new':''}">
         <div class="supplier-order-head">
           <div>
@@ -688,20 +716,31 @@
           <div><small>${local('Quantity','الكمية')}</small><b>${Number(i.quantity||1)}</b><span>${IZZY.money(i.retail_price_at_purchase,o.currency||'EGP')} ${local('each','للوحدة')}</span></div>
         </div>
 
-        ${shipped?`<div class="fulfilled-strip"><span>${local('Shipped','تم الشحن')}</span><b>${IZZY.esc(i.shipping_carrier||local('Carrier','شركة الشحن'))} ${IZZY.esc(i.tracking_number||'')}</b></div>`:
-          cancelled?'<div class="notice">'+local('This order item was cancelled.','تم إلغاء هذا العنصر.')+'</div>':
-          `<div class="fulfillment-box">
-            <div><b>${local('Shipping','الشحن')}</b><small>${local('Add tracking when the order leaves you.','أضف بيانات التتبع عندما يخرج الطلب للشحن.')}</small></div>
-            <div class="fulfillment-fields">
-              <input data-carrier="${i.id}" placeholder="${local('Shipping carrier','شركة الشحن')}">
-              <input data-tracking="${i.id}" placeholder="${local('Tracking number','رقم التتبع')}">
-              <button class="btn fulfill-btn" data-id="${i.id}">${local('Mark shipped','تحديد كمشحون')}</button>
-            </div>
-          </div>`}
+        ${fulfillmentUi}
       </article>`;
     }).join('')||`<div class="empty-state"><div class="empty-icon">□</div><h3>${local('No orders found','لا توجد طلبات')}</h3><p>${local('Orders will appear here when dropshippers sell your products.','ستظهر الطلبات هنا عندما يبيع الدروبشيبرز منتجاتك.')}</p></div>`;
 
     document.querySelectorAll('.fulfill-btn').forEach(b=>b.onclick=()=>fulfill(b));
+    document.querySelectorAll('.return-receive-btn').forEach(b=>b.onclick=()=>receiveReturn(b));
+  }
+
+  async function receiveReturn(btn){
+    const disposition=btn.dataset.disposition;
+    const restock=disposition==='restocked';
+    const question=restock
+      ? local('Confirm the returned item is physically back and sellable? This will add it back to stock.','تأكيد وصول المرتجع وأنه صالح للبيع؟ سيتم إرجاعه للمخزون.')
+      : local('Confirm the returned item is physically back but should NOT be restocked?','تأكيد وصول المرتجع لكنه لا يجب أن يعود للمخزون؟');
+    if(!confirm(question))return;
+    const siblings=btn.parentElement?.querySelectorAll('.return-receive-btn')||[];
+    siblings.forEach(x=>x.disabled=true);
+    try{
+      await IZZY.rpc('supplier_receive_return',{_order_item_id:btn.dataset.id,_disposition:disposition});
+      msg(restock?local('Return received and restocked.','تم استلام المرتجع وإعادته للمخزون.'):local('Return received and marked damaged.','تم استلام المرتجع وتحديده كتالف.'));
+      await load(false);
+    }catch(e){
+      msg(e.message,true);
+      siblings.forEach(x=>x.disabled=false);
+    }
   }
 
   async function fulfill(btn){
