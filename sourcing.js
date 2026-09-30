@@ -1,4 +1,4 @@
-// Community sourcing is separate from catalog products, inventory and customer orders.
+// Community sourcing keeps its own request/history layer. Marking an offer Sourced publishes a catalog product, but never creates customer orders or adds it to My Products automatically.
 (()=>{
   const esc=v=>IZZY.esc(v), money=v=>v==null?'Not specified':IZZY.money(v,'EGP');
   const safeUrl=v=>{try{const u=new URL(v);return ['http:','https:'].includes(u.protocol)?u.href:''}catch{return ''}};
@@ -69,7 +69,7 @@
         const closed=['closed','archived'].includes(r.status);
         return `<article class="card order-card sourcing-post" id="sourced-${o.id}">
           <div class="order-card-head"><div><h3>${esc(r.title||'Sourced product')}</h3><small>${esc(o.supplier_name||'IzzyDrop Supplier')}</small></div>${tag('sourced')}</div>
-          ${image(o.image_url)}<div class="notice">Found by a supplier. ${o.catalog_slug?'Also published in Products.':'Not yet a stocked marketplace product.'} Showing interest creates demand only.</div>
+          ${image(o.image_url)}<div class="notice">Found by a supplier. ${o.catalog_slug?'Published in Products and kept here with its sourcing history.':'Legacy sourced offer: no catalog product is linked yet.'} Showing interest records demand only; adding it to My Products is still your choice.</div>
           ${offerDetails(o,r)}
           <div class="sourcing-post-actions"><button class="btn" data-interest-offer="${o.id}" ${o.interested||closed?'disabled':''}>${o.interested?'Requested ✓':closed?'Request closed':'Request this product'}</button>
           ${o.catalog_slug?'<a class="btn secondary" href="product.html?slug='+encodeURIComponent(o.catalog_slug)+'&from=app">View published product</a>':''}</div>
@@ -102,14 +102,11 @@
             <label>Or upload a product image<input name="image_file" type="file" accept="image/jpeg,image/png,image/webp"><small>JPG, PNG or WebP · max 5 MB</small></label>
             <label class="span-2">Supplier notes<textarea name="supplier_notes" maxlength="5000" data-final>${esc(o.supplier_notes||'')}</textarea></label>
             <label class="span-2">Additional sourcing information (optional)<textarea name="sourcing_details" maxlength="5000">${esc(o.sourcing_details||'')}</textarea></label>
-            <p class="muted span-2">Save estimates while researching. Mark Sourced only when you can supply this item. This does not publish a catalog product.</p>
+            <p class="muted span-2">Save estimates while researching. Mark Sourced only when you can supply this item. Marking Sourced publishes it to Products automatically with a default variant using the sourced price, recommended retail and available quantity. It does not create an order or add it to anyone's My Products.</p>
             <button class="btn secondary" name="save" type="submit">Save ${o.status==='sourced'?'information':'estimates'}</button>
             ${o.status==='sourcing'?'<button class="btn" name="complete" type="submit">Mark Sourced</button>':''}
           </form></details>`}
-          ${o.status==='sourced'?`<details><summary>Link a separately created catalog product</summary>
-          <p class="muted">Create and publish the actual stocked product in Products first. Linking preserves the relationship and alerts interested dropshippers when it is available. It never adds it to My Products.</p>
-          ${o.catalog_product_id?'<p>Catalog relationship saved. '+(o.catalog_slug?'Published and available.':'Waiting for publication.')+'</p>':`<form class="sourcing-catalog-form" data-response-id="${o.id}"><label>Your catalog product<select name="product_id" required><option value="">Choose the product you created separately</option>${(products||[]).map(p=>'<option value="'+p.id+'">'+esc(p.name)+' · '+esc(p.status)+'</option>').join('')}</select></label><button class="btn secondary">Link catalog product</button></form>`}
-          </details>`:''}`}
+          ${o.status==='sourced'?`<div class="notice ${o.catalog_slug?'ok':''}">${o.catalog_slug?'Published in Products automatically. The sourcing history stays here, and dropshippers still choose whether to add it to My Products.':'This legacy sourced offer was created before automatic catalog publishing.'}${o.catalog_slug?' <a class="auth-text-button" href="product.html?slug='+encodeURIComponent(o.catalog_slug)+'&from=supplier">View product →</a>':''}</div>`:''}
         </article>`;
     }).join('')||empty('No sourcing opportunities yet');
     root.querySelectorAll('[data-start-sourcing]').forEach(b=>b.onclick=()=>action(b,()=>IZZY.rpc('sourcing_start',{_request_id:b.dataset.startSourcing}),refresh));
@@ -133,7 +130,6 @@
         },refresh);
       };
     });
-    root.querySelectorAll('.sourcing-catalog-form').forEach(f=>f.onsubmit=e=>{e.preventDefault();return action(f.querySelector('button'),()=>IZZY.rpc('sourcing_link_catalog',{_response_id:f.dataset.responseId,_product_id:f.elements.product_id.value}),refresh)});
   }
   window.IZZY_SOURCING={renderDropshipper,renderSupplier};
 })();
