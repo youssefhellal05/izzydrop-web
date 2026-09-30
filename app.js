@@ -1,13 +1,14 @@
 (()=>{
   const $=s=>document.querySelector(s);
-  let PRODUCTS=[],LINKED_PRODUCTS=[],LINKS=[],INTEGRATIONS=[],INTEGRATION_VARIANTS=[],ORDERS=[],ITEMS=[],REQUESTS=[],QUOTES=[],SAMPLES=[],ALERTS=[],SETTLEMENTS=[],COD={},SHIPPING={},PRICE_RANGES=[],ORDER_VARIANTS=[],SESSION=null,DROPSHIPPER=null,ORDER_FILTER='all',CURRENT_WEB_TOKEN=null;
+  let PRODUCTS=[],LINKED_PRODUCTS=[],LINKS=[],INTEGRATIONS=[],INTEGRATION_VARIANTS=[],ORDERS=[],ITEMS=[],SOURCING_BOARD={},SAMPLES=[],ALERTS=[],SETTLEMENTS=[],COD={},SHIPPING={},PRICE_RANGES=[],ORDER_VARIANTS=[],SESSION=null,DROPSHIPPER=null,ORDER_FILTER='all',CURRENT_WEB_TOKEN=null;
 
   const VIEW_COPY={
     products:['Products','Find products to sell.'],
     linked:['My products','Products you chose to sell.'],
     orders:['Orders','Create and track customer orders.'],
     money:['Money','Track actual COD profit and payout status.'],
-    requests:['Find a product','Ask suppliers to source something you need.'],
+    requests:['Sourcing requests','Products the community wants suppliers to find.'],
+    sourced:['Sourced products','Found by suppliers, not necessarily stocked in the marketplace.'],
     samples:['Samples','Track product samples.'],
     settings:['Settings','Account and preferences.']
   };
@@ -606,62 +607,23 @@
   }
 
   function renderRequests(){
-    const el=$('#product-requests');if(!el)return;
-    const byRequest=new Map();
-    (QUOTES||[]).forEach(q=>{if(!byRequest.has(q.request_id))byRequest.set(q.request_id,[]);byRequest.get(q.request_id).push(q)});
-    el.innerHTML=(REQUESTS||[]).map(r=>{
-      const quotes=byRequest.get(r.id)||[];
-      const quoteHtml=quotes.map(q=>{
-        const accepted=q.status==='accepted';
-        const declined=q.status==='declined';
-        const pname=productName({name:q.product_name,name_en:q.product_name_en,name_ar:q.product_name_ar});
-        const qVariant=variantLabel({option_values:q.variant_options,variant_name:q.variant_name,sku:q.variant_sku});
-        return `<div class="sourcing-quote ${accepted?'is-accepted':''} ${declined?'is-declined':''}">
-          <div><b>${IZZY.esc(publicSupplierName(q.supplier_name))}</b><small>${q.available_quantity==null?'':`${q.available_quantity} ${local('available','متاح')}`}${q.lead_time_days==null?'':` · ${q.lead_time_days} ${local('day lead time','يوم مدة تجهيز')}`}</small></div>
-          <strong>${IZZY.money(q.offered_cost,'EGP')}</strong>
-          ${q.suggested_retail_price==null?'':`<small>${local('Suggested retail','السعر المقترح')}: ${IZZY.money(q.suggested_retail_price,'EGP')} · ${local('suggestion only','اقتراح فقط')}</small>`}
-          ${q.message?`<p>${IZZY.esc(q.message)}</p>`:''}
-          ${pname?`<small>${local('Matched product','المنتج المطابق')}: ${IZZY.esc(pname)}${q.variant_id?` · ${local('Variant','الخيار')}: ${IZZY.esc(qVariant)}`:''}</small>`:''}
-          <div class="sourcing-quote-actions">
-            ${q.public_slug?`<a class="btn secondary" href="product.html?slug=${encodeURIComponent(q.public_slug)}&from=app">${local('View product','عرض المنتج')}</a>`:''}
-            ${!accepted&&!declined&&r.status!=='accepted'&&q.product_id?`<button class="btn accept-quote" data-id="${q.id}">${local('Accept quote','قبول العرض')}</button>`:''}
-            ${!accepted&&!declined&&!q.product_id?`<span class="muted">${local('Waiting for supplier to link a product.','في انتظار أن يربط المورّد منتجًا بالعرض.')}</span>`:''}
-            ${accepted?`<span class="tag ok">${local('Accepted','تم القبول')}</span>`:''}
-            ${declined?`<span class="tag">${local('Not selected','لم يتم اختياره')}</span>`:''}
-          </div>
-        </div>`;
-      }).join('');
-      return `<article class="card order-card">
-        <div class="order-card-head"><div><span class="order-id">${IZZY.esc(r.title)}</span><small>${new Date(r.created_at).toLocaleString()}</small></div><span class="tag ${r.status==='accepted'?'ok':r.status==='matched'?'ok':'warn'}">${IZZY.esc(window.IZZY_I18N?.status?.(r.status)||r.status)}</span></div>
-        <div class="order-summary-grid"><div><small>${local('Target cost','التكلفة المستهدفة')}</small><b>${r.target_cost==null?'—':IZZY.money(r.target_cost,'EGP')}</b></div><div><small>${local('Source','المصدر')}</small><b>${r.source_url?'<a href="'+IZZY.esc(r.source_url)+'" target="_blank" rel="noopener">'+local('Open link','فتح الرابط')+'</a>':'—'}</b></div><div><small>${local('Notes','ملاحظات')}</small><span>${IZZY.esc(r.notes||'—')}</span></div></div>
-        <div class="sourcing-quotes">${quoteHtml||`<div class="notice">${local('No supplier quotes yet.','لا توجد عروض من المورّدين بعد.')}</div>`}</div>
-      </article>`;
-    }).join('')||`<div class="empty-state"><div class="empty-icon">⌕</div><h3>${local('No sourcing requests yet','لا توجد طلبات توريد بعد')}</h3><p>${local('Send a product link or description and IzzyDrop suppliers can quote it.','أرسل رابط منتج أو وصفًا وسيتمكن مورّدو IzzyDrop من تقديم عروض.')}</p></div>`;
-
-    document.querySelectorAll('.accept-quote').forEach(btn=>btn.onclick=async()=>{
-      if(!confirm(local('Accept this supplier quote? Other quotes for this request will be closed.','قبول عرض هذا المورّد؟ سيتم إغلاق باقي العروض لهذا الطلب.')))return;
-      btn.disabled=true;
-      try{
-        await IZZY.rpc('accept_product_request_quote',{_quote_id:btn.dataset.id});
-        status(local('Supplier quote accepted and product added to My Products.','تم قبول عرض المورّد وإضافة المنتج إلى منتجاتي.'));
-        await load(false);
-      }catch(e){status(e.message,true);btn.disabled=false}
-    });
+    window.IZZY_SOURCING.renderDropshipper(SOURCING_BOARD,()=>load(false));
   }
 
   function renderAlerts(){
-    const el=$('#inventory-alerts');if(!el)return;
     const unread=(ALERTS||[]).filter(a=>!a.read_at);
-    el.innerHTML=unread.slice(0,8).map(a=>`<div class="notice alert-notice"><b>${IZZY.esc(a.title)}</b><span>${IZZY.esc(a.message)}</span><button class="auth-text-button mark-alert" data-id="${a.id}">Mark read</button></div>`).join('');
+    const html=rows=>rows.map(a=>`<div class="notice alert-notice"><b>${IZZY.esc(a.title)}</b><span>${IZZY.esc(a.message)}</span>${a.sourcing_response_id?`<a class="btn secondary" href="app.html?sourced=${encodeURIComponent(a.sourcing_response_id)}">Open sourced offer</a>`:''}<button class="auth-text-button mark-alert" data-id="${a.id}">Mark read</button></div>`).join('');
+    const inventory=$('#inventory-alerts');if(inventory)inventory.innerHTML=html(unread.slice(0,8));
+    document.querySelectorAll('.sourcing-alert-stack').forEach(el=>el.innerHTML=html(unread.filter(a=>a.sourcing_response_id).slice(0,8)));
     document.querySelectorAll('.mark-alert').forEach(b=>b.onclick=async()=>{
-      await IZZY.request(`/rest/v1/dropshipper_alerts?id=eq.${encodeURIComponent(b.dataset.id)}`,{method:'PATCH',body:JSON.stringify({read_at:new Date().toISOString()})});
-      await load(false);
+      b.disabled=true;
+      try{await IZZY.request(`/rest/v1/dropshipper_alerts?id=eq.${encodeURIComponent(b.dataset.id)}`,{method:'PATCH',body:JSON.stringify({read_at:new Date().toISOString()})});await load(false)}catch(e){status(e.message,true);b.disabled=false}
     });
   }
 
   async function load(showMessage=false){
     try{
-      [PRODUCTS,LINKED_PRODUCTS,LINKS,INTEGRATIONS,INTEGRATION_VARIANTS,ORDERS,ITEMS,REQUESTS,QUOTES,SAMPLES,ALERTS,COD,SHIPPING,PRICE_RANGES,SETTLEMENTS]=await Promise.all([
+      [PRODUCTS,LINKED_PRODUCTS,LINKS,INTEGRATIONS,INTEGRATION_VARIANTS,ORDERS,ITEMS,SOURCING_BOARD,SAMPLES,ALERTS,COD,SHIPPING,PRICE_RANGES,SETTLEMENTS]=await Promise.all([
         IZZY.rpc('marketplace_catalog_v3'),
         IZZY.rpc('dropshipper_linked_catalog'),
         IZZY.request('/rest/v1/dropshipper_product_links?select=*&order=created_at.desc'),
@@ -669,8 +631,7 @@
         IZZY.request('/rest/v1/storefront_integration_variants?select=*&order=created_at.asc'),
         IZZY.request('/rest/v1/orders?select=*&order=created_at.desc&limit=100'),
         IZZY.request('/rest/v1/order_items?select=id,order_id,supplier_product_id,variant_id,quantity,retail_price_at_purchase,fulfillment_status,tracking_number,shipping_carrier,created_at&order=created_at.desc&limit=200'),
-        IZZY.request('/rest/v1/product_requests?select=*&order=created_at.desc&limit=50'),
-        IZZY.rpc('dropshipper_sourcing_quotes'),
+        IZZY.rpc('sourcing_board'),
         IZZY.rpc('dropshipper_samples'),
         IZZY.request('/rest/v1/dropshipper_alerts?select=*&order=created_at.desc&limit=50'),
         IZZY.rpc('dropshipper_cod_metrics'),
@@ -711,6 +672,8 @@
     go('products');
     await load();
     const params=new URLSearchParams(location.search);
+    const sourcedOffer=params.get('sourced');
+    if(sourcedOffer){go('sourced');const card=document.getElementById('sourced-'+sourcedOffer);if(card){card.classList.add('is-highlighted');card.scrollIntoView({block:'center'});}else status('This sourced offer is no longer available.',true);}
     const addProduct=params.get('add');
     const sampleProduct=params.get('sample');
     if(addProduct){
@@ -893,13 +856,15 @@
     const btn=$('#request-submit'),st=$('#request-status');
     btn.disabled=true;btn.textContent='Sending…';st.textContent='Sending request…';st.className='status';
     try{
-      const id=await IZZY.rpc('create_product_request',{
-        _title:$('#request-title').value.trim(),
-        _source_url:$('#request-url').value.trim()||null,
-        _image_url:$('#request-image').value.trim()||null,
-        _notes:$('#request-notes').value.trim()||null,
-        _target_cost:$('#request-target-cost').value===''?null:Number($('#request-target-cost').value)
-      });
+      const id=await IZZY.rpc('sourcing_create_request',{_data:{
+        title:$('#request-title').value.trim(),
+        description:$('#request-description').value.trim(),
+        source_url:$('#request-url').value.trim()||null,
+        image_url:$('#request-image').value.trim()||null,
+        notes:$('#request-notes').value.trim()||null,
+        expected_quantity:$('#request-quantity').value===''?null:Number($('#request-quantity').value),
+        target_cost:$('#request-target-cost').value===''?null:Number($('#request-target-cost').value)
+      }});
       st.textContent='Sourcing request sent ✓ '+String(id).slice(0,8);
       e.target.reset();await load(false);
     }catch(err){st.textContent=err.message;st.className='status bad'}

@@ -1,0 +1,84 @@
+{
+  "comments": [
+    {
+      "id": "c7a0ff04-c2d4-4680-b997-89de92956ea0",
+      "body": "QA demand: interested in 40 amber units; removable lens required. Edited by author.",
+      "is_mine": false,
+      "created_at": "2026-09-30T12:08:08.979824+00:00",
+      "request_id": "d38a32f2-0e35-4b3e-b7b1-83e2ebdd7824",
+      "dropshipper_id": "2f30084c-2e67-48cd-b6a9-9a10de7a53c2"
+    }
+  ],
+  "requests": [
+    {
+      "id": "d38a32f2-0e35-4b3e-b7b1-83e2ebdd7824",
+      "notes": "QA ONLY: independent sourcing, community demand and notifications test. Not a customer order.",
+      "title": "QA Community Sourcing — Fold-flat Solar Desk Beacon — 2026-09-30",
+      "status": "sourced",
+      "is_mine": true,
+      "image_url": null,
+      "created_at": "2026-09-30T12:08:08.979824+00:00",
+      "interested": true,
+      "source_url": null,
+      "updated_at": "2026-09-30T12:08:08.979824+00:00",
+      "description": "FAKE QA product not in IzzyDrop. Fold-flat solar desk beacon with removable amber lens. Do not fulfill or import.",
+      "target_cost": 125,
+      "dropshipper_id": "010fd478-b364-424d-8d3e-1ad23d67f4b1",
+      "interest_count": 3,
+      "accepted_quote_id": null,
+      "expected_quantity": 40
+    }
+  ],
+  "responses": [
+    {
+      "id": "c5dc7544-1734-4588-8d4e-e27c8b70bda8",
+      "moq": 10,
+      "status": "sourced",
+      "is_mine": null,
+      "image_url": "https://youssefhellal05.github.io/izzydrop-web/favicon.svg",
+      "created_at": "2026-09-30T12:08:08.979824+00:00",
+      "interested": false,
+      "request_id": "d38a32f2-0e35-4b3e-b7b1-83e2ebdd7824",
+      "sourced_at": "2026-09-30T12:08:08.979824+00:00",
+      "updated_at": "2026-09-30T12:08:08.979824+00:00",
+      "supplier_id": "10284c23-31ac-417b-a2fc-4e74fceb3286",
+      "catalog_slug": null,
+      "supplier_name": "IzzyDrop Supplier",
+      "interest_count": 1,
+      "lead_time_days": 14,
+      "origin_country": "China",
+      "supplier_notes": "QA ONLY: fictitious supplier found this test beacon. Never fulfill.",
+      "supplier_price": 125,
+      "estimated_margin": 75,
+      "sourcing_details": "Expected margin is guidance, before shipping and fees. MOQ 10. Fake QA offer.",
+      "available_quantity": 250,
+      "catalog_product_id": null,
+      "recommended_retail": 200
+    },
+    {
+      "id": "fe752b9a-6e83-4c14-9430-3b6969d16328",
+      "moq": null,
+      "status": "sourcing",
+      "is_mine": null,
+      "image_url": null,
+      "created_at": "2026-09-30T12:08:08.979824+00:00",
+      "interested": false,
+      "request_id": "d38a32f2-0e35-4b3e-b7b1-83e2ebdd7824",
+      "sourced_at": null,
+      "updated_at": "2026-09-30T12:08:08.979824+00:00",
+      "supplier_id": "9541edba-600a-4172-9858-bde5f7b954ff",
+      "catalog_slug": null,
+      "supplier_name": "Test Supplier Co",
+      "interest_count": 0,
+      "lead_time_days": null,
+      "origin_country": null,
+      "supplier_notes": null,
+      "supplier_price": null,
+      "estimated_margin": null,
+      "sourcing_details": null,
+      "available_quantity": null,
+      "catalog_product_id": null,
+      "recommended_retail": null
+    }
+  ]
+}

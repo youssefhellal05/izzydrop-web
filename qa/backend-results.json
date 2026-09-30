@@ -1,0 +1,229 @@
+[
+  {
+    "test": "Anonymous API access denied",
+    "detail": {
+      "result": "PASS"
+    }
+  },
+  {
+    "test": "Another dropshipper requests sourced offer without duplicates",
+    "detail": {
+      "result": "PASS"
+    }
+  },
+  {
+    "test": "Another dropshipper sees request",
+    "detail": {
+      "result": "PASS"
+    }
+  },
+  {
+    "test": "Another supplier not declined or closed",
+    "detail": {
+      "result": "PASS"
+    }
+  },
+  {
+    "test": "Approved supplier sees community request",
+    "detail": {
+      "result": "PASS"
+    }
+  },
+  {
+    "test": "Begin sourcing without catalog match",
+    "detail": {
+      "result": "PASS"
+    }
+  },
+  {
+    "test": "Cannot edit another dropshipper comment",
+    "detail": {
+      "result": "PASS"
+    }
+  },
+  {
+    "test": "Comment created and author can edit",
+    "detail": {
+      "result": "PASS"
+    }
+  },
+  {
+    "test": "Direct request ownership reassignment blocked",
+    "detail": {
+      "result": "PASS"
+    }
+  },
+  {
+    "test": "Dropshipper cannot act as supplier",
+    "detail": {
+      "result": "PASS"
+    }
+  },
+  {
+    "test": "Duplicate request interest prevented",
+    "detail": {
+      "result": "PASS"
+    }
+  },
+  {
+    "test": "Exactly two completion alerts despite repeat completion",
+    "detail": {
+      "result": "PASS"
+    }
+  },
+  {
+    "test": "Fake requested product absent from normal catalog",
+    "detail": {
+      "result": "PASS"
+    }
+  },
+  {
+    "test": "Incomplete completion rejected",
+    "detail": {
+      "result": "PASS"
+    }
+  },
+  {
+    "test": "Interested second dropshipper notified",
+    "detail": {
+      "result": "PASS"
+    }
+  },
+  {
+    "test": "Multiple suppliers work independently",
+    "detail": {
+      "result": "PASS"
+    }
+  },
+  {
+    "test": "No sourcing response auto-added to My Products",
+    "detail": {
+      "result": "PASS"
+    }
+  },
+  {
+    "test": "Non-admin active requester",
+    "detail": {
+      "result": "PASS"
+    }
+  },
+  {
+    "test": "Offer demand rolls into request demand",
+    "detail": {
+      "result": "PASS"
+    }
+  },
+  {
+    "test": "Old accept-and-add path retired",
+    "detail": {
+      "result": "PASS"
+    }
+  },
+  {
+    "test": "One request created without catalog product",
+    "detail": {
+      "result": "PASS",
+      "request_id": "d38a32f2-0e35-4b3e-b7b1-83e2ebdd7824"
+    }
+  },
+  {
+    "test": "Optional research estimates saved",
+    "detail": {
+      "result": "PASS"
+    }
+  },
+  {
+    "test": "QA request final state",
+    "detail": {
+      "result": "PASS",
+      "comment_id": "c7a0ff04-c2d4-4680-b997-89de92956ea0",
+      "request_id": "d38a32f2-0e35-4b3e-b7b1-83e2ebdd7824",
+      "response_id": "c5dc7544-1734-4588-8d4e-e27c8b70bda8",
+      "second_response_id": "fe752b9a-6e83-4c14-9430-3b6969d16328"
+    }
+  },
+  {
+    "test": "Recommended price is independent commercial guidance",
+    "detail": {
+      "result": "PASS"
+    }
+  },
+  {
+    "test": "Repeated start uses same response",
+    "detail": {
+      "result": "PASS"
+    }
+  },
+  {
+    "test": "Request aggregates sourced state",
+    "detail": {
+      "result": "PASS"
+    }
+  },
+  {
+    "test": "Request aggregates sourcing state",
+    "detail": {
+      "result": "PASS"
+    }
+  },
+  {
+    "test": "Requester gets one actionable notification",
+    "detail": {
+      "result": "PASS"
+    }
+  },
+  {
+    "test": "RLS blocks direct cross-supplier response update",
+    "detail": {
+      "result": "PASS"
+    }
+  },
+  {
+    "test": "RLS blocks direct cross-user comment update",
+    "detail": {
+      "result": "PASS"
+    }
+  },
+  {
+    "test": "RLS blocks direct forged supplier response",
+    "detail": {
+      "result": "PASS"
+    }
+  },
+  {
+    "test": "Sourced final values correct",
+    "detail": {
+      "result": "PASS"
+    }
+  },
+  {
+    "test": "Sourced offer visible under requester RLS",
+    "detail": {
+      "result": "PASS"
+    }
+  },
+  {
+    "test": "Supplier cannot change another supplier offer via RPC",
+    "detail": {
+      "result": "PASS"
+    }
+  },
+  {
+    "test": "Supplier cannot close another user request via RPC",
+    "detail": {
+      "result": "PASS"
+    }
+  },
+  {
+    "test": "Supplier cannot close requester post",
+    "detail": {
+      "result": "PASS"
+    }
+  },
+  {
+    "test": "Two distinct interested dropshippers",
+    "detail": {
+      "result": "PASS"
+    }
+  }
+]

@@ -1,6 +1,6 @@
 (()=>{
   const $=s=>document.querySelector(s);
-  let SUP=null,PRODUCTS=[],VARIANTS=[],IMAGES=[],ORDERS=[],ITEMS=[],REQUESTS=[],QUOTES=[],CATEGORIES=[],SAMPLES=[],SETTLEMENTS=[],SELECTED_IMAGES=[],ORDER_FILTER='all',NEW_CONTENT_LANG='en',NEW_SOURCE_LANGUAGE='en',EDIT_CONTENT_LANG='en',VARIANT_MODE='single',PRODUCT_STEP=3,VARIANT_ADVANCED=false,SIMPLE_PRODUCT_FLOW=true,VARIANT_PRICES_VARY=false;
+  let SUP=null,PRODUCTS=[],VARIANTS=[],IMAGES=[],ORDERS=[],ITEMS=[],SOURCING_BOARD={},CATEGORIES=[],SAMPLES=[],SETTLEMENTS=[],SELECTED_IMAGES=[],ORDER_FILTER='all',NEW_CONTENT_LANG='en',NEW_SOURCE_LANGUAGE='en',EDIT_CONTENT_LANG='en',VARIANT_MODE='single',PRODUCT_STEP=3,VARIANT_ADVANCED=false,SIMPLE_PRODUCT_FLOW=true,VARIANT_PRICES_VARY=false;
   const SELECTED_PRODUCT_IDS=new Set();
   const VARIANT_COMBO_STATE=new Map();
   const VARIANT_IMAGE_STATE=new Map();
@@ -792,80 +792,8 @@
   }
 
   function renderSourcingRequests(){
-    const el=$('#supplier-requests');if(!el)return;
-    const myQuoteByRequest=new Map((QUOTES||[]).map(q=>[q.request_id,q]));
-    const productOptions='<option value="">'+local('Choose an IzzyDrop product','اختر منتجًا على IzzyDrop')+'</option>'+(PRODUCTS||[]).filter(p=>p.status==='active').map(p=>`<option value="${p.id}">${IZZY.esc(productName(p)||p.sku||local('Product','المنتج'))}</option>`).join('');
-    el.innerHTML=(REQUESTS||[]).map(r=>{
-      const q=myQuoteByRequest.get(r.id);
-      const qv=q?(VARIANTS||[]).find(v=>v.id===q.variant_id):null;
-      const qVariant=qv?variantLabel(qv):'';
-      return `<article class="card order-card">
-        <div class="order-card-head"><div><span class="order-id">${IZZY.esc(r.title)}</span><small>${new Date(r.created_at).toLocaleString()}</small></div><span class="tag ${r.status==='matched'?'ok':'warn'}">${IZZY.esc(r.status)}</span></div>
-        <div class="order-summary-grid">
-          <div><small>Target cost</small><b>${r.target_cost==null?'—':IZZY.money(r.target_cost,'EGP')}</b></div>
-          <div><small>Source</small><b>${r.source_url?'<a href="'+IZZY.esc(r.source_url)+'" target="_blank" rel="noopener">Open link</a>':'—'}</b></div>
-          <div><small>Notes</small><span>${IZZY.esc(r.notes||'—')}</span></div>
-        </div>
-        ${q?`<div class="notice ${q.status==='accepted'?'ok':''}"><b>${local('Your quote','عرضك')}: ${IZZY.money(q.offered_cost,'EGP')}</b><span>${qVariant?`${local('Variant','الخيار')}: ${IZZY.esc(qVariant)} · `:''}${IZZY.esc(q.message||'')} ${q.message?'· ':''}${IZZY.esc(window.IZZY_I18N?.status?.(q.status)||q.status)}</span></div>`:
-        `<form class="form quote-form" data-request-id="${r.id}">
-          <select name="product_id" required>${productOptions}</select>
-          <select name="variant_id" required disabled><option value="">${local('Choose variant','اختر الخيار')}</option></select>
-          <input name="offered_cost" type="number" min="0" step="0.01" placeholder="${local('Variant supplier price','سعر المورّد للخيار')}" readonly required>
-          <input name="available_quantity" type="number" min="0" step="1" placeholder="${local('Available quantity','الكمية المتاحة')}" readonly>
-          <input name="lead_time_days" type="number" min="0" step="1" placeholder="${local('Lead time days','مدة التجهيز بالأيام')}">
-          <input name="message" class="span-2" placeholder="${local('Message / MOQ / notes','رسالة / الحد الأدنى / ملاحظات')}">
-          <button class="btn span-2" type="submit">${local('Submit quote','إرسال العرض')}</button>
-        </form>`}
-      </article>`;
-    }).join('')||'<div class="empty-state"><div class="empty-icon">⌕</div><h3>No sourcing requests right now</h3><p>New requests from dropshippers will appear here.</p></div>';
-
-    document.querySelectorAll('.quote-form').forEach(form=>{
-      const productSelect=form.querySelector('[name="product_id"]');
-      const variantSelect=form.querySelector('[name="variant_id"]');
-      const offered=form.querySelector('[name="offered_cost"]');
-      const available=form.querySelector('[name="available_quantity"]');
-
-      const syncVariant=()=>{
-        const v=(VARIANTS||[]).find(x=>x.id===variantSelect.value);
-        const p=(PRODUCTS||[]).find(x=>x.id===productSelect.value);
-        offered.value=v?Number(v.cost_price??p?.cost_price??0).toFixed(2):'';
-        available.value=v?Number(v.stock_quantity||0):'';
-      };
-
-      const syncVariants=()=>{
-        const variants=(VARIANTS||[]).filter(v=>v.product_id===productSelect.value&&v.is_enabled!==false);
-        variantSelect.innerHTML='<option value="">'+local('Choose variant','اختر الخيار')+'</option>'+variants.map(v=>`<option value="${v.id}" ${Number(v.stock_quantity||0)<=0?'disabled':''}>${IZZY.esc(variantLabel(v))} · ${Number(v.stock_quantity||0)} ${local('in stock','متوفر')}</option>`).join('');
-        variantSelect.disabled=!variants.length;
-        offered.value='';
-        available.value='';
-      };
-
-      productSelect.onchange=syncVariants;
-      variantSelect.onchange=syncVariant;
-      syncVariants();
-
-      form.onsubmit=async e=>{
-        e.preventDefault();
-        const btn=form.querySelector('button[type="submit"]');
-        btn.disabled=true;btn.textContent='Sending…';
-        const fd=new FormData(form);
-        try{
-          await IZZY.rpc('submit_product_request_quote',{
-            _request_id:form.dataset.requestId,
-            _offered_cost:Number(fd.get('offered_cost')),
-            _available_quantity:fd.get('available_quantity')===''?null:Number(fd.get('available_quantity')),
-            _lead_time_days:fd.get('lead_time_days')===''?null:Number(fd.get('lead_time_days')),
-            _message:String(fd.get('message')||'').trim()||null,
-            _product_id:String(fd.get('product_id')||'').trim()||null,
-            _variant_id:String(fd.get('variant_id')||'').trim()||null
-          });
-          msg('Quote sent to the dropshipper.');
-          await load(false);
-        }catch(err){msg(err.message,true);btn.disabled=false;btn.textContent=local('Submit quote','إرسال العرض')}
-      };
-    });
+    window.IZZY_SOURCING.renderSupplier(SOURCING_BOARD,PRODUCTS,()=>load(false));
   }
-
 
   function renderSamples(){
     const el=$('#supplier-samples');if(!el)return;
@@ -903,14 +831,13 @@
   }
 
   async function load(showMessage=false){
-    const [supplierRows,products,variants,orders,items,requests,quotes,categories,samples,settlements]=await Promise.all([
+    const [supplierRows,products,variants,orders,items,board,categories,samples,settlements]=await Promise.all([
       IZZY.request(`/rest/v1/suppliers?select=id,business_name,status,low_stock_threshold,notification_preferences&id=eq.${encodeURIComponent(SUP.id)}&limit=1`),
       IZZY.request(`/rest/v1/supplier_products?select=*&supplier_id=eq.${encodeURIComponent(SUP.id)}&order=created_at.desc`),
       IZZY.request('/rest/v1/product_variants?select=*&order=created_at.asc'),
       IZZY.request('/rest/v1/orders?select=*&order=created_at.desc&limit=150'),
       IZZY.request(`/rest/v1/order_items?select=*&supplier_id=eq.${encodeURIComponent(SUP.id)}&order=created_at.desc&limit=250`),
-      IZZY.request('/rest/v1/product_requests?select=*&status=in.(open,matched,accepted)&order=created_at.desc&limit=100'),
-      IZZY.request(`/rest/v1/product_request_quotes?select=*&supplier_id=eq.${encodeURIComponent(SUP.id)}&order=created_at.desc&limit=100`),
+      IZZY.rpc('sourcing_board'),
       IZZY.request('/rest/v1/categories?select=id,name,name_ar&order=name.asc'),
       IZZY.rpc('supplier_samples'),
       IZZY.rpc('supplier_settlements')
@@ -924,8 +851,7 @@
     VARIANTS=variants||[];
     ORDERS=orders||[];
     ITEMS=items||[];
-    REQUESTS=requests||[];
-    QUOTES=quotes||[];
+    SOURCING_BOARD=board||{};
     CATEGORIES=categories||[];
     SAMPLES=Array.isArray(samples)?samples:[];
     SETTLEMENTS=Array.isArray(settlements)?settlements:[];
