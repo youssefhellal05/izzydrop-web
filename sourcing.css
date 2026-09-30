@@ -1,6 +1,9 @@
 .sourcing-intro{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:20px}
-.sourcing-intro>div{flex:1;min-width:200px;padding:18px;border:1px solid var(--line,#e4e9f0);border-radius:16px;background:var(--surface,#fff)}
-.sourcing-intro b{display:block;margin-bottom:6px}
+.sourcing-intro>div{flex:1;min-width:200px;padding:18px;border:1px solid var(--line,#e4e9f0);border-radius:16px;background:var(--card,#fff);color:var(--text,#0e1116)}
+.sourcing-intro b{display:block;margin-bottom:6px;color:var(--text,#0e1116)}
+.sourcing-intro>div{line-height:1.45}
+html[data-theme="dark"] .sourcing-intro>div{background:var(--card,#12161b);border-color:var(--line,#252b33);color:var(--muted,#9aa4b1)}
+html[data-theme="dark"] .sourcing-intro b{color:var(--text,#f4f6f8)}
 .sourcing-image{width:180px;height:150px;object-fit:contain;border-radius:12px;background:#f5f7fa;margin:12px 0}
 .sourcing-description,.sourcing-comment p{white-space:pre-wrap;overflow-wrap:anywhere}
 .sourcing-facts{display:flex;gap:18px;flex-wrap:wrap;margin:18px 0}
