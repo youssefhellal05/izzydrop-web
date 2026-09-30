@@ -196,8 +196,8 @@ html,body,.card,.panel,.choice,.side,.list-row,.auth-card,.modal-card,.btn,input
 .account-chip small{display:block;color:var(--muted);font-size:11px;max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dropshipper-toolbar{display:grid;grid-template-columns:minmax(260px,1fr) 170px 190px auto;gap:10px;align-items:center;margin-bottom:10px}
 .search-wrap{position:relative}
-.search-wrap svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:18px;height:18px;fill:none;stroke:#7b8490;stroke-width:1.8}
-.search-wrap .search{width:100%;padding-left:40px}
+.search-wrap svg{position:absolute;left:16px;top:50%;transform:translateY(-50%);width:18px;height:18px;fill:none;stroke:#7b8490;stroke-width:1.8;pointer-events:none}
+.search-wrap .search{width:100%;padding-left:52px}
 .control{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--text)}
 .stock-toggle{display:flex;align-items:center;gap:8px;padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card);font-size:13px;font-weight:750;white-space:nowrap}
 .stock-toggle input{accent-color:#111318}
@@ -782,8 +782,8 @@ html[dir="rtl"] .row{direction:rtl}
 html[dir="rtl"] .side button,
 html[dir="rtl"] .settings-menu button{text-align:right}
 html[dir="rtl"] .side button svg{transform:scaleX(-1)}
-html[dir="rtl"] .search-wrap svg{left:auto;right:13px}
-html[dir="rtl"] .search-wrap .search{padding-left:14px;padding-right:40px;text-align:right}
+html[dir="rtl"] .search-wrap svg{left:auto;right:16px}
+html[dir="rtl"] .search-wrap .search{padding-left:14px;padding-right:52px;text-align:right}
 html[dir="rtl"] input:not([type="email"]):not([type="number"]):not([readonly]),
 html[dir="rtl"] textarea,
 html[dir="rtl"] select{text-align:right}
