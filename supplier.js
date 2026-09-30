@@ -797,6 +797,8 @@
     const productOptions='<option value="">'+local('Choose an IzzyDrop product','اختر منتجًا على IzzyDrop')+'</option>'+(PRODUCTS||[]).filter(p=>p.status==='active').map(p=>`<option value="${p.id}">${IZZY.esc(productName(p)||p.sku||local('Product','المنتج'))}</option>`).join('');
     el.innerHTML=(REQUESTS||[]).map(r=>{
       const q=myQuoteByRequest.get(r.id);
+      const qv=q?(VARIANTS||[]).find(v=>v.id===q.variant_id):null;
+      const qVariant=qv?variantLabel(qv):'';
       return `<article class="card order-card">
         <div class="order-card-head"><div><span class="order-id">${IZZY.esc(r.title)}</span><small>${new Date(r.created_at).toLocaleString()}</small></div><span class="tag ${r.status==='matched'?'ok':'warn'}">${IZZY.esc(r.status)}</span></div>
         <div class="order-summary-grid">
@@ -804,11 +806,12 @@
           <div><small>Source</small><b>${r.source_url?'<a href="'+IZZY.esc(r.source_url)+'" target="_blank" rel="noopener">Open link</a>':'—'}</b></div>
           <div><small>Notes</small><span>${IZZY.esc(r.notes||'—')}</span></div>
         </div>
-        ${q?`<div class="notice ${q.status==='accepted'?'ok':''}"><b>${local('Your quote','عرضك')}: ${IZZY.money(q.offered_cost,'EGP')}</b><span>${IZZY.esc(q.message||'')} · ${IZZY.esc(window.IZZY_I18N?.status?.(q.status)||q.status)}</span></div>`:
+        ${q?`<div class="notice ${q.status==='accepted'?'ok':''}"><b>${local('Your quote','عرضك')}: ${IZZY.money(q.offered_cost,'EGP')}</b><span>${qVariant?`${local('Variant','الخيار')}: ${IZZY.esc(qVariant)} · `:''}${IZZY.esc(q.message||'')} ${q.message?'· ':''}${IZZY.esc(window.IZZY_I18N?.status?.(q.status)||q.status)}</span></div>`:
         `<form class="form quote-form" data-request-id="${r.id}">
           <select name="product_id" required>${productOptions}</select>
-          <input name="offered_cost" type="number" min="0" step="0.01" placeholder="${local('Select a product to use its price','اختر منتجًا لاستخدام سعره')}" readonly required>
-          <input name="available_quantity" type="number" min="0" step="1" placeholder="${local('Available quantity','الكمية المتاحة')}">
+          <select name="variant_id" required disabled><option value="">${local('Choose variant','اختر الخيار')}</option></select>
+          <input name="offered_cost" type="number" min="0" step="0.01" placeholder="${local('Variant supplier price','سعر المورّد للخيار')}" readonly required>
+          <input name="available_quantity" type="number" min="0" step="1" placeholder="${local('Available quantity','الكمية المتاحة')}" readonly>
           <input name="lead_time_days" type="number" min="0" step="1" placeholder="${local('Lead time days','مدة التجهيز بالأيام')}">
           <input name="message" class="span-2" placeholder="${local('Message / MOQ / notes','رسالة / الحد الأدنى / ملاحظات')}">
           <button class="btn span-2" type="submit">${local('Submit quote','إرسال العرض')}</button>
@@ -818,30 +821,47 @@
 
     document.querySelectorAll('.quote-form').forEach(form=>{
       const productSelect=form.querySelector('[name="product_id"]');
+      const variantSelect=form.querySelector('[name="variant_id"]');
       const offered=form.querySelector('[name="offered_cost"]');
-      const syncPrice=()=>{
+      const available=form.querySelector('[name="available_quantity"]');
+
+      const syncVariant=()=>{
+        const v=(VARIANTS||[]).find(x=>x.id===variantSelect.value);
         const p=(PRODUCTS||[]).find(x=>x.id===productSelect.value);
-        offered.value=p?Number(p.cost_price||0).toFixed(2):'';
+        offered.value=v?Number(v.cost_price??p?.cost_price??0).toFixed(2):'';
+        available.value=v?Number(v.stock_quantity||0):'';
       };
-      productSelect.onchange=syncPrice;
-      syncPrice();
+
+      const syncVariants=()=>{
+        const variants=(VARIANTS||[]).filter(v=>v.product_id===productSelect.value&&v.is_enabled!==false);
+        variantSelect.innerHTML='<option value="">'+local('Choose variant','اختر الخيار')+'</option>'+variants.map(v=>`<option value="${v.id}" ${Number(v.stock_quantity||0)<=0?'disabled':''}>${IZZY.esc(variantLabel(v))} · ${Number(v.stock_quantity||0)} ${local('in stock','متوفر')}</option>`).join('');
+        variantSelect.disabled=!variants.length;
+        offered.value='';
+        available.value='';
+      };
+
+      productSelect.onchange=syncVariants;
+      variantSelect.onchange=syncVariant;
+      syncVariants();
+
       form.onsubmit=async e=>{
-      e.preventDefault();
-      const btn=form.querySelector('button[type="submit"]');
-      btn.disabled=true;btn.textContent='Sending…';
-      const fd=new FormData(form);
-      try{
-        await IZZY.rpc('submit_product_request_quote',{
-          _request_id:form.dataset.requestId,
-          _offered_cost:Number(fd.get('offered_cost')),
-          _available_quantity:fd.get('available_quantity')===''?null:Number(fd.get('available_quantity')),
-          _lead_time_days:fd.get('lead_time_days')===''?null:Number(fd.get('lead_time_days')),
-          _message:String(fd.get('message')||'').trim()||null,
-          _product_id:String(fd.get('product_id')||'').trim()||null
-        });
-        msg('Quote sent to the dropshipper.');
-        await load(false);
-      }catch(err){msg(err.message,true);btn.disabled=false;btn.textContent=local('Submit quote','إرسال العرض')}
+        e.preventDefault();
+        const btn=form.querySelector('button[type="submit"]');
+        btn.disabled=true;btn.textContent='Sending…';
+        const fd=new FormData(form);
+        try{
+          await IZZY.rpc('submit_product_request_quote',{
+            _request_id:form.dataset.requestId,
+            _offered_cost:Number(fd.get('offered_cost')),
+            _available_quantity:fd.get('available_quantity')===''?null:Number(fd.get('available_quantity')),
+            _lead_time_days:fd.get('lead_time_days')===''?null:Number(fd.get('lead_time_days')),
+            _message:String(fd.get('message')||'').trim()||null,
+            _product_id:String(fd.get('product_id')||'').trim()||null,
+            _variant_id:String(fd.get('variant_id')||'').trim()||null
+          });
+          msg('Quote sent to the dropshipper.');
+          await load(false);
+        }catch(err){msg(err.message,true);btn.disabled=false;btn.textContent=local('Submit quote','إرسال العرض')}
       };
     });
   }
