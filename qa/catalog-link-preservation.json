@@ -1,0 +1,182 @@
+{
+  "before": {
+    "orders": {
+      "hash": "4fc0b3d849b75086fa81d80b80703fbf",
+      "count": 1
+    },
+    "suppliers": {
+      "hash": "3f6d62d7bbed086cf590c72e79b427a1",
+      "count": 2
+    },
+    "order_items": {
+      "hash": "a671ee9000248d20cd9b1ac761f23766",
+      "count": 1
+    },
+    "dropshippers": {
+      "hash": "7dca6d246027f976bcbbac4dc11072d0",
+      "count": 3
+    },
+    "sample_orders": {
+      "hash": "d41d8cd98f00b204e9800998ecf8427e",
+      "count": 0
+    },
+    "product_images": {
+      "hash": "4137cc2fe21b4d6434bb40c2c4b46a4f",
+      "count": 2
+    },
+    "product_requests": {
+      "hash": "025a85d42d16dc261b305307d09b4c6c",
+      "count": 2
+    },
+    "product_variants": {
+      "hash": "a989988190bbd3a6938495ab1e926e6e",
+      "count": 13
+    },
+    "order_settlements": {
+      "hash": "d41d8cd98f00b204e9800998ecf8427e",
+      "count": 0
+    },
+    "sourcing_comments": {
+      "hash": "85c9009d484f13c9885cc49da5af555f",
+      "count": 1
+    },
+    "supplier_products": {
+      "hash": "fecf3ed498d7153130fe1d5a836225e3",
+      "count": 4
+    },
+    "dropshipper_alerts": {
+      "hash": "c549e8560e4c809b565734847c599caa",
+      "count": 2
+    },
+    "sourcing_responses": {
+      "hash": "36b8b56c081e326f2ab11774a400c05c",
+      "count": 3
+    },
+    "order_shipping_costs": {
+      "hash": "d41d8cd98f00b204e9800998ecf8427e",
+      "count": 0
+    },
+    "order_item_settlements": {
+      "hash": "d41d8cd98f00b204e9800998ecf8427e",
+      "count": 0
+    },
+    "product_request_quotes": {
+      "hash": "d41d8cd98f00b204e9800998ecf8427e",
+      "count": 0
+    },
+    "storefront_integrations": {
+      "hash": "9207b5905ffb21d7d34f61d0a0bfbc96",
+      "count": 2
+    },
+    "supplier_payout_details": {
+      "hash": "d41d8cd98f00b204e9800998ecf8427e",
+      "count": 0
+    },
+    "dropshipper_product_links": {
+      "hash": "2bb09ac88d68191b45ef65bff4398708",
+      "count": 2
+    },
+    "sourcing_request_interests": {
+      "hash": "324cfc0784dd21e4462a27c0060942ab",
+      "count": 3
+    },
+    "sourcing_response_interests": {
+      "hash": "2fc7efadcaef71b043f4e21efb7941a2",
+      "count": 1
+    },
+    "storefront_integration_variants": {
+      "hash": "0bdb180087e9c00081488bc4035010d6",
+      "count": 3
+    }
+  },
+  "after": {
+    "orders": {
+      "hash": "4fc0b3d849b75086fa81d80b80703fbf",
+      "count": 1
+    },
+    "suppliers": {
+      "hash": "3f6d62d7bbed086cf590c72e79b427a1",
+      "count": 2
+    },
+    "order_items": {
+      "hash": "a671ee9000248d20cd9b1ac761f23766",
+      "count": 1
+    },
+    "dropshippers": {
+      "hash": "7dca6d246027f976bcbbac4dc11072d0",
+      "count": 3
+    },
+    "sample_orders": {
+      "hash": "d41d8cd98f00b204e9800998ecf8427e",
+      "count": 0
+    },
+    "product_images": {
+      "hash": "4137cc2fe21b4d6434bb40c2c4b46a4f",
+      "count": 2
+    },
+    "product_requests": {
+      "hash": "025a85d42d16dc261b305307d09b4c6c",
+      "count": 2
+    },
+    "product_variants": {
+      "hash": "a989988190bbd3a6938495ab1e926e6e",
+      "count": 13
+    },
+    "order_settlements": {
+      "hash": "d41d8cd98f00b204e9800998ecf8427e",
+      "count": 0
+    },
+    "sourcing_comments": {
+      "hash": "85c9009d484f13c9885cc49da5af555f",
+      "count": 1
+    },
+    "supplier_products": {
+      "hash": "fecf3ed498d7153130fe1d5a836225e3",
+      "count": 4
+    },
+    "dropshipper_alerts": {
+      "hash": "c549e8560e4c809b565734847c599caa",
+      "count": 2
+    },
+    "sourcing_responses": {
+      "hash": "36b8b56c081e326f2ab11774a400c05c",
+      "count": 3
+    },
+    "order_shipping_costs": {
+      "hash": "d41d8cd98f00b204e9800998ecf8427e",
+      "count": 0
+    },
+    "order_item_settlements": {
+      "hash": "d41d8cd98f00b204e9800998ecf8427e",
+      "count": 0
+    },
+    "product_request_quotes": {
+      "hash": "d41d8cd98f00b204e9800998ecf8427e",
+      "count": 0
+    },
+    "storefront_integrations": {
+      "hash": "9207b5905ffb21d7d34f61d0a0bfbc96",
+      "count": 2
+    },
+    "supplier_payout_details": {
+      "hash": "d41d8cd98f00b204e9800998ecf8427e",
+      "count": 0
+    },
+    "dropshipper_product_links": {
+      "hash": "2bb09ac88d68191b45ef65bff4398708",
+      "count": 2
+    },
+    "sourcing_request_interests": {
+      "hash": "324cfc0784dd21e4462a27c0060942ab",
+      "count": 3
+    },
+    "sourcing_response_interests": {
+      "hash": "2fc7efadcaef71b043f4e21efb7941a2",
+      "count": 1
+    },
+    "storefront_integration_variants": {
+      "hash": "0bdb180087e9c00081488bc4035010d6",
+      "count": 3
+    }
+  }
+}

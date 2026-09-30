@@ -1,0 +1,42 @@
+[
+  {
+    "test": "Supplier researches without commercial form",
+    "result": "PASS"
+  },
+  {
+    "test": "Normal product creation shortcut and eligible selector",
+    "result": "PASS"
+  },
+  {
+    "test": "Community comments interests and escaping preserved",
+    "result": "PASS"
+  },
+  {
+    "test": "Research response excluded from Sourced page",
+    "result": "PASS"
+  },
+  {
+    "test": "Sourced page uses live catalog ranges not old offer price",
+    "result": "PASS"
+  },
+  {
+    "test": "Variants stock and retail guidance shown",
+    "result": "PASS"
+  },
+  {
+    "test": "Links to real product and original request",
+    "result": "PASS"
+  },
+  {
+    "test": "Completed supplier sees product instead of link form",
+    "result": "PASS"
+  },
+  {
+    "test": "Legacy unlinked record retained in thread but excluded from Sourced",
+    "result": "PASS"
+  },
+  {
+    "test": "Link button calls only sourcing_link_catalog with chosen product",
+    "result": "PASS"
+  }
+]

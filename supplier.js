@@ -792,7 +792,7 @@
   }
 
   function renderSourcingRequests(){
-    window.IZZY_SOURCING.renderSupplier(SOURCING_BOARD,PRODUCTS,()=>load(false));
+    window.IZZY_SOURCING.renderSupplier(SOURCING_BOARD,PRODUCTS,()=>load(false),()=>go('add'));
   }
 
   function renderSamples(){

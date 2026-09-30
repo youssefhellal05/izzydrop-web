@@ -1,0 +1,178 @@
+[
+  {
+    "test": "A links own real product and becomes Sourced",
+    "result": "PASS"
+  },
+  {
+    "test": "Active dropshipper creates community request",
+    "result": "PASS"
+  },
+  {
+    "test": "Admin control retained",
+    "result": "PASS"
+  },
+  {
+    "test": "Automatic catalog publication trigger removed",
+    "result": "PASS"
+  },
+  {
+    "test": "Automatic publishing function removed",
+    "result": "PASS"
+  },
+  {
+    "test": "B can later link different product",
+    "result": "PASS"
+  },
+  {
+    "test": "B remains Sourcing",
+    "result": "PASS"
+  },
+  {
+    "test": "Cannot edit another dropshipper comment",
+    "error": "You may only edit your own comments",
+    "result": "PASS"
+  },
+  {
+    "test": "Cannot source without real product",
+    "error": "Choose your published product",
+    "result": "PASS"
+  },
+  {
+    "test": "Catalog edits appear live without copying into sourcing",
+    "result": "PASS"
+  },
+  {
+    "test": "Community comments and deduplicated interest",
+    "result": "PASS"
+  },
+  {
+    "test": "Direct other comment UPDATE blocked by RLS",
+    "result": "PASS"
+  },
+  {
+    "test": "Direct other request UPDATE blocked by RLS",
+    "result": "PASS"
+  },
+  {
+    "test": "Direct response UPDATE blocked by RLS",
+    "result": "PASS"
+  },
+  {
+    "test": "Draft product rejected",
+    "error": "Choose your own active published product",
+    "result": "PASS"
+  },
+  {
+    "test": "Dropshipper cannot complete supplier response",
+    "error": "Approved supplier required",
+    "result": "PASS"
+  },
+  {
+    "test": "Dropshipper cannot start sourcing",
+    "error": "Approved supplier required",
+    "result": "PASS"
+  },
+  {
+    "test": "Each supplier sends exactly one alert per recipient",
+    "result": "PASS"
+  },
+  {
+    "test": "Interested dropshipper notified exactly once",
+    "result": "PASS"
+  },
+  {
+    "test": "Live prices retail stock and enabled variants",
+    "result": "PASS"
+  },
+  {
+    "test": "No customer orders created",
+    "result": "PASS"
+  },
+  {
+    "test": "No My Products links created",
+    "result": "PASS"
+  },
+  {
+    "test": "Nonmember board has no community or catalog data",
+    "result": "PASS"
+  },
+  {
+    "test": "Normal Products includes linked product",
+    "result": "PASS"
+  },
+  {
+    "test": "Normal supplier flow creates multiple published variants",
+    "result": "PASS"
+  },
+  {
+    "test": "Old automatic Mark Sourced disabled",
+    "error": "Create and publish the product in Products, then use Link sourced product on your sourcing response.",
+    "result": "PASS"
+  },
+  {
+    "test": "Product without enabled variants rejected",
+    "error": "Product requires valid enabled variants",
+    "result": "PASS"
+  },
+  {
+    "test": "Replacing linked product prevented",
+    "error": "This response already links a product",
+    "result": "PASS"
+  },
+  {
+    "test": "Request stays visible and sourced",
+    "result": "PASS"
+  },
+  {
+    "test": "Requester notified exactly once",
+    "result": "PASS"
+  },
+  {
+    "test": "Second active dropshipper views request",
+    "result": "PASS"
+  },
+  {
+    "test": "Sourced page receives real product",
+    "result": "PASS"
+  },
+  {
+    "test": "Sourced product interest is deduplicated",
+    "result": "PASS"
+  },
+  {
+    "test": "Start sourcing is idempotent",
+    "result": "PASS"
+  },
+  {
+    "test": "Stock unchanged after repeated link",
+    "result": "PASS"
+  },
+  {
+    "test": "Supplier A cannot link B product",
+    "error": "Choose your own active published product",
+    "result": "PASS"
+  },
+  {
+    "test": "Supplier A cannot modify B response through RPC",
+    "error": "Your sourcing response is required",
+    "result": "PASS"
+  },
+  {
+    "test": "Supplier A starts without price/product/stock",
+    "result": "PASS"
+  },
+  {
+    "test": "Supplier B cannot complete A response",
+    "error": "Your sourcing response is required",
+    "result": "PASS"
+  },
+  {
+    "test": "Supplier B independently starts",
+    "result": "PASS"
+  },
+  {
+    "test": "Unapproved user cannot start",
+    "error": "Approved supplier required",
+    "result": "PASS"
+  }
+]

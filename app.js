@@ -8,7 +8,7 @@
     orders:['Orders','Create and track customer orders.'],
     money:['Money','Track actual COD profit and payout status.'],
     requests:['Sourcing requests','Products the community wants suppliers to find.'],
-    sourced:['Sourced products','Found by suppliers, not necessarily stocked in the marketplace.'],
+    sourced:['Sourced products','Real published products linked to community sourcing requests.'],
     samples:['Samples','Track product samples.'],
     settings:['Settings','Account and preferences.']
   };
@@ -612,7 +612,7 @@
 
   function renderAlerts(){
     const unread=(ALERTS||[]).filter(a=>!a.read_at);
-    const html=rows=>rows.map(a=>`<div class="notice alert-notice"><b>${IZZY.esc(a.title)}</b><span>${IZZY.esc(a.message)}</span>${a.sourcing_response_id?`<a class="btn secondary" href="app.html?sourced=${encodeURIComponent(a.sourcing_response_id)}">Open sourced offer</a>`:''}<button class="auth-text-button mark-alert" data-id="${a.id}">Mark read</button></div>`).join('');
+    const html=rows=>rows.map(a=>`<div class="notice alert-notice"><b>${IZZY.esc(a.title)}</b><span>${IZZY.esc(a.message)}</span>${a.sourcing_response_id?`<a class="btn secondary" href="app.html?sourced=${encodeURIComponent(a.sourcing_response_id)}">Open sourced product</a>`:''}<button class="auth-text-button mark-alert" data-id="${a.id}">Mark read</button></div>`).join('');
     const inventory=$('#inventory-alerts');if(inventory)inventory.innerHTML=html(unread.slice(0,8));
     document.querySelectorAll('.sourcing-alert-stack').forEach(el=>el.innerHTML=html(unread.filter(a=>a.sourcing_response_id).slice(0,8)));
     document.querySelectorAll('.mark-alert').forEach(b=>b.onclick=async()=>{
@@ -672,6 +672,8 @@
     go('products');
     await load();
     const params=new URLSearchParams(location.search);
+    const requestId=params.get('request');
+    if(requestId){go('requests');const card=document.getElementById('request-'+requestId);if(card){card.classList.add('is-highlighted');card.scrollIntoView({block:'center'});}}
     const sourcedOffer=params.get('sourced');
     if(sourcedOffer){go('sourced');const card=document.getElementById('sourced-'+sourcedOffer);if(card){card.classList.add('is-highlighted');card.scrollIntoView({block:'center'});}else status('This sourced offer is no longer available.',true);}
     const addProduct=params.get('add');

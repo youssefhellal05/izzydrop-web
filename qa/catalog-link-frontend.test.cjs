@@ -1,0 +1,40 @@
+// Run with node qa/catalog-link-frontend.test.cjs
+const fs=require('node:fs');
+async function runSourcingFrontendTests(source){
+const results=[];const assert=(name,ok)=>{if(!ok)throw Error(name);results.push({test:name,result:'PASS'})};
+const nodes={};for(const id of ['#product-requests','#sourced-products','#supplier-requests'])nodes[id]={innerHTML:'',querySelectorAll:()=>[]};
+const document={querySelector:s=>nodes[s]||null};
+const window={};const calls=[];const IZZY={esc:v=>String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;'),money:(v,c)=>c+' '+Number(v).toFixed(2),rpc:async(n,p)=>calls.push({n,p})};
+new Function('window','document','IZZY',source)(window,document,IZZY);
+const request={id:'r',title:'Community beacon',description:'Requirements <script>',status:'sourcing',interest_count:2,created_at:'2026-09-30'};
+const p={id:'p',name:'Published beacon',public_slug:'beacon',currency:'EGP',variants:[{name:'Small',supplier_price:100,suggested_retail:150,stock:12},{name:'Large',supplier_price:120,suggested_retail:180,stock:8}]};
+const research={id:'a',request_id:'r',status:'sourcing',is_mine:true,supplier_name:'Supplier A'};
+const board={requests:[request],responses:[research],comments:[{request_id:'r',body:'Keep community discussion',created_at:'2026-09-30'}],eligible_products:[p]};
+const api=window.IZZY_SOURCING;api.renderSupplier(board,[],async()=>{});
+let html=nodes['#supplier-requests'].innerHTML;
+assert('Supplier researches without commercial form',html.includes('Link sourced product')&&!html.includes('sourcing-response-form')&&!html.includes('name="supplier_price"'));
+assert('Normal product creation shortcut and eligible selector',html.includes('data-create-product')&&html.includes('value="p"'));
+api.renderDropshipper(board,async()=>{});
+assert('Community comments interests and escaping preserved',nodes['#product-requests'].innerHTML.includes('Keep community discussion')&&nodes['#product-requests'].innerHTML.includes('data-interest-request')&&nodes['#product-requests'].innerHTML.includes('&lt;script>'));
+assert('Research response excluded from Sourced page',!nodes['#sourced-products'].innerHTML.includes('id="sourced-a"'));
+board.responses[0]={...research,status:'sourced',catalog_product:p,catalog_product_id:'p',catalog_slug:'beacon',supplier_price:9999};
+api.renderDropshipper(board,async()=>{});
+html=nodes['#sourced-products'].innerHTML;
+assert('Sourced page uses live catalog ranges not old offer price',html.includes('EGP 100.00 – EGP 120.00')&&!html.includes('9999'));
+assert('Variants stock and retail guidance shown',html.includes('Small')&&html.includes('Large')&&html.includes('20')&&html.includes('Guidance only'));
+assert('Links to real product and original request',html.includes('product.html?slug=beacon')&&html.includes('app.html?request=r'));
+api.renderSupplier(board,[],async()=>{});
+assert('Completed supplier sees product instead of link form',nodes['#supplier-requests'].innerHTML.includes('Open published product')&&!nodes['#supplier-requests'].innerHTML.includes('<form'));
+board.responses[0]={...research,status:'sourced',catalog_product:null};
+api.renderDropshipper(board,async()=>{});
+assert('Legacy unlinked record retained in thread but excluded from Sourced',nodes['#product-requests'].innerHTML.includes('Awaiting published product')&&!nodes['#sourced-products'].innerHTML.includes('id="sourced-a"'));
+board.responses=[research];
+const status={};const card={querySelector:()=>status};const button={textContent:'Link sourced product',closest:()=>card};
+const form={dataset:{responseId:'a'},elements:{product_id:{value:'p'}},querySelector:()=>button};
+nodes['#supplier-requests'].querySelectorAll=s=>s==='.sourcing-catalog-form'?[form]:[];
+api.renderSupplier(board,[],async()=>{});
+await form.onsubmit({preventDefault(){},submitter:button});
+assert('Link button calls only sourcing_link_catalog with chosen product',calls.length===1&&calls[0].n==='sourcing_link_catalog'&&calls[0].p._response_id==='a'&&calls[0].p._product_id==='p');
+return results;
+}
+runSourcingFrontendTests(fs.readFileSync(require('node:path').join(__dirname,'..','sourcing.js'),'utf8')).then(r=>console.log(JSON.stringify(r,null,2))).catch(e=>{console.error(e);process.exitCode=1});
