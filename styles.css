@@ -135,6 +135,8 @@ html[data-theme="dark"] .notice.bad{background:#311816;color:#ff9d96}
 html[data-theme="dark"] .tag{background:#20262e;color:#aeb8c3}
 html[data-theme="dark"] .tag.ok{background:#123126;color:#6de0aa}
 html[data-theme="dark"] .tag.warn{background:#322710;color:#efc477}
+html[data-theme="dark"] .search-wrap{background:#0f1318;border-color:#303741}
+html[data-theme="dark"] .search-wrap .search{background:transparent;color:#f4f6f8;border:0}
 html[data-theme="dark"] .search,
 html[data-theme="dark"] .form input,
 html[data-theme="dark"] .form textarea,
@@ -195,9 +197,10 @@ html,body,.card,.panel,.choice,.side,.list-row,.auth-card,.modal-card,.btn,input
 .account-chip div{display:grid;gap:2px;min-width:0}
 .account-chip small{display:block;color:var(--muted);font-size:11px;max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dropshipper-toolbar{display:grid;grid-template-columns:minmax(260px,1fr) 170px 190px auto;gap:10px;align-items:center;margin-bottom:10px}
-.search-wrap{position:relative}
-.search-wrap svg{position:absolute;left:16px;top:50%;transform:translateY(-50%);width:18px;height:18px;fill:none;stroke:#7b8490;stroke-width:1.8;pointer-events:none}
-.search-wrap .search{width:100%;padding-left:52px}
+.search-wrap{display:flex;align-items:center;gap:10px;width:100%;padding:0 14px;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+.search-wrap svg{position:static;flex:0 0 18px;width:18px;height:18px;transform:none;fill:none;stroke:#7b8490;stroke-width:1.8;pointer-events:none}
+.search-wrap .search{width:100%;min-width:0;padding:12px 0;border:0;background:transparent;color:var(--text);outline:none}
+.search-wrap:focus-within{border-color:#8e98a5;box-shadow:0 0 0 3px rgba(80,93,110,.08)}
 .control{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--text)}
 .stock-toggle{display:flex;align-items:center;gap:8px;padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card);font-size:13px;font-weight:750;white-space:nowrap}
 .stock-toggle input{accent-color:#111318}
@@ -782,8 +785,9 @@ html[dir="rtl"] .row{direction:rtl}
 html[dir="rtl"] .side button,
 html[dir="rtl"] .settings-menu button{text-align:right}
 html[dir="rtl"] .side button svg{transform:scaleX(-1)}
-html[dir="rtl"] .search-wrap svg{left:auto;right:16px}
-html[dir="rtl"] .search-wrap .search{padding-left:14px;padding-right:52px;text-align:right}
+html[dir="rtl"] .search-wrap{direction:rtl}
+html[dir="rtl"] .search-wrap svg{left:auto;right:auto}
+html[dir="rtl"] .search-wrap .search{padding:12px 0;text-align:right}
 html[dir="rtl"] input:not([type="email"]):not([type="number"]):not([readonly]),
 html[dir="rtl"] textarea,
 html[dir="rtl"] select{text-align:right}
