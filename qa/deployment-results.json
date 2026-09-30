@@ -1,0 +1,32 @@
+[
+  {
+    "file": "app.html",
+    "matches": true,
+    "deployed_sha256": "ec9526b2b839b5402f3a6566eec897920456eb274cabcbe785566a85fea7c159"
+  },
+  {
+    "file": "app.js",
+    "matches": true,
+    "deployed_sha256": "ee17098009dbb24a45cca0d43eb9c0f31d124a198453920ca8320e46f619f407"
+  },
+  {
+    "file": "supplier.html",
+    "matches": true,
+    "deployed_sha256": "f28076fcae4b052831ee2deff7481ee65f3e319b2b4448468d255b1a5cd95e21"
+  },
+  {
+    "file": "supplier.js",
+    "matches": true,
+    "deployed_sha256": "41ccbe606be2d2c1cb74ddf27be120f98da8c1a422aa5a6eada698153b2d945f"
+  },
+  {
+    "file": "sourcing.js",
+    "matches": true,
+    "deployed_sha256": "2f48632d9c556a042577eec5322b534e817af2f4501d17fc6f0a505adfeb1ed2"
+  },
+  {
+    "file": "sourcing.css",
+    "matches": true,
+    "deployed_sha256": "3a1dd36e2291d1a00aa09a54ca013244255f8e352648e77f6f388c5dbc474d2e"
+  }
+]

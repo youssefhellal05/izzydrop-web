@@ -1,0 +1,158 @@
+[
+  {
+    "table": "orders",
+    "before": {
+      "hash": "4fc0b3d849b75086fa81d80b80703fbf",
+      "count": 1
+    },
+    "after": {
+      "hash": "4fc0b3d849b75086fa81d80b80703fbf",
+      "count": 1
+    },
+    "pass": true
+  },
+  {
+    "table": "suppliers",
+    "before": {
+      "hash": "3f6d62d7bbed086cf590c72e79b427a1",
+      "count": 2
+    },
+    "after": {
+      "hash": "3f6d62d7bbed086cf590c72e79b427a1",
+      "count": 2
+    },
+    "pass": true
+  },
+  {
+    "table": "order_items",
+    "before": {
+      "hash": "a671ee9000248d20cd9b1ac761f23766",
+      "count": 1
+    },
+    "after": {
+      "hash": "a671ee9000248d20cd9b1ac761f23766",
+      "count": 1
+    },
+    "pass": true
+  },
+  {
+    "table": "dropshippers",
+    "before": {
+      "hash": "7dca6d246027f976bcbbac4dc11072d0",
+      "count": 3
+    },
+    "after": {
+      "hash": "7dca6d246027f976bcbbac4dc11072d0",
+      "count": 3
+    },
+    "pass": true
+  },
+  {
+    "table": "product_images",
+    "before": {
+      "hash": "4137cc2fe21b4d6434bb40c2c4b46a4f",
+      "count": 2
+    },
+    "after": {
+      "hash": "4137cc2fe21b4d6434bb40c2c4b46a4f",
+      "count": 2
+    },
+    "pass": true
+  },
+  {
+    "table": "product_variants",
+    "before": {
+      "hash": "a989988190bbd3a6938495ab1e926e6e",
+      "count": 13
+    },
+    "after": {
+      "hash": "a989988190bbd3a6938495ab1e926e6e",
+      "count": 13
+    },
+    "pass": true
+  },
+  {
+    "table": "order_settlements",
+    "before": {
+      "hash": "d41d8cd98f00b204e9800998ecf8427e",
+      "count": 0
+    },
+    "after": {
+      "hash": "d41d8cd98f00b204e9800998ecf8427e",
+      "count": 0
+    },
+    "pass": true
+  },
+  {
+    "table": "supplier_products",
+    "before": {
+      "hash": "fecf3ed498d7153130fe1d5a836225e3",
+      "count": 4
+    },
+    "after": {
+      "hash": "fecf3ed498d7153130fe1d5a836225e3",
+      "count": 4
+    },
+    "pass": true
+  },
+  {
+    "table": "order_item_settlements",
+    "before": {
+      "hash": "d41d8cd98f00b204e9800998ecf8427e",
+      "count": 0
+    },
+    "after": {
+      "hash": "d41d8cd98f00b204e9800998ecf8427e",
+      "count": 0
+    },
+    "pass": true
+  },
+  {
+    "table": "storefront_integrations",
+    "before": {
+      "hash": "9207b5905ffb21d7d34f61d0a0bfbc96",
+      "count": 2
+    },
+    "after": {
+      "hash": "9207b5905ffb21d7d34f61d0a0bfbc96",
+      "count": 2
+    },
+    "pass": true
+  },
+  {
+    "table": "supplier_payout_details",
+    "before": {
+      "hash": "d41d8cd98f00b204e9800998ecf8427e",
+      "count": 0
+    },
+    "after": {
+      "hash": "d41d8cd98f00b204e9800998ecf8427e",
+      "count": 0
+    },
+    "pass": true
+  },
+  {
+    "table": "storefront_integration_variants",
+    "before": {
+      "hash": "0bdb180087e9c00081488bc4035010d6",
+      "count": 3
+    },
+    "after": {
+      "hash": "0bdb180087e9c00081488bc4035010d6",
+      "count": 3
+    },
+    "pass": true
+  },
+  {
+    "table": "dropshipper_product_links_except_verified_qa",
+    "before": {
+      "hash": "2bb09ac88d68191b45ef65bff4398708",
+      "count": 2
+    },
+    "after": {
+      "hash": "2bb09ac88d68191b45ef65bff4398708",
+      "count": 2
+    },
+    "pass": true
+  }
+]
