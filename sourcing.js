@@ -106,7 +106,7 @@
             <button class="btn secondary" name="save" type="submit">Save ${o.status==='sourced'?'information':'estimates'}</button>
             ${o.status==='sourcing'?'<button class="btn" name="complete" type="submit">Mark Sourced</button>':''}
           </form></details>`}
-          ${o.status==='sourced'?`<div class="notice ${o.catalog_slug?'ok':''}">${o.catalog_slug?'Published in Products automatically. The sourcing history stays here, and dropshippers still choose whether to add it to My Products.':'This legacy sourced offer was created before automatic catalog publishing.'}${o.catalog_slug?' <a class="auth-text-button" href="product.html?slug='+encodeURIComponent(o.catalog_slug)+'&from=supplier">View product →</a>':''}</div>`:''}
+          ${o.status==='sourced'?`<div class="notice ${o.catalog_slug?'ok':''}">${o.catalog_slug?'Published in Products automatically. The sourcing history stays here, and dropshippers still choose whether to add it to My Products.':'This legacy sourced offer was created before automatic catalog publishing.'}</div>`:''}`}
         </article>`;
     }).join('')||empty('No sourcing opportunities yet');
     root.querySelectorAll('[data-start-sourcing]').forEach(b=>b.onclick=()=>action(b,()=>IZZY.rpc('sourcing_start',{_request_id:b.dataset.startSourcing}),refresh));
