@@ -158,9 +158,11 @@
 
   function linkedProductCard(l,p){
     const range=priceRangeFor(p.product_id);
-    const selling=Number(l.retail_price??p.suggested_retail_price??0);
+    const hasCustomSelling=l.retail_price!=null;
+    const selling=hasCustomSelling?Number(l.retail_price):null;
     const suggested=Number(p.suggested_retail_price||0);
     const suggestedDisplay=range?rangeMoney(range.retail_min,range.retail_max,p.currency):IZZY.money(suggested,p.currency);
+    const sourcedVariant=p.sourced_variant_id?variantLabel({option_values:p.sourced_variant_options,variant_name:p.sourced_variant_name,sku:p.sourced_variant_sku}):'';
     const signedMoney=value=>{
       const n=Number(value);
       if(!Number.isFinite(n))return '—';
@@ -169,8 +171,11 @@
     };
     let differenceLabel=local('Vs suggested','مقارنة بالمقترح');
     let differenceDisplay;
-    let differenceClassValue;
-    if(range&&Number.isFinite(Number(range.retail_min))&&Number.isFinite(Number(range.retail_max))){
+    let differenceClassValue=0;
+    if(!hasCustomSelling){
+      differenceLabel=local('Pricing','التسعير');
+      differenceDisplay=local('Variant suggestions','اقتراحات كل خيار');
+    }else if(range&&Number.isFinite(Number(range.retail_min))&&Number.isFinite(Number(range.retail_max))){
       const diffLow=selling-Number(range.retail_max);
       const diffHigh=selling-Number(range.retail_min);
       differenceLabel=local('Vs suggested range','مقارنة بنطاق السعر المقترح');
@@ -195,9 +200,10 @@
         <div class="linked-info">
           <div class="row linked-title-row"><div><h3>${IZZY.esc(productName(p)||local('Product','المنتج'))}</h3><small>${IZZY.esc(p.supplier_name||local('IzzyDrop supplier','مورّد IzzyDrop'))} · ${Number(p.stock_quantity||0)} ${local('in stock','متوفر')}</small></div><span class="tag ${available?(integration?.enabled?'ok':''):'bad'}">${available?(integration?.enabled?local('Web connected','الموقع متصل'):local('My product','منتجي')):local('Unavailable','غير متاح')}</span></div>
           ${available?'':`<div class="notice bad linked-unavailable-note"><b>${local('Unavailable','غير متاح')}</b><span>${IZZY.esc(reason)}</span></div>`}
+          ${sourcedVariant?`<div class="notice"><b>${local('Sourced match','الاختيار المورّد')}: ${IZZY.esc(sourcedVariant)}</b><span>${local('Supplier price','سعر المورّد')} ${IZZY.money(p.sourced_quote_cost||0,p.currency||'EGP')} · ${local('Suggested retail','السعر المقترح')} ${IZZY.money(p.sourced_quote_suggested_retail||0,p.currency||'EGP')} · ${local('suggestion only','اقتراح فقط')}</span></div>`:''}
           <div class="linked-price-grid">
             <div><small>${local('Suggested','المقترح')}</small><b>${suggestedDisplay}</b></div>
-            <label><small>${local('Your selling price','سعر بيعك')}</small><div class="price-editor"><input class="linked-price-input" data-link-id="${l.id}" type="number" min="0" step="0.01" value="${selling}" ${available?'':'disabled'}><span>${IZZY.esc(p.currency||'EGP')}</span></div></label>
+            <label><small>${local('Your selling price','سعر بيعك')}</small><div class="price-editor"><input class="linked-price-input" data-link-id="${l.id}" type="number" min="0" step="0.01" value="${hasCustomSelling?selling:''}" placeholder="${local('Use variant suggestions','استخدم اقتراحات الخيارات')}" ${available?'':'disabled'}><span>${IZZY.esc(p.currency||'EGP')}</span></div></label>
             <div><small>${differenceLabel}</small><b class="${differenceClassValue>0?'positive':differenceClassValue<0?'negative':''}">${differenceDisplay}</b></div>
             <div><small>${local('Cairo delivery','توصيل القاهرة')}</small><b>${shippingReady?IZZY.money(delivery,SHIPPING.currency||p.currency):local('Setup pending','قيد الإعداد')}</b></div>
           </div>
