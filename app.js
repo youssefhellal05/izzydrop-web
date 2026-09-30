@@ -591,11 +591,13 @@
         const accepted=q.status==='accepted';
         const declined=q.status==='declined';
         const pname=productName({name:q.product_name,name_en:q.product_name_en,name_ar:q.product_name_ar});
+        const qVariant=variantLabel({option_values:q.variant_options,variant_name:q.variant_name,sku:q.variant_sku});
         return `<div class="sourcing-quote ${accepted?'is-accepted':''} ${declined?'is-declined':''}">
           <div><b>${IZZY.esc(q.supplier_name||local('Supplier','المورّد'))}</b><small>${q.available_quantity==null?'':`${q.available_quantity} ${local('available','متاح')}`}${q.lead_time_days==null?'':` · ${q.lead_time_days} ${local('day lead time','يوم مدة تجهيز')}`}</small></div>
           <strong>${IZZY.money(q.offered_cost,'EGP')}</strong>
+          ${q.suggested_retail_price==null?'':`<small>${local('Suggested retail','السعر المقترح')}: ${IZZY.money(q.suggested_retail_price,'EGP')} · ${local('suggestion only','اقتراح فقط')}</small>`}
           ${q.message?`<p>${IZZY.esc(q.message)}</p>`:''}
-          ${pname?`<small>${local('Matched product','المنتج المطابق')}: ${IZZY.esc(pname)}</small>`:''}
+          ${pname?`<small>${local('Matched product','المنتج المطابق')}: ${IZZY.esc(pname)}${q.variant_id?` · ${local('Variant','الخيار')}: ${IZZY.esc(qVariant)}`:''}</small>`:''}
           <div class="sourcing-quote-actions">
             ${q.public_slug?`<a class="btn secondary" href="product.html?slug=${encodeURIComponent(q.public_slug)}&from=app">${local('View product','عرض المنتج')}</a>`:''}
             ${!accepted&&!declined&&r.status!=='accepted'&&q.product_id?`<button class="btn accept-quote" data-id="${q.id}">${local('Accept quote','قبول العرض')}</button>`:''}
