@@ -16,6 +16,11 @@
   const productDescription=p=>window.IZZY_I18N?.productDescription(p)||p?.description||'';
   const ar=()=>window.IZZY_I18N?.isArabic?.()===true;
   const local=(en,arText)=>ar()?arText:en;
+  const publicSupplierName=name=>{
+    const value=String(name||'').trim();
+    const looksLikeEmail=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+    return !value||looksLikeEmail?local('IzzyDrop Supplier','مورّد IzzyDrop'):value;
+  };
   const variantLabel=v=>{
     const entries=Object.entries(v?.option_values||v?.options||{}).filter(([,value])=>String(value??'').trim());
     return entries.length?entries.map(([name,value])=>`${name}: ${value}`).join(' · '):(v?.variant_name||v?.name||v?.sku||'Default');
@@ -122,7 +127,7 @@
             ${p.category_name?`<span class="product-category">${IZZY.esc(p.category_name)}</span>`:''}
           </div>
           <a class="product-title-link" href="${productDetailsUrl(p)}"><h3>${IZZY.esc(name)}</h3></a>
-          <p class="supplier-line">${local('Sold by','يباع بواسطة')} <b>${IZZY.esc(p.supplier_name||local('IzzyDrop supplier','مورّد IzzyDrop'))}</b></p>
+          <p class="supplier-line">${local('Sold by','يباع بواسطة')} <b>${IZZY.esc(publicSupplierName(p.supplier_name))}</b></p>
 
           <div class="simple-product-prices">
             <div><small>${local('Supplier price','سعر المورّد')}</small><b>${supplierDisplay}</b></div>
@@ -161,8 +166,14 @@
     const hasCustomSelling=l.retail_price!=null;
     const selling=hasCustomSelling?Number(l.retail_price):null;
     const suggested=Number(p.suggested_retail_price||0);
-    const suggestedDisplay=range?rangeMoney(range.retail_min,range.retail_max,p.currency):IZZY.money(suggested,p.currency);
     const sourcedVariant=p.sourced_variant_id?variantLabel({option_values:p.sourced_variant_options,variant_name:p.sourced_variant_name,sku:p.sourced_variant_sku}):'';
+    const sourcedSuggested=p.sourced_variant_id&&p.sourced_quote_suggested_retail!=null?Number(p.sourced_quote_suggested_retail):null;
+    const suggestedDisplay=sourcedSuggested!=null
+      ? IZZY.money(sourcedSuggested,p.currency)
+      : range?rangeMoney(range.retail_min,range.retail_max,p.currency):IZZY.money(suggested,p.currency);
+    const fullRangeDisplay=sourcedSuggested!=null&&range
+      ? rangeMoney(range.retail_min,range.retail_max,p.currency)
+      : null;
     const signedMoney=value=>{
       const n=Number(value);
       if(!Number.isFinite(n))return '—';
@@ -174,7 +185,14 @@
     let differenceClassValue=0;
     if(!hasCustomSelling){
       differenceLabel=local('Pricing','التسعير');
-      differenceDisplay=local('Variant suggestions','اقتراحات كل خيار');
+      differenceDisplay=sourcedSuggested!=null
+        ? local('Sourced suggestion','اقتراح الخيار المورّد')
+        : local('Variant suggestions','اقتراحات كل خيار');
+    }else if(sourcedSuggested!=null){
+      const difference=selling-sourcedSuggested;
+      differenceLabel=local('Vs sourced suggestion','مقارنة باقتراح الخيار المورّد');
+      differenceDisplay=signedMoney(difference);
+      differenceClassValue=difference;
     }else if(range&&Number.isFinite(Number(range.retail_min))&&Number.isFinite(Number(range.retail_max))){
       const diffLow=selling-Number(range.retail_max);
       const diffHigh=selling-Number(range.retail_min);
@@ -198,11 +216,11 @@
           ${p.primary_image_url?`<img src="${IZZY.esc(p.primary_image_url)}" alt="">`:'IZ'}
         </a>
         <div class="linked-info">
-          <div class="row linked-title-row"><div><h3>${IZZY.esc(productName(p)||local('Product','المنتج'))}</h3><small>${IZZY.esc(p.supplier_name||local('IzzyDrop supplier','مورّد IzzyDrop'))} · ${Number(p.stock_quantity||0)} ${local('in stock','متوفر')}</small></div><span class="tag ${available?(integration?.enabled?'ok':''):'bad'}">${available?(integration?.enabled?local('Web connected','الموقع متصل'):local('My product','منتجي')):local('Unavailable','غير متاح')}</span></div>
+          <div class="row linked-title-row"><div><h3>${IZZY.esc(productName(p)||local('Product','المنتج'))}</h3><small>${IZZY.esc(publicSupplierName(p.supplier_name))} · ${Number(p.stock_quantity||0)} ${local('in stock','متوفر')}</small></div><span class="tag ${available?(integration?.enabled?'ok':''):'bad'}">${available?(integration?.enabled?local('Web connected','الموقع متصل'):local('My product','منتجي')):local('Unavailable','غير متاح')}</span></div>
           ${available?'':`<div class="notice bad linked-unavailable-note"><b>${local('Unavailable','غير متاح')}</b><span>${IZZY.esc(reason)}</span></div>`}
           ${sourcedVariant?`<div class="notice"><b>${local('Sourced match','الاختيار المورّد')}: ${IZZY.esc(sourcedVariant)}</b><span>${local('Supplier price','سعر المورّد')} ${IZZY.money(p.sourced_quote_cost||0,p.currency||'EGP')} · ${local('Suggested retail','السعر المقترح')} ${IZZY.money(p.sourced_quote_suggested_retail||0,p.currency||'EGP')} · ${local('suggestion only','اقتراح فقط')}</span></div>`:''}
           <div class="linked-price-grid">
-            <div><small>${local('Suggested','المقترح')}</small><b>${suggestedDisplay}</b></div>
+            <div><small>${sourcedSuggested!=null?local('Sourced suggestion','اقتراح الخيار المورّد'):local('Suggested','المقترح')}</small><b>${suggestedDisplay}</b>${sourcedVariant?`<span class="price-note">${IZZY.esc(sourcedVariant)}${fullRangeDisplay?` · ${local('full product range','نطاق المنتج الكامل')} ${fullRangeDisplay}`:''}</span>`:''}</div>
             <label><small>${local('Your selling price','سعر بيعك')}</small><div class="price-editor"><input class="linked-price-input" data-link-id="${l.id}" type="number" min="0" step="0.01" value="${hasCustomSelling?selling:''}" placeholder="${local('Use variant suggestions','استخدم اقتراحات الخيارات')}" ${available?'':'disabled'}><span>${IZZY.esc(p.currency||'EGP')}</span></div></label>
             <div><small>${differenceLabel}</small><b class="${differenceClassValue>0?'positive':differenceClassValue<0?'negative':''}">${differenceDisplay}</b></div>
             <div><small>${local('Cairo delivery','توصيل القاهرة')}</small><b>${shippingReady?IZZY.money(delivery,SHIPPING.currency||p.currency):local('Setup pending','قيد الإعداد')}</b></div>
@@ -524,7 +542,7 @@
       return `<article class="card sample-card">
         <div class="order-card-head"><div><span class="order-id">${IZZY.esc(name)}</span><small>${IZZY.esc(options||x.variant_name||'')} · ${new Date(x.created_at).toLocaleString()}</small></div><span class="tag ${x.status==='delivered'?'ok':x.status==='rejected'?'bad':x.status==='requested'?'warn':''}">${IZZY.esc(window.IZZY_I18N?.status?.(x.status)||x.status)}</span></div>
         <div class="order-summary-grid">
-          <div><small>${local('Supplier','المورّد')}</small><b>${IZZY.esc(x.supplier_name||'—')}</b></div>
+          <div><small>${local('Supplier','المورّد')}</small><b>${IZZY.esc(publicSupplierName(x.supplier_name))}</b></div>
           <div><small>${local('Delivery address','عنوان التوصيل')}</small><b>${IZZY.esc([addr.address1,addr.city,addr.governorate].filter(Boolean).join(', ')||'—')}</b></div>
           <div><small>${local('Tracking','التتبع')}</small><span>${IZZY.esc(tracking||'—')}</span></div>
         </div>
@@ -599,7 +617,7 @@
         const pname=productName({name:q.product_name,name_en:q.product_name_en,name_ar:q.product_name_ar});
         const qVariant=variantLabel({option_values:q.variant_options,variant_name:q.variant_name,sku:q.variant_sku});
         return `<div class="sourcing-quote ${accepted?'is-accepted':''} ${declined?'is-declined':''}">
-          <div><b>${IZZY.esc(q.supplier_name||local('Supplier','المورّد'))}</b><small>${q.available_quantity==null?'':`${q.available_quantity} ${local('available','متاح')}`}${q.lead_time_days==null?'':` · ${q.lead_time_days} ${local('day lead time','يوم مدة تجهيز')}`}</small></div>
+          <div><b>${IZZY.esc(publicSupplierName(q.supplier_name))}</b><small>${q.available_quantity==null?'':`${q.available_quantity} ${local('available','متاح')}`}${q.lead_time_days==null?'':` · ${q.lead_time_days} ${local('day lead time','يوم مدة تجهيز')}`}</small></div>
           <strong>${IZZY.money(q.offered_cost,'EGP')}</strong>
           ${q.suggested_retail_price==null?'':`<small>${local('Suggested retail','السعر المقترح')}: ${IZZY.money(q.suggested_retail_price,'EGP')} · ${local('suggestion only','اقتراح فقط')}</small>`}
           ${q.message?`<p>${IZZY.esc(q.message)}</p>`:''}
