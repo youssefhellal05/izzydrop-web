@@ -353,9 +353,10 @@
 
     el.innerHTML=groups.map(group=>{
       const x=group[0];
-      const remitReady=x.settlement_status==='ready'&&x.cod_remittance_status!=='remitted';
+      const remitReady=x.settlement_status==='ready'&&!['remitted','reversal_required'].includes(x.cod_remittance_status);
       const remitted=x.cod_remittance_status==='remitted';
       const reversal=x.cod_remittance_status==='reversal_required';
+      const discrepancy=['partial','disputed','not_remitted'].includes(x.cod_remittance_status)&&x.cod_remitted_amount!=null;
       const itemRows=group.map(i=>`<div class="admin-order-item">
         <div>
           <b>${IZZY.esc(i.supplier_name||'Supplier')}</b>
@@ -386,7 +387,9 @@
         </div>
         <div class="admin-order-summary">
           <div><small>COD collected from customer</small><b>${IZZY.money(x.customer_collected_amount||0,'EGP')}</b></div>
+          <div><small>Expected COD</small><b>${IZZY.money(x.expected_cod_amount??x.customer_collected_amount??0,'EGP')}</b></div>
           <div><small>Courier remitted</small><b>${x.cod_remitted_amount==null?'—':IZZY.money(x.cod_remitted_amount,'EGP')}</b></div>
+          <div><small>Difference</small><b class="${Number(x.remittance_difference||0)===0?'positive':'negative'}">${IZZY.money(x.remittance_difference||0,'EGP')}</b></div>
           <div><small>Customer delivery fee</small><b>${IZZY.money(x.customer_shipping_fee_amount||0,'EGP')}</b></div>
           <div><small>Courier cost</small><b>${x.courier_cost_amount==null?'—':IZZY.money(x.courier_cost_amount,'EGP')}</b></div>
           <div><small>Shipping margin</small><b>${x.shipping_margin_amount==null?'—':IZZY.money(x.shipping_margin_amount,'EGP')}</b></div>
@@ -395,15 +398,18 @@
         ${remitReady?`<div class="fulfillment-box">
           <div><b>Courier COD remittance</b><small>Confirm only after the courier has transferred the money to IzzyDrop.</small></div>
           <div class="fulfillment-fields">
-            <button class="btn confirm-remittance" data-order-id="${x.order_id}" data-collected="${Number(x.customer_collected_amount||0)}">Confirm COD remitted</button>
+            <button class="btn confirm-remittance" data-order-id="${x.order_id}" data-collected="${Number(x.expected_cod_amount??x.customer_collected_amount??0)}">Record COD remittance</button>
           </div>
         </div>`:''}
+        ${discrepancy?`<div class="fulfillment-box"><div><b>Reconciliation required</b><small>Payout eligibility: blocked until the difference is resolved.</small></div><button class="btn secondary resolve-remittance" data-order-id="${x.order_id}">Resolve discrepancy</button></div>`:''}
+        ${x.remittance_note?`<div class="notice">${IZZY.esc(x.remittance_note)}${x.remittance_reference?` · Ref ${IZZY.esc(x.remittance_reference)}`:''}</div>`:''}
         ${reversal?'<div class="notice">This order was reversed after remittance. Manual reconciliation is required.</div>':''}
         <div class="admin-order-items">${itemRows}</div>
       </article>`;
     }).join('')||'<div class="empty-state"><div class="empty-icon">EGP</div><h3>No settlements yet</h3><p>Delivered COD orders will appear here.</p></div>';
 
     document.querySelectorAll('.confirm-remittance').forEach(b=>b.onclick=()=>confirmCodRemittance(b));
+    document.querySelectorAll('.resolve-remittance').forEach(b=>b.onclick=()=>resolveCodDiscrepancy(b));
     document.querySelectorAll('.supplier-payout-paid').forEach(b=>b.onclick=()=>markSupplierPayoutPaid(b));
     document.querySelectorAll('.dropshipper-payout-paid').forEach(b=>b.onclick=()=>markDropshipperPayoutPaid(b));
   }
@@ -418,14 +424,24 @@
     if(costRaw===null)return;
     const cost=costRaw.trim()===''?null:Number(costRaw);
     if(cost!==null&&(!Number.isFinite(cost)||cost<0)){msg('Enter a valid courier cost.',true);return}
-    if(!confirm('Confirm that this COD money has actually reached IzzyDrop?'))return;
+    let reason=null,reference=null;
+    if(amount!==collected){reason=prompt('This is a discrepancy. Enter the reason (required):','');if(!reason?.trim()){msg('A reason is required for a partial or zero remittance.',true);return}reference=prompt('Enter the courier/remittance reference (required):','');if(!reference?.trim()){msg('A reference is required for a discrepancy.',true);return}}
+    if(!confirm(amount===collected?'Confirm that this COD money has actually reached IzzyDrop?':'Record this discrepancy without releasing payouts?'))return;
     btn.disabled=true;
     try{
-      await IZZY.rpc('admin_confirm_cod_remittance',{_order_id:btn.dataset.orderId,_remitted_amount:amount,_courier_cost:cost});
-      msg('COD remittance confirmed. Supplier and dropshipper payouts are now ready.');
+      await IZZY.rpc('admin_confirm_cod_remittance',{_order_id:btn.dataset.orderId,_remitted_amount:amount,_courier_cost:cost,_resolution_reason:reason,_reference:reference});
+      msg(amount===collected?'COD remittance fully reconciled. Payouts are now eligible.':'COD discrepancy recorded. Payouts remain blocked.');
       await load(false);
       go('settlements');
     }catch(e){msg(e.message,true);btn.disabled=false}
+  }
+
+  async function resolveCodDiscrepancy(btn){
+    const reason=prompt('Resolution reason (required):','');if(!reason?.trim())return;
+    const reference=prompt('Resolution reference (required):','');if(!reference?.trim())return;
+    const approve=confirm('Approve payouts despite this discrepancy? Choose Cancel to keep payouts blocked.');
+    btn.disabled=true;
+    try{await IZZY.rpc('admin_resolve_cod_discrepancy',{_order_id:btn.dataset.orderId,_resolution_reason:reason,_reference:reference,_approve_payout:approve});msg(approve?'Discrepancy resolved; payouts are eligible.':'Discrepancy recorded; payouts remain blocked.');await load(false);go('settlements')}catch(e){msg(e.message,true);btn.disabled=false}
   }
 
   async function markSupplierPayoutPaid(btn){
