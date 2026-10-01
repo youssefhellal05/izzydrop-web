@@ -252,13 +252,13 @@
     $('#products').innerHTML=rows.map(p=>{
       const s=supplierFor(p.supplier_id),img=imageFor(p.id),stock=totalStock(p.id);
       const canModerate=['active','inactive'].includes(p.status);
-      const action=canModerate?`<button class="btn secondary moderate-product" data-id="${p.id}" data-next="${p.status==='active'?'inactive':'active'}">${p.status==='active'?'Deactivate':'Activate'}</button>`:'';
+      const action=canModerate?`<button class="btn secondary moderate-product" data-id="${p.id}" data-next="${p.admin_blocked?'active':'inactive'}">${p.admin_blocked?'Unblock':'Block'}</button>`:'';
       return `<div class="admin-product-table admin-table-row">
         <div class="admin-product-cell"><div class="admin-product-thumb">${img?.url?`<img src="${IZZY.esc(img.url)}" alt="">`:'IZ'}</div><div><b>${IZZY.esc(productName(p))}</b><small>${IZZY.esc(p.sku||'')}</small></div></div>
         <span data-label="Supplier">${IZZY.esc(s.business_name||'—')}</span>
         <span data-label="Stock" class="${stock===0?'stock-low':''}">${stock}</span>
         <span data-label="Price">${IZZY.money(p.suggested_retail_price,p.currency)}</span>
-        <span data-label="Status"><span class="tag ${p.status==='active'?'ok':p.status==='inactive'?'warn':''}">${IZZY.esc(p.status)}</span></span>
+        <span data-label="Status"><span class="tag ${p.admin_blocked?'bad':p.status==='active'?'ok':p.status==='inactive'?'warn':''}">${p.admin_blocked?'Blocked by IzzyDrop':IZZY.esc(p.status)}</span></span>
         <span data-label="Added">${fmtDate(p.created_at)}</span>
         <div class="admin-row-actions"><a class="btn secondary" href="product.html?slug=${encodeURIComponent(p.public_slug||'')}&from=admin" target="_blank" rel="noopener">Inspect</a>${action}</div>
       </div>`;
@@ -269,11 +269,11 @@
 
   async function moderateProduct(btn){
     const next=btn.dataset.next;
-    if(next==='inactive'&&!confirm('Deactivate this product and hide it from dropshippers?'))return;
+    if(next==='inactive'&&!confirm('Block this product and hide it from dropshippers?'))return;
     btn.disabled=true;btn.textContent=next==='inactive'?'Deactivating…':'Activating…';
     try{
       await IZZY.rpc('admin_set_product_status',{_product_id:btn.dataset.id,_status:next});
-      msg(next==='inactive'?'Product deactivated.':'Product activated.');
+      msg(next==='inactive'?'Product blocked.':'Product unblocked.');
       await load(false);
     }catch(e){msg(e.message,true);btn.disabled=false}
   }
