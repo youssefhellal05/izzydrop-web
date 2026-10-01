@@ -164,7 +164,7 @@
 
   function linkedProductCard(l,p){
     const range=priceRangeFor(p.product_id);
-    const hasCustomSelling=l.retail_price!=null;
+    const hasCustomSelling=l.pricing_mode==='custom' && l.retail_price!=null;
     const selling=hasCustomSelling?Number(l.retail_price):null;
     const suggested=Number(p.suggested_retail_price||0);
     const sourcedVariant=p.sourced_variant_id?variantLabel({option_values:p.sourced_variant_options,variant_name:p.sourced_variant_name,sku:p.sourced_variant_sku}):'';
@@ -222,7 +222,7 @@
           ${sourcedVariant?`<div class="notice"><b>${local('Sourced match','الاختيار المورّد')}: ${IZZY.esc(sourcedVariant)}</b><span>${local('Supplier price','سعر المورّد')} ${IZZY.money(p.sourced_quote_cost||0,p.currency||'EGP')} · ${local('Suggested retail','السعر المقترح')} ${IZZY.money(p.sourced_quote_suggested_retail||0,p.currency||'EGP')} · ${local('suggestion only','اقتراح فقط')}</span></div>`:''}
           <div class="linked-price-grid">
             <div><small>${sourcedSuggested!=null?local('Sourced suggestion','اقتراح الخيار المورّد'):local('Suggested','المقترح')}</small><b>${suggestedDisplay}</b>${sourcedVariant?`<span class="price-note">${IZZY.esc(sourcedVariant)}${fullRangeDisplay?` · ${local('full product range','نطاق المنتج الكامل')} ${fullRangeDisplay}`:''}</span>`:''}</div>
-            <label><small>${local('Your selling price','سعر بيعك')}</small><div class="price-editor"><input class="linked-price-input" data-link-id="${l.id}" type="number" min="0" step="0.01" value="${hasCustomSelling?selling:''}" placeholder="${local('Use variant suggestions','استخدم اقتراحات الخيارات')}" ${available?'':'disabled'}><span>${IZZY.esc(p.currency||'EGP')}</span></div></label>
+            <label><small>${local('General selling price','سعر البيع العام')}</small><div class="price-editor"><input class="linked-price-input" data-link-id="${l.id}" type="number" min="0" step="0.01" value="${hasCustomSelling?selling:''}" placeholder="${local('Follow supplier suggestions','اتبع اقتراحات المورد')}" ${available?'':'disabled'}><span>${IZZY.esc(p.currency||'EGP')}</span></div><span class="price-note">${hasCustomSelling?local('Custom price','سعر مخصص'):local('Follow variant suggestions','اتبع اقتراح كل خيار')}</span></label>
             <div><small>${differenceLabel}</small><b class="${differenceClassValue>0?'positive':differenceClassValue<0?'negative':''}">${differenceDisplay}</b></div>
             <div><small>${local('Cairo delivery','توصيل القاهرة')}</small><b>${shippingReady?IZZY.money(delivery,SHIPPING.currency||p.currency):local('Setup pending','قيد الإعداد')}</b></div>
           </div>
@@ -255,12 +255,14 @@
 
   async function saveLinkedPrice(btn){
     const input=document.querySelector(`.linked-price-input[data-link-id="${btn.dataset.linkId}"]`);
-    const price=Number(input?.value);
-    if(!Number.isFinite(price)||price<0){status('Enter a valid selling price.',true);return}
+    const raw=input?.value?.trim()||'';
+    const follow=raw==='';
+    const price=follow?null:Number(raw);
+    if(!follow&&(!Number.isFinite(price)||price<0)){status('Enter a valid selling price or leave it blank to follow suggestions.',true);return}
     btn.disabled=true;btn.textContent='Saving…';
     try{
-      await IZZY.request(`/rest/v1/dropshipper_product_links?id=eq.${encodeURIComponent(btn.dataset.linkId)}`,{method:'PATCH',body:JSON.stringify({retail_price:price,updated_at:new Date().toISOString()})});
-      status('Selling price saved.');
+      await IZZY.request(`/rest/v1/dropshipper_product_links?id=eq.${encodeURIComponent(btn.dataset.linkId)}`,{method:'PATCH',body:JSON.stringify({retail_price:price,pricing_mode:follow?'follow_suggestions':'custom',updated_at:new Date().toISOString()})});
+      status(follow?'Following supplier suggestions.':'Custom selling price saved.');
       await load(false);
     }catch(e){status(e.message,true)}
     finally{btn.disabled=false;btn.textContent='Save price'}
@@ -371,8 +373,8 @@
     const linkPrice=link?.retail_price==null?null:Number(link.retail_price);
     const productSuggested=p.suggested_retail_price==null?null:Number(p.suggested_retail_price);
     const variantSuggested=v?.suggested_retail_price==null?null:Number(v.suggested_retail_price);
-    if(linkPrice==null||(productSuggested!=null&&linkPrice===productSuggested))return variantSuggested??productSuggested??linkPrice??0;
-    return linkPrice;
+    if(link?.pricing_mode==='custom' && linkPrice!=null)return linkPrice;
+    return variantSuggested??productSuggested??0;
   }
 
   function renderOrderPreview(){
@@ -500,7 +502,8 @@
         body:JSON.stringify({
           dropshipper_id:DROPSHIPPER.id,
           supplier_product_id:p.product_id,
-          retail_price:Number(p.suggested_retail_price||0),
+          retail_price:null,
+          pricing_mode:'follow_suggestions',
           status:'active',
           last_seen_cost:Number(p.supplier_cost||0),
           last_seen_stock:Number(p.stock_quantity||0)
@@ -876,11 +879,13 @@
   $('#order-product').onchange=loadOrderVariants;
   $('#order-variant').onchange=renderOrderPreview;
   $('#order-qty').oninput=renderOrderPreview;
+  let activeOrderIdempotencyKey=null;
   $('#order-form').onsubmit=async e=>{
     e.preventDefault();
     const s=$('#order-status'),btn=$('#order-submit');
     btn.disabled=true;btn.textContent='Sending…';s.textContent='Creating order…';s.className='status';
     try{
+      if(!activeOrderIdempotencyKey)activeOrderIdempotencyKey=crypto.randomUUID();
       const orderId=await IZZY.rpc('create_dropshipper_order',{
         _product_id:$('#order-product').value,
         _variant_id:$('#order-variant').value,
@@ -889,7 +894,8 @@
         _customer_phone:$('#order-customer-phone').value.trim(),
         _customer_email:$('#order-customer-email').value.trim()||null,
         _shipping_address:{address1:$('#order-address1').value.trim(),city:$('#order-city').value.trim(),governorate:$('#order-governorate').value.trim()},
-        _external_order_ref:$('#order-ref').value.trim()||null
+        _external_order_ref:$('#order-ref').value.trim()||null,
+        _idempotency_key:activeOrderIdempotencyKey
       });
       s.textContent='Order created ✓ '+String(orderId).slice(0,8);
       $('#order-form').reset();
@@ -897,8 +903,9 @@
       $('#order-variant').disabled=true;
       $('#order-create-card').hidden=true;
       $('#toggle-order-form').hidden=false;
+      activeOrderIdempotencyKey=null;
       await load();
-    }catch(err){s.textContent=err.message;s.className='status bad'}
+    }catch(err){s.textContent=err.message;s.className='status bad';/* keep the key so a retry is the same attempt */}
     finally{btn.disabled=SHIPPING?.available!==true;btn.textContent='Send order to IzzyDrop';renderOrderPreview()}
   };
 
