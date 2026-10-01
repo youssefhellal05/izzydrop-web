@@ -482,7 +482,7 @@
     const newItems=ITEMS.filter(i=>supplierOrderState(i)==='new');
     const openItems=ITEMS.filter(i=>!['fulfilled','cancelled'].includes(i.fulfillment_status));
     const lowProducts=PRODUCTS.filter(lowStockProduct);
-    const active=PRODUCTS.filter(p=>p.status==='active');
+    const active=PRODUCTS.filter(p=>p.status==='active'&&!p.admin_blocked);
 
     $('#new-order-count').textContent=newItems.length;
     $('#open-order-count').textContent=openItems.length;
@@ -506,7 +506,7 @@
       action:'Update stock',
       view:'products'
     });
-    const inactive=PRODUCTS.filter(p=>p.status==='inactive');
+    const inactive=PRODUCTS.filter(p=>p.status==='inactive'||p.admin_blocked);
     if(inactive.length)attention.push({
       type:'product',
       title:`${inactive.length} paused product${inactive.length===1?'':'s'}`,
@@ -604,7 +604,7 @@
   }
 
   async function bulkSetProductStatus(nextStatus){
-    const ids=[...SELECTED_PRODUCT_IDS];
+    const ids=[...SELECTED_PRODUCT_IDS].filter(id=>!PRODUCTS.find(p=>p.id===id)?.admin_blocked);
     if(!ids.length)return;
     const verb=nextStatus==='active'?'activate':'pause';
     if(!confirm(`${verb[0].toUpperCase()+verb.slice(1)} ${ids.length} selected product${ids.length===1?'':'s'}?`))return;
@@ -641,11 +641,11 @@
         <span class="supplier-table-cell ${low?'stock-low':''}" data-label="Stock">${stock}${low?' · Low':''}</span>
         <span class="supplier-table-cell" data-label="Your price">${IZZY.money(p.cost_price,p.currency)}</span>
         <span class="supplier-table-cell" data-label="Suggested retail">${IZZY.money(p.suggested_retail_price,p.currency)}</span>
-        <span class="supplier-table-cell" data-label="Status"><span class="tag ${p.status==='active'?'ok':p.status==='inactive'?'warn':''}">${p.status==='inactive'?'paused':IZZY.esc(p.status)}</span></span>
+        <span class="supplier-table-cell" data-label="Status"><span class="tag ${p.admin_blocked?'bad':p.status==='active'?'ok':p.status==='inactive'?'warn':''}">${p.admin_blocked?'Blocked by IzzyDrop':p.status==='inactive'?'paused':IZZY.esc(p.status)}</span></span>
         <div class="supplier-table-actions">
           ${p.public_slug?'<a class="btn secondary" href="product.html?slug='+encodeURIComponent(p.public_slug)+'" target="_blank" rel="noopener">View</a>':''}
           <button class="btn secondary edit-product-btn" data-id="${p.id}">Edit</button>
-          <button class="btn secondary toggle-product-btn" data-id="${p.id}" data-next="${p.status==='active'?'inactive':'active'}">${p.status==='active'?'Pause':'Activate'}</button>
+          ${p.admin_blocked?'<span class="muted">Admin restriction</span>':`<button class="btn secondary toggle-product-btn" data-id="${p.id}" data-next="${p.status==='active'?'inactive':'active'}">${p.status==='active'?'Pause':'Activate'}</button>`}
         </div>
       </div>`;
     }).join('')||'<div class="empty-state supplier-table-empty"><div class="empty-icon">□</div><h3>No products found</h3><p>Add your first product or change the current filters.</p><button class="btn" data-jump="add">Add product</button></div>';
