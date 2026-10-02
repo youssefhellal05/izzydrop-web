@@ -8,6 +8,7 @@
   let ADD_PREVIEW_OBJECT_URL=null;
   let PENDING_PRODUCT_PUBLISH=null;
   let SOURCING_RETURN=null;
+  let EDIT_PRODUCT_SNAPSHOT=null;
   let SUPPLIER_METRICS={},ORDER_HAS_MORE=false;
   const ORDER_PAGE_SIZE=50;
 
@@ -1078,9 +1079,10 @@
     $('#edit-product-market-status').value=p.status||'active';
     setEditContentLang(p.content_source_language==='ar'?'ar':'en');
     $('#edit-product-retail').value=p.suggested_retail_price??'';
+    EDIT_PRODUCT_SNAPSHOT={id:p.id,updated_at:p.updated_at};
 
     const vs=variantsFor(id);
-    $('#edit-variant-list').innerHTML=vs.map(v=>`<div class="edit-variant-row" data-variant-id="${v.id}">
+    $('#edit-variant-list').innerHTML=vs.map(v=>`<div class="edit-variant-row" data-variant-id="${v.id}" data-expected-updated-at="${IZZY.esc(v.updated_at||'')}" data-expected-stock="${Number(v.stock_quantity||0)}">
       <label class="edit-variant-enabled"><input data-edit-variant-enabled type="checkbox" ${v.is_enabled!==false?'checked':''}><span>${local('Available','متاح')}</span></label>
       <div class="edit-variant-name-cell">
         <input data-edit-variant-name value="${IZZY.esc(v.variant_name||'Default')}" placeholder="${local('Variant','الخيار')}">
@@ -1102,58 +1104,63 @@
     e.preventDefault();
     const id=$('#edit-product-id').value,p=productFor(id),btn=$('#save-product-edit');
     if(!p)return;
-    btn.disabled=true;btn.textContent='Saving…';
-    const st=$('#edit-product-status');st.textContent='Saving product…';st.className='status';
+    btn.disabled=true;btn.textContent=local('Saving…','جارٍ الحفظ…');
+    const st=$('#edit-product-status');st.textContent=local('Saving product…','جارٍ حفظ المنتج…');st.className='status';
     try{
-      await IZZY.request(`/rest/v1/supplier_products?id=eq.${encodeURIComponent(id)}`,{
-        method:'PATCH',
-        body:JSON.stringify((()=>{
-          const nameEn=$('#edit-product-name-en').value.trim()||null;
-          const nameAr=$('#edit-product-name-ar').value.trim()||null;
-          const descEn=$('#edit-product-description-en').value.trim()||null;
-          const descAr=$('#edit-product-description-ar').value.trim()||null;
-          const source=p.content_source_language==='ar'?'ar':'en';
-          return {
-            name_en:nameEn,
-            name_ar:nameAr,
-            description_en:descEn,
-            description_ar:descAr,
-            content_source_language:source,
-            name:(source==='ar'?(nameAr||nameEn):(nameEn||nameAr)),
-            description:(source==='ar'?(descAr||descEn):(descEn||descAr)),
-            sku:$('#edit-product-sku').value.trim(),
-            cost_price:Number($('#edit-product-cost').value),
-            category_id:$('#edit-product-category').value||null,
-            suggested_retail_price:$('#edit-product-retail').value===''?null:Number($('#edit-product-retail').value),
-            status:$('#edit-product-market-status').value,
-            updated_at:new Date().toISOString()
-          };
-        })())
-      });
+      const nameEn=$('#edit-product-name-en').value.trim()||null;
+      const nameAr=$('#edit-product-name-ar').value.trim()||null;
+      const descEn=$('#edit-product-description-en').value.trim()||null;
+      const descAr=$('#edit-product-description-ar').value.trim()||null;
+      const source=p.content_source_language==='ar'?'ar':'en';
+      const productPayload={
+        name_en:nameEn,
+        name_ar:nameAr,
+        description_en:descEn,
+        description_ar:descAr,
+        content_source_language:source,
+        sku:$('#edit-product-sku').value.trim(),
+        cost_price:Number($('#edit-product-cost').value),
+        category_id:$('#edit-product-category').value||null,
+        suggested_retail_price:$('#edit-product-retail').value===''?null:Number($('#edit-product-retail').value),
+        status:$('#edit-product-market-status').value
+      };
 
       const rows=[...document.querySelectorAll('.edit-variant-row[data-variant-id]')];
-      for(const row of rows){
-        const vid=row.dataset.variantId;
-        await IZZY.request(`/rest/v1/product_variants?id=eq.${encodeURIComponent(vid)}`,{
-          method:'PATCH',
-          body:JSON.stringify({
-            variant_name:row.querySelector('[data-edit-variant-name]').value.trim()||'Default',
-            sku:row.querySelector('[data-edit-variant-sku]').value.trim()||null,
-            stock_quantity:Number(row.querySelector('[data-edit-variant-stock]').value||0),
-            cost_price:row.querySelector('[data-edit-variant-cost]').value===''?null:Number(row.querySelector('[data-edit-variant-cost]').value),
-            suggested_retail_price:row.querySelector('[data-edit-variant-retail]').value===''?null:Number(row.querySelector('[data-edit-variant-retail]').value),
-            weight_grams:row.querySelector('[data-edit-variant-weight]').value===''?null:Number(row.querySelector('[data-edit-variant-weight]').value),
-            variant_image_url:row.querySelector('[data-edit-variant-image]').value||null,
-            is_enabled:row.querySelector('[data-edit-variant-enabled]').checked,
-            updated_at:new Date().toISOString()
-          })
-        });
-      }
-      st.textContent='Product updated.';
+      const variantsPayload=rows.map(row=>({
+        id:row.dataset.variantId,
+        expected_updated_at:row.dataset.expectedUpdatedAt,
+        expected_stock:Number(row.dataset.expectedStock),
+        variant_name:row.querySelector('[data-edit-variant-name]').value.trim()||'Default',
+        sku:row.querySelector('[data-edit-variant-sku]').value.trim()||null,
+        stock_quantity:Number(row.querySelector('[data-edit-variant-stock]').value||0),
+        cost_price:row.querySelector('[data-edit-variant-cost]').value===''?null:Number(row.querySelector('[data-edit-variant-cost]').value),
+        suggested_retail_price:row.querySelector('[data-edit-variant-retail]').value===''?null:Number(row.querySelector('[data-edit-variant-retail]').value),
+        weight_grams:row.querySelector('[data-edit-variant-weight]').value===''?null:Number(row.querySelector('[data-edit-variant-weight]').value),
+        variant_image_url:row.querySelector('[data-edit-variant-image]').value||null,
+        is_enabled:row.querySelector('[data-edit-variant-enabled]').checked
+      }));
+
+      await IZZY.rpc('supplier_update_product_v3',{
+        _product_id:id,
+        _expected_product_updated_at:EDIT_PRODUCT_SNAPSHOT?.updated_at||p.updated_at,
+        _product:productPayload,
+        _variants:variantsPayload
+      });
+
+      st.textContent=local('Product updated.','تم تحديث المنتج.');
+      EDIT_PRODUCT_SNAPSHOT=null;
       await load(false);
       setTimeout(()=>{$('#product-edit-modal').hidden=true},400);
-    }catch(err){st.textContent=err.message;st.className='status bad'}
-    finally{btn.disabled=false;btn.textContent='Save changes'}
+    }catch(err){
+      const conflict=/changed while you were editing|Inventory changed/i.test(String(err.message||''));
+      st.textContent=conflict
+        ? local('This product or its stock changed while you were editing. Nothing was saved. Close this window and reopen the product to use the latest stock.','تم تغيير المنتج أو مخزونه أثناء التعديل. لم يتم حفظ أي شيء. أغلق النافذة وافتح المنتج مرة أخرى لاستخدام أحدث مخزون.')
+        : err.message;
+      st.className='status bad';
+    }finally{
+      btn.disabled=false;
+      btn.textContent=local('Save changes','حفظ التغييرات');
+    }
   };
 
   const OPTION_QUICK_VALUES={
