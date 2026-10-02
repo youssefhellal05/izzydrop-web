@@ -298,6 +298,19 @@
         return `${IZZY.esc(productName(p)||local('Product','المنتج'))} × ${Number(i.quantity||1)}`;
       }).join(' · ')||local('Order items','عناصر الطلب');
       const tracking=items.map(i=>i.tracking_number?`${IZZY.esc(i.shipping_carrier||local('Carrier','شركة الشحن'))}: ${IZZY.esc(i.tracking_number)}`:'').filter(Boolean).join(' · ');
+      const settlement=SETTLEMENTS.find(x=>String(x.order_id)===String(o.id))||null;
+      const payoutStatus=settlement?.payout_status||'';
+      const payoutLabel=payoutStatus==='paid'
+        ? local('Paid','تم الدفع')
+        : payoutStatus==='pending'
+          ? local('Ready for payout','جاهز للدفع')
+          : payoutStatus==='not_ready'&&settlement?.settlement_status==='ready'
+            ? local('Awaiting courier remittance','في انتظار تحويل شركة الشحن')
+            : ['blocked','reversal_required'].includes(payoutStatus)
+              ? local('Not payable','غير مستحق للدفع')
+              : payoutStatus
+                ? (window.IZZY_I18N?.status?.(payoutStatus)||payoutStatus)
+                : local('Not ready','غير جاهز');
       let actions='';
       if(['pending','processing'].includes(o.status))actions=`<div class="order-delivery-actions"><button class="btn secondary cancel-order-btn" data-id="${o.id}">${local('Cancel order','إلغاء الطلب')}</button></div>`;
       else if(o.status==='shipped')actions=`<div class="order-delivery-actions"><button class="btn secondary delivery-status-btn" data-id="${o.id}" data-next="in_transit">${local('Mark in transit','تحديد قيد التوصيل')}</button><button class="btn delivery-status-btn" data-id="${o.id}" data-next="delivered">${local('Delivered','تم التوصيل')}</button><button class="btn secondary delivery-status-btn" data-id="${o.id}" data-next="refused">${local('Customer refused','رفض العميل')}</button></div>`;
@@ -322,6 +335,8 @@
             <div><small>${local('Delivery address','عنوان التوصيل')}</small><p>${IZZY.esc([addr.address1,addr.city,addr.governorate].filter(Boolean).join(', ')||'—')}</p></div>
             <div><small>${local('Tracking','التتبع')}</small><p>${tracking||local('Waiting for supplier to ship','في انتظار شحن المورّد')}</p></div>
             <div><small>${local('Source','المصدر')}</small><p>${IZZY.esc(o.source||'manual')}</p></div>
+            <div><small>${local('Your profit','ربحك')}</small><p>${settlement?IZZY.money(settlement.dropshipper_profit_amount||0,settlement.currency||o.currency||'EGP'):'—'}</p></div>
+            <div><small>${local('Payout status','حالة الدفع')}</small><p>${settlement?IZZY.esc(payoutLabel):local('Not available yet','غير متاح بعد')}</p></div>
           </div>
         </details>
         ${actions}
