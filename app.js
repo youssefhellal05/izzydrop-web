@@ -673,15 +673,22 @@
   }
 
   async function load(showMessage=false){
+    const sectionError=(selector,label)=>{
+      const el=$(selector);
+      if(!el)return;
+      el.innerHTML=`<div class="notice bad"><b>${IZZY.esc(label)} could not refresh.</b><span>Your other workspace sections are still available.</span><button class="btn secondary section-retry" type="button">Retry</button></div>`;
+      const retry=el.querySelector('.section-retry');
+      if(retry)retry.onclick=()=>load(false);
+    };
+
     try{
-      [PRODUCTS,LINKED_PRODUCTS,LINKS,INTEGRATIONS,INTEGRATION_VARIANTS,ORDERS,ITEMS,SOURCING_BOARD,SAMPLES,ALERTS,COD,SHIPPING,PRICE_RANGES,SETTLEMENTS]=await Promise.all([
+      const results=await Promise.allSettled([
         IZZY.rpc('marketplace_catalog_v3'),
         IZZY.rpc('dropshipper_linked_catalog'),
         IZZY.request('/rest/v1/dropshipper_product_links?select=*&order=created_at.desc'),
         IZZY.request('/rest/v1/storefront_integrations?select=*&order=created_at.desc'),
         IZZY.request('/rest/v1/storefront_integration_variants?select=*&order=created_at.asc'),
         IZZY.request(`/rest/v1/orders?select=*&order=created_at.desc&limit=${ORDER_PAGE_SIZE}`),
-        Promise.resolve([]),
         IZZY.rpc('sourcing_board'),
         IZZY.rpc('dropshipper_samples'),
         IZZY.request('/rest/v1/dropshipper_alerts?select=*&order=created_at.desc&limit=50'),
@@ -690,22 +697,77 @@
         IZZY.rpc('marketplace_variant_price_ranges'),
         IZZY.rpc('dropshipper_settlements')
       ]);
-      ITEMS=await fetchItemsForOrders(ORDERS);
-      ORDER_HAS_MORE=ORDERS.length===ORDER_PAGE_SIZE;
-      updateOrderPager();
+
+      const [
+        rProducts,rLinkedProducts,rLinks,rIntegrations,rIntegrationVariants,rOrders,
+        rSourcing,rSamples,rAlerts,rCod,rShipping,rPriceRanges,rSettlements
+      ]=results;
+      const failures=[];
+      const take=(r,current,label)=>{
+        if(r.status==='fulfilled')return r.value;
+        failures.push(label);
+        return current;
+      };
+
+      PRODUCTS=take(rProducts,PRODUCTS,'Products')||[];
+      LINKED_PRODUCTS=take(rLinkedProducts,LINKED_PRODUCTS,'My Products')||[];
+      LINKS=take(rLinks,LINKS,'product links')||[];
+      INTEGRATIONS=take(rIntegrations,INTEGRATIONS,'web connections')||[];
+      INTEGRATION_VARIANTS=take(rIntegrationVariants,INTEGRATION_VARIANTS,'web variants')||[];
+      SOURCING_BOARD=take(rSourcing,SOURCING_BOARD,'Sourcing')||{};
+      SAMPLES=take(rSamples,SAMPLES,'Samples')||[];
+      ALERTS=take(rAlerts,ALERTS,'Alerts')||[];
+      COD=take(rCod,COD,'COD summary')||{};
+      SHIPPING=take(rShipping,SHIPPING,'Shipping')||{};
+      PRICE_RANGES=take(rPriceRanges,PRICE_RANGES,'price ranges')||[];
+      SETTLEMENTS=take(rSettlements,SETTLEMENTS,'Money')||[];
+
+      if(rOrders.status==='fulfilled'){
+        ORDERS=rOrders.value||[];
+        try{
+          ITEMS=await fetchItemsForOrders(ORDERS);
+          ORDER_HAS_MORE=ORDERS.length===ORDER_PAGE_SIZE;
+          updateOrderPager();
+        }catch(e){
+          failures.push('order items');
+          if(!ITEMS.length)sectionError('#orders',local('Orders','الطلبات'));
+        }
+      }else{
+        failures.push('Orders');
+        if(!ORDERS.length)sectionError('#orders',local('Orders','الطلبات'));
+      }
+
+      if(rProducts.status==='rejected'&&!PRODUCTS.length)sectionError('#products',local('Products','المنتجات'));
+      if(rSourcing.status==='rejected'&&!Object.keys(SOURCING_BOARD||{}).length){
+        sectionError('#product-requests',local('Sourcing requests','طلبات التوريد'));
+        sectionError('#sourced-products',local('Sourced products','المنتجات التي تم توريدها'));
+      }
+      if(rSamples.status==='rejected'&&!SAMPLES.length)sectionError('#dropshipper-samples',local('Samples','العينات'));
+      if(rSettlements.status==='rejected'&&!SETTLEMENTS.length)sectionError('#money-list',local('Money','الأموال'));
+
       populateCategories();
-      renderProducts();
+      if(!(rProducts.status==='rejected'&&!PRODUCTS.length))renderProducts();
       renderLinked();
-      renderOrders();
+      if(!(rOrders.status==='rejected'&&!ORDERS.length))renderOrders();
       renderOrderProducts();
       renderOrderPreview();
       renderCod();
-      renderMoney();
-      renderRequests();
-      renderSamples();
+      if(!(rSettlements.status==='rejected'&&!SETTLEMENTS.length))renderMoney();
+      if(!(rSourcing.status==='rejected'&&!Object.keys(SOURCING_BOARD||{}).length))renderRequests();
+      if(!(rSamples.status==='rejected'&&!SAMPLES.length))renderSamples();
       renderAlerts();
-      if(showMessage)status('Everything is up to date.');
-    }catch(e){status(e.message,true)}
+
+      if(failures.length){
+        status(local(
+          `Some sections could not refresh: ${[...new Set(failures)].join(', ')}. Working sections are still available.`,
+          `تعذر تحديث بعض الأقسام: ${[...new Set(failures)].join('، ')}. باقي الأقسام ما زالت متاحة.`
+        ),true);
+      }else if(showMessage){
+        status('Everything is up to date.');
+      }
+    }catch(e){
+      status(e.message,true);
+    }
   }
 
   async function showDash(){
