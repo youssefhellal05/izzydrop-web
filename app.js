@@ -1,6 +1,7 @@
 (()=>{
   const $=s=>document.querySelector(s);
-  let PRODUCTS=[],LINKED_PRODUCTS=[],LINKS=[],INTEGRATIONS=[],INTEGRATION_VARIANTS=[],ORDERS=[],ITEMS=[],SOURCING_BOARD={},SAMPLES=[],ALERTS=[],SETTLEMENTS=[],COD={},SHIPPING={},PRICE_RANGES=[],ORDER_VARIANTS=[],SESSION=null,DROPSHIPPER=null,ORDER_FILTER='all',CURRENT_WEB_TOKEN=null;
+  let PRODUCTS=[],LINKED_PRODUCTS=[],LINKS=[],INTEGRATIONS=[],INTEGRATION_VARIANTS=[],ORDERS=[],ITEMS=[],SOURCING_BOARD={},SAMPLES=[],ALERTS=[],SETTLEMENTS=[],COD={},SHIPPING={},PRICE_RANGES=[],ORDER_VARIANTS=[],SESSION=null,DROPSHIPPER=null,ORDER_FILTER='all',CURRENT_WEB_TOKEN=null,ORDER_HAS_MORE=false;
+  const ORDER_PAGE_SIZE=50;
 
   const VIEW_COPY={
     products:['Products','Find products to sell.'],
@@ -279,6 +280,38 @@
   }
 
   function orderItemsFor(id){return ITEMS.filter(i=>i.order_id===id)}
+
+  async function fetchItemsForOrders(rows){
+    if(!rows?.length)return [];
+    const ids=rows.map(o=>o.id).filter(Boolean);
+    if(!ids.length)return [];
+    return IZZY.request(`/rest/v1/order_items?select=id,order_id,supplier_product_id,variant_id,quantity,retail_price_at_purchase,fulfillment_status,tracking_number,shipping_carrier,created_at&order_id=in.(${ids.join(',')})&order=created_at.desc`);
+  }
+
+  function updateOrderPager(){
+    const btn=$('#load-more-orders');
+    if(!btn)return;
+    btn.hidden=!ORDER_HAS_MORE;
+    btn.disabled=false;
+    btn.textContent=local('Load older orders','تحميل طلبات أقدم');
+  }
+
+  async function loadMoreOrders(){
+    const btn=$('#load-more-orders');
+    if(btn){btn.disabled=true;btn.textContent=local('Loading…','جارٍ التحميل…');}
+    try{
+      const page=await IZZY.request(`/rest/v1/orders?select=*&order=created_at.desc&limit=${ORDER_PAGE_SIZE}&offset=${ORDERS.length}`);
+      const pageItems=await fetchItemsForOrders(page||[]);
+      ORDERS=[...ORDERS,...(page||[])];
+      ITEMS=[...ITEMS,...(pageItems||[])];
+      ORDER_HAS_MORE=(page||[]).length===ORDER_PAGE_SIZE;
+      renderOrders();
+      updateOrderPager();
+    }catch(e){
+      status(e.message,true);
+      if(btn){btn.disabled=false;btn.textContent=local('Load older orders','تحميل طلبات أقدم');}
+    }
+  }
 
   function orderStatusClass(s){
     if(['delivered','shipped','in_transit'].includes(s))return 'ok';
@@ -647,8 +680,8 @@
         IZZY.request('/rest/v1/dropshipper_product_links?select=*&order=created_at.desc'),
         IZZY.request('/rest/v1/storefront_integrations?select=*&order=created_at.desc'),
         IZZY.request('/rest/v1/storefront_integration_variants?select=*&order=created_at.asc'),
-        IZZY.request('/rest/v1/orders?select=*&order=created_at.desc&limit=100'),
-        IZZY.request('/rest/v1/order_items?select=id,order_id,supplier_product_id,variant_id,quantity,retail_price_at_purchase,fulfillment_status,tracking_number,shipping_carrier,created_at&order=created_at.desc&limit=200'),
+        IZZY.request(`/rest/v1/orders?select=*&order=created_at.desc&limit=${ORDER_PAGE_SIZE}`),
+        Promise.resolve([]),
         IZZY.rpc('sourcing_board'),
         IZZY.rpc('dropshipper_samples'),
         IZZY.request('/rest/v1/dropshipper_alerts?select=*&order=created_at.desc&limit=50'),
@@ -657,6 +690,9 @@
         IZZY.rpc('marketplace_variant_price_ranges'),
         IZZY.rpc('dropshipper_settlements')
       ]);
+      ITEMS=await fetchItemsForOrders(ORDERS);
+      ORDER_HAS_MORE=ORDERS.length===ORDER_PAGE_SIZE;
+      updateOrderPager();
       populateCategories();
       renderProducts();
       renderLinked();
@@ -870,6 +906,7 @@
     document.querySelectorAll('[data-order-filter]').forEach(x=>x.classList.toggle('on',x===b));
     renderOrders();
   });
+  if($('#load-more-orders'))$('#load-more-orders').onclick=loadMoreOrders;
 
   $('#product-request-form').onsubmit=async e=>{
     e.preventDefault();
