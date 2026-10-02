@@ -45,8 +45,23 @@
     try{await fn();await refresh()}catch(e){status.textContent=e.message;status.className='status bad sourcing-action-status';button.disabled=false;button.textContent=label}
   }
   function bindDemand(root,refresh){
-    root.querySelectorAll('[data-interest-request]').forEach(b=>b.onclick=()=>action(b,()=>IZZY.rpc('sourcing_interest',{_request_id:b.dataset.interestRequest}),refresh));
-    root.querySelectorAll('[data-interest-offer]').forEach(b=>b.onclick=()=>action(b,()=>IZZY.rpc('sourcing_interest',{_response_id:b.dataset.interestOffer}),refresh));
+    root.querySelectorAll('[data-interest-request]').forEach(b=>b.onclick=()=>{
+      const currentlyInterested=b.dataset.interested==='1';
+      if(currentlyInterested&&!confirm('Withdraw interest from this request? This also clears your interest in sourced offers for this request.'))return;
+      return action(b,()=>IZZY.rpc('sourcing_set_interest',{
+        _request_id:b.dataset.interestRequest,
+        _response_id:null,
+        _interested:!currentlyInterested
+      }),refresh);
+    });
+    root.querySelectorAll('[data-interest-offer]').forEach(b=>b.onclick=()=>{
+      const currentlyInterested=b.dataset.interested==='1';
+      return action(b,()=>IZZY.rpc('sourcing_set_interest',{
+        _request_id:null,
+        _response_id:b.dataset.interestOffer,
+        _interested:!currentlyInterested
+      }),refresh);
+    });
     root.querySelectorAll('.sourcing-comment-form').forEach(f=>f.onsubmit=e=>{e.preventDefault();return action(f.querySelector('button'),()=>IZZY.rpc('sourcing_comment',{_request_id:f.dataset.requestId,_body:f.elements.body.value.trim(),_comment_id:f.dataset.commentId||null}),refresh)});
     root.querySelectorAll('[data-close-request]').forEach(b=>b.onclick=()=>{if(confirm('Close this request? Existing sourced offers remain visible; new comments and demand will stop.'))return action(b,()=>IZZY.rpc('sourcing_close_request',{_request_id:b.dataset.closeRequest}),refresh)});
   }
@@ -61,7 +76,7 @@
       return `<article class="card order-card sourcing-post" id="request-${r.id}">
         <div class="order-card-head"><div><h3>${esc(r.title)}</h3><small>${r.is_mine?'Your request · ':''}${new Date(r.created_at).toLocaleDateString()}</small></div>${tag(r.status)}</div>
         ${image(r.image_url)}${details(r)}
-        <div class="sourcing-post-actions"><button class="btn secondary" data-interest-request="${r.id}" ${r.interested||closed?'disabled':''}>${r.interested?'Interested ✓':"I'm interested"}</button>
+        <div class="sourcing-post-actions"><button class="btn secondary" data-interest-request="${r.id}" data-interested="${r.interested?'1':'0'}" ${closed&&!r.interested?'disabled':''}>${r.interested?'Withdraw interest':closed?'Request closed':"I'm interested"}</button>
         ${r.is_mine&&!closed?'<button class="auth-text-button" data-close-request="'+r.id+'">Close request</button>':''}</div>
         <div class="sourcing-progress-list">${responses.filter(o=>o.request_id===r.id).map(o=>offerPreview(o,r,'dropshipper')).join('')||'<p class="muted">Suppliers can start sourcing this product independently.</p>'}</div>
         <details class="sourcing-discussion"><summary>Community discussion (${discussion.length})</summary>
@@ -84,7 +99,7 @@
           ${image(o.catalog_product.image_url)}<div class="notice">Published through the normal Products flow. Prices, variants and stock below come from the catalog. Adding to My Products is your choice.</div>
           ${offerDetails(o,r)}
           <a class="auth-text-button" href="app.html?request=${encodeURIComponent(r.id)}">Open original community request →</a>
-          <div class="sourcing-post-actions"><button class="btn" data-interest-offer="${o.id}" ${o.interested||closed?'disabled':''}>${o.interested?'Requested ✓':closed?'Request closed':"I'm interested"}</button>
+          <div class="sourcing-post-actions"><button class="btn ${o.interested?'secondary':''}" data-interest-offer="${o.id}" data-interested="${o.interested?'1':'0'}" ${closed&&!o.interested?'disabled':''}>${o.interested?'Withdraw interest':closed?'Request closed':"I'm interested"}</button>
           ${o.catalog_slug?'<a class="btn secondary" href="product.html?slug='+encodeURIComponent(o.catalog_slug)+'&from=app">View published product</a>':''}</div>
         </article>`;
       }).join('')||empty('No sourced products yet');
