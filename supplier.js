@@ -7,6 +7,8 @@
   let VARIANT_GENERATION_SIGNATURE='';
   let ADD_PREVIEW_OBJECT_URL=null;
   let PENDING_PRODUCT_PUBLISH=null;
+  let SUPPLIER_METRICS={},ORDER_HAS_MORE=false;
+  const ORDER_PAGE_SIZE=50;
 
   const VIEW_COPY={
     overview:['Overview','What needs your attention.'],
@@ -42,6 +44,38 @@
   }
 
   function orderFor(id){return ORDERS.find(o=>o.id===id)||{}}
+
+  async function fetchSupplierItemsForOrders(rows){
+    if(!rows?.length)return [];
+    const ids=rows.map(o=>o.id).filter(Boolean);
+    if(!ids.length)return [];
+    return IZZY.request(`/rest/v1/order_items?select=*&supplier_id=eq.${encodeURIComponent(SUP.id)}&order_id=in.(${ids.join(',')})&order=created_at.desc`);
+  }
+
+  function updateSupplierOrderPager(){
+    const btn=$('#supplier-load-more-orders');
+    if(!btn)return;
+    btn.hidden=!ORDER_HAS_MORE;
+    btn.disabled=false;
+    btn.textContent=local('Load older orders','تحميل طلبات أقدم');
+  }
+
+  async function loadMoreSupplierOrders(){
+    const btn=$('#supplier-load-more-orders');
+    if(btn){btn.disabled=true;btn.textContent=local('Loading…','جارٍ التحميل…');}
+    try{
+      const page=await IZZY.request(`/rest/v1/orders?select=*&order=created_at.desc&limit=${ORDER_PAGE_SIZE}&offset=${ORDERS.length}`);
+      const pageItems=await fetchSupplierItemsForOrders(page||[]);
+      ORDERS=[...ORDERS,...(page||[])];
+      ITEMS=[...ITEMS,...(pageItems||[])];
+      ORDER_HAS_MORE=(page||[]).length===ORDER_PAGE_SIZE;
+      renderOrders();
+      updateSupplierOrderPager();
+    }catch(e){
+      msg(e.message,true);
+      if(btn){btn.disabled=false;btn.textContent=local('Load older orders','تحميل طلبات أقدم');}
+    }
+  }
   function productFor(id){return PRODUCTS.find(p=>p.id===id)||{}}
   function variantsFor(id){return VARIANTS.filter(v=>v.product_id===id)}
   function enabledVariantsFor(id){return variantsFor(id).filter(v=>v.is_enabled!==false)}
@@ -482,19 +516,21 @@
   function renderOverview(){
     const newItems=ITEMS.filter(i=>supplierOrderState(i)==='new');
     const openItems=ITEMS.filter(i=>!['fulfilled','cancelled'].includes(i.fulfillment_status));
+    const newItemCount=Number(SUPPLIER_METRICS.new_items??newItems.length);
+    const openItemCount=Number(SUPPLIER_METRICS.open_items??openItems.length);
     const lowProducts=PRODUCTS.filter(lowStockProduct);
     const active=PRODUCTS.filter(p=>p.status==='active'&&!p.admin_blocked);
 
-    $('#new-order-count').textContent=newItems.length;
-    $('#open-order-count').textContent=openItems.length;
+    $('#new-order-count').textContent=newItemCount;
+    $('#open-order-count').textContent=openItemCount;
     $('#low-stock-count').textContent=lowProducts.length;
     $('#active-product-count').textContent=active.length;
     $('#total-product-label').textContent=`${PRODUCTS.length} total product${PRODUCTS.length===1?'':'s'}`;
 
     const attention=[];
-    if(newItems.length)attention.push({
+    if(newItemCount)attention.push({
       type:'order',
-      title:`${newItems.length} new order${newItems.length===1?'':'s'} waiting`,
+      title:`${newItemCount} new order${newItemCount===1?'':'s'} waiting`,
       text:'Review customer details and prepare fulfillment.',
       action:'View orders',
       view:'orders',
@@ -531,10 +567,13 @@
     const todayOrders=ORDERS.filter(o=>new Date(o.created_at).toDateString()===today);
     const shippedToday=ITEMS.filter(i=>i.fulfillment_status==='fulfilled'&&new Date(i.updated_at||i.created_at).toDateString()===today);
     const unitsToday=ITEMS.filter(i=>new Date(i.created_at).toDateString()===today).reduce((n,i)=>n+Number(i.quantity||0),0);
+    const todayOrderCount=Number(SUPPLIER_METRICS.orders_received_today??todayOrders.length);
+    const todayUnitCount=Number(SUPPLIER_METRICS.units_ordered_today??unitsToday);
+    const todayShippedCount=Number(SUPPLIER_METRICS.items_shipped_today??shippedToday.length);
     $('#today-summary').innerHTML=`
-      <div><small>${local('Orders received','طلبات وصلت')}</small><strong>${todayOrders.length}</strong></div>
-      <div><small>${local('Units ordered','وحدات مطلوبة')}</small><strong>${unitsToday}</strong></div>
-      <div><small>${local('Items shipped','عناصر تم شحنها')}</small><strong>${shippedToday.length}</strong></div>
+      <div><small>${local('Orders received','طلبات وصلت')}</small><strong>${todayOrderCount}</strong></div>
+      <div><small>${local('Units ordered','وحدات مطلوبة')}</small><strong>${todayUnitCount}</strong></div>
+      <div><small>${local('Items shipped','عناصر تم شحنها')}</small><strong>${todayShippedCount}</strong></div>
     `;
   }
 
@@ -832,16 +871,17 @@
   }
 
   async function load(showMessage=false){
-    const [supplierRows,products,variants,orders,items,board,categories,samples,settlements]=await Promise.all([
+    const [supplierRows,products,variants,orders,items,board,categories,samples,settlements,metrics]=await Promise.all([
       IZZY.request(`/rest/v1/suppliers?select=id,business_name,status,low_stock_threshold,notification_preferences&id=eq.${encodeURIComponent(SUP.id)}&limit=1`),
       IZZY.request(`/rest/v1/supplier_products?select=*&supplier_id=eq.${encodeURIComponent(SUP.id)}&order=created_at.desc`),
       IZZY.request('/rest/v1/product_variants?select=*&order=created_at.asc'),
-      IZZY.request('/rest/v1/orders?select=*&order=created_at.desc&limit=150'),
-      IZZY.request(`/rest/v1/order_items?select=*&supplier_id=eq.${encodeURIComponent(SUP.id)}&order=created_at.desc&limit=250`),
+      IZZY.request(`/rest/v1/orders?select=*&order=created_at.desc&limit=${ORDER_PAGE_SIZE}`),
+      Promise.resolve([]),
       IZZY.rpc('sourcing_board'),
       IZZY.request('/rest/v1/categories?select=id,name,name_ar&order=name.asc'),
       IZZY.rpc('supplier_samples'),
-      IZZY.rpc('supplier_settlements')
+      IZZY.rpc('supplier_settlements'),
+      IZZY.rpc('supplier_dashboard_metrics')
     ]);
 
     if(supplierRows?.[0]){
@@ -851,11 +891,14 @@
     PRODUCTS=products||[];
     VARIANTS=variants||[];
     ORDERS=orders||[];
-    ITEMS=items||[];
+    ITEMS=await fetchSupplierItemsForOrders(ORDERS);
     SOURCING_BOARD=board||{};
     CATEGORIES=categories||[];
     SAMPLES=Array.isArray(samples)?samples:[];
     SETTLEMENTS=Array.isArray(settlements)?settlements:[];
+    SUPPLIER_METRICS=metrics||{};
+    ORDER_HAS_MORE=ORDERS.length===ORDER_PAGE_SIZE;
+    updateSupplierOrderPager();
 
     if(PRODUCTS.length){
       const ids=PRODUCTS.map(p=>p.id).join(',');
@@ -1879,6 +1922,7 @@
     go(b.dataset.jump);
   });
   document.querySelectorAll('[data-supplier-order-filter]').forEach(b=>b.onclick=()=>setOrderFilter(b.dataset.supplierOrderFilter));
+  if($('#supplier-load-more-orders'))$('#supplier-load-more-orders').onclick=loadMoreSupplierOrders;
 
   $('#notification-bell').onclick=e=>{
     e.stopPropagation();
