@@ -6,6 +6,7 @@
   const VARIANT_IMAGE_STATE=new Map();
   let VARIANT_GENERATION_SIGNATURE='';
   let ADD_PREVIEW_OBJECT_URL=null;
+  let PENDING_PRODUCT_PUBLISH=null;
 
   const VIEW_COPY={
     overview:['Overview','What needs your attention.'],
@@ -1681,80 +1682,96 @@
 
   $('#add-form').onsubmit=async e=>{
     e.preventDefault();
-    if(!validateProductStep(1))return;
+    const retrying=!!PENDING_PRODUCT_PUBLISH;
 
-    const costRaw=$('#p-cost').value,retailRaw=$('#p-retail').value;
-    const cost=Number(costRaw),retail=Number(retailRaw);
-    if(costRaw===''||!Number.isFinite(cost)||cost<0)return showFormError($('#p-cost'),local('Enter your supplier price.','أدخل سعر المورّد.'));
-    if(retailRaw===''||!Number.isFinite(retail)||retail<0)return showFormError($('#p-retail'),local('Enter a suggested selling price.','أدخل سعر البيع المقترح.'));
-    if(retail<cost)return showFormError($('#p-retail'),local('Suggested selling price must be at least your supplier price.','يجب ألا يقل سعر البيع المقترح عن سعر المورّد.'));
+    if(!retrying){
+      if(!validateProductStep(1))return;
 
-    if(!SIMPLE_PRODUCT_FLOW&&!validateProductStep(2))return;
+      const costRaw=$('#p-cost').value,retailRaw=$('#p-retail').value;
+      const cost=Number(costRaw),retail=Number(retailRaw);
+      if(costRaw===''||!Number.isFinite(cost)||cost<0)return showFormError($('#p-cost'),local('Enter your supplier price.','أدخل سعر المورّد.'));
+      if(retailRaw===''||!Number.isFinite(retail)||retail<0)return showFormError($('#p-retail'),local('Enter a suggested selling price.','أدخل سعر البيع المقترح.'));
+      if(retail<cost)return showFormError($('#p-retail'),local('Suggested selling price must be at least your supplier price.','يجب ألا يقل سعر البيع المقترح عن سعر المورّد.'));
 
-    const btn=$('#add-product-btn');btn.disabled=true;btn.textContent=local('Publishing…','جارٍ النشر…');
+      if(!SIMPLE_PRODUCT_FLOW&&!validateProductStep(2))return;
+    }
+
+    const btn=$('#add-product-btn');
+    btn.disabled=true;
+    btn.textContent=retrying?local('Retrying photos…','جارٍ إعادة رفع الصور…'):local('Publishing…','جارٍ النشر…');
+
     try{
-      const variants=collectVariants();
+      let variants,result,pid,uploadedUrls;
 
-      let nameEn=$('#p-name-en').value.trim()||null;
-      let nameAr=$('#p-name-ar').value.trim()||null;
-      let descEn=$('#p-description-en').value.trim()||null;
-      let descAr=$('#p-description-ar').value.trim()||null;
-      if(!nameEn&&!nameAr)throw Error(local('Enter the product name.','أدخل اسم المنتج.'));
+      if(PENDING_PRODUCT_PUBLISH){
+        ({variants,result,pid,uploadedUrls}=PENDING_PRODUCT_PUBLISH);
+      }else{
+        variants=collectVariants();
+        const cost=Number($('#p-cost').value);
+        const retail=Number($('#p-retail').value);
 
-      if(!nameEn||!nameAr){
-        btn.textContent=local('Preparing translation…','جارٍ تجهيز الترجمة…');
-        try{
-          const from=nameEn?'en':'ar',to=from==='en'?'ar':'en';
-          const translated=await translateText(nameEn||nameAr,from,to);
-          if(to==='en')nameEn=translated;else nameAr=translated;
-        }catch(e){console.warn('Automatic name translation skipped',e)}
+        let nameEn=$('#p-name-en').value.trim()||null;
+        let nameAr=$('#p-name-ar').value.trim()||null;
+        let descEn=$('#p-description-en').value.trim()||null;
+        let descAr=$('#p-description-ar').value.trim()||null;
+        if(!nameEn&&!nameAr)throw Error(local('Enter the product name.','أدخل اسم المنتج.'));
+
+        if(!nameEn||!nameAr){
+          btn.textContent=local('Preparing translation…','جارٍ تجهيز الترجمة…');
+          try{
+            const from=nameEn?'en':'ar',to=from==='en'?'ar':'en';
+            const translated=await translateText(nameEn||nameAr,from,to);
+            if(to==='en')nameEn=translated;else nameAr=translated;
+          }catch(e){console.warn('Automatic name translation skipped',e)}
+        }
+        if((descEn&&!descAr)||(descAr&&!descEn)){
+          btn.textContent=local('Preparing translation…','جارٍ تجهيز الترجمة…');
+          try{
+            const from=descEn?'en':'ar',to=from==='en'?'ar':'en';
+            const translated=await translateText(descEn||descAr,from,to);
+            if(to==='en')descEn=translated;else descAr=translated;
+          }catch(e){console.warn('Automatic description translation skipped',e)}
+        }
+
+        result=await IZZY.rpc('supplier_create_product_v2',{
+          _name_en:nameEn,
+          _name_ar:nameAr,
+          _description_en:descEn,
+          _description_ar:descAr,
+          _source_language:NEW_SOURCE_LANGUAGE,
+          _sku:$('#p-sku').value.trim()||null,
+          _cost:cost,
+          _retail:retail,
+          _currency:'EGP',
+          _variants:variants,
+          _category_id:$('#p-category').value||null,
+          _shipping_cost:0
+        });
+
+        pid=result.product_id;
+        uploadedUrls=Array(SELECTED_IMAGES.length).fill(null);
+        PENDING_PRODUCT_PUBLISH={pid,result,variants,uploadedUrls,nextIndex:0};
       }
-      if((descEn&&!descAr)||(descAr&&!descEn)){
-        btn.textContent=local('Preparing translation…','جارٍ تجهيز الترجمة…');
-        try{
-          const from=descEn?'en':'ar',to=from==='en'?'ar':'en';
-          const translated=await translateText(descEn||descAr,from,to);
-          if(to==='en')descEn=translated;else descAr=translated;
-        }catch(e){console.warn('Automatic description translation skipped',e)}
-      }
-      const result=await IZZY.rpc('supplier_create_product_v2',{
-        _name_en:nameEn,
-        _name_ar:nameAr,
-        _description_en:descEn,
-        _description_ar:descAr,
-        _source_language:NEW_SOURCE_LANGUAGE,
-        _sku:$('#p-sku').value.trim()||null,
-        _cost:cost,
-        _retail:retail,
-        _currency:'EGP',
-        _variants:variants,
-        _category_id:$('#p-category').value||null,
-        _shipping_cost:0
-      });
 
-      const pid=result.product_id;
-      let uploaded=0;
-      const uploadedUrls=[];
-      for(let i=0;i<SELECTED_IMAGES.length;i++){
-        btn.textContent=`Uploading photo ${i+1} of ${SELECTED_IMAGES.length}…`;
+      const pending=PENDING_PRODUCT_PUBLISH;
+      for(let i=pending.nextIndex;i<SELECTED_IMAGES.length;i++){
+        btn.textContent=local(
+          `Uploading photo ${i+1} of ${SELECTED_IMAGES.length}…`,
+          `جارٍ رفع الصورة ${i+1} من ${SELECTED_IMAGES.length}…`
+        );
         const file=SELECTED_IMAGES[i],ext=(file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';
         const path=`${SUP.id}/${pid}/${String(i+1).padStart(2,'0')}-${Date.now()}.${ext}`;
-        try{
-          const url=await IZZY.uploadProductImage(path,file);
-          await IZZY.request('/rest/v1/product_images',{
-            method:'POST',
-            headers:{Prefer:'return=representation'},
-            body:JSON.stringify({product_id:pid,url,position:i})
-          });
-          uploadedUrls[i]=url;
-          uploaded++;
-        }catch(photoError){
-          console.warn(photoError);
-          msg(`Product created, but only ${uploaded} of ${SELECTED_IMAGES.length} photos uploaded.`,true);
-          break;
-        }
+        const url=await IZZY.uploadProductImage(path,file);
+        await IZZY.request('/rest/v1/product_images',{
+          method:'POST',
+          headers:{Prefer:'return=representation'},
+          body:JSON.stringify({product_id:pid,url,position:i})
+        });
+        uploadedUrls[i]=url;
+        pending.nextIndex=i+1;
       }
 
+      btn.textContent=local('Finishing product…','جارٍ إنهاء نشر المنتج…');
       for(const created of (result.variants||[])){
         const source=variants[Number(created.index)];
         const imageUrl=source?.image_index==null?null:uploadedUrls[source.image_index]||null;
@@ -1766,6 +1783,14 @@
         }
       }
 
+      await IZZY.request(`/rest/v1/supplier_products?id=eq.${encodeURIComponent(pid)}`,{
+        method:'PATCH',
+        body:JSON.stringify({status:'active',updated_at:new Date().toISOString()})
+      });
+
+      const uploaded=uploadedUrls.filter(Boolean).length;
+      PENDING_PRODUCT_PUBLISH=null;
+
       e.target.reset();
       const resetLang=window.IZZY_I18N?.isArabic?.()?'ar':'en';NEW_SOURCE_LANGUAGE=resetLang;setNewContentLang(resetLang,false);
       $('#p-translation-status').textContent='';
@@ -1775,9 +1800,23 @@
       setVariantFlow(false,false);
       await load(false);
       go('products');
-      msg(`Product added · SKU ${result.sku}${uploaded? ` · ${uploaded} photo${uploaded===1?'':'s'}`:''}.`);
-    }catch(err){msg(err.message,true)}
-    finally{btn.disabled=false;btn.textContent=local('Publish product','نشر المنتج')}
+      msg(`Product published · SKU ${result.sku}${uploaded? ` · ${uploaded} photo${uploaded===1?'':'s'}`:''}.`);
+    }catch(err){
+      if(PENDING_PRODUCT_PUBLISH){
+        console.warn(err);
+        msg(local(
+          `Product saved as unpublished because photo publishing did not finish. Your selected photos are still here. Press “Retry photo upload” to continue. (${err.message})`,
+          `تم حفظ المنتج بدون نشر لأن رفع الصور لم يكتمل. الصور المختارة ما زالت موجودة. اضغط «إعادة رفع الصور» للمتابعة. (${err.message})`
+        ),true);
+      }else{
+        msg(err.message,true);
+      }
+    }finally{
+      btn.disabled=false;
+      btn.textContent=PENDING_PRODUCT_PUBLISH
+        ? local('Retry photo upload','إعادة رفع الصور')
+        : local('Publish product','نشر المنتج');
+    }
   };
 
   document.querySelectorAll('[data-product-version-mode]').forEach(btn=>btn.onclick=()=>{
