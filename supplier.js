@@ -7,6 +7,7 @@
   let VARIANT_GENERATION_SIGNATURE='';
   let ADD_PREVIEW_OBJECT_URL=null;
   let PENDING_PRODUCT_PUBLISH=null;
+  let SOURCING_RETURN=null;
   let SUPPLIER_METRICS={},ORDER_HAS_MORE=false;
   const ORDER_PAGE_SIZE=50;
 
@@ -41,6 +42,38 @@
     }
     if(v==='add')setProductStep(1,false);
     msg('');
+  }
+
+  function focusSourcingRequest(requestId,productId=null,responseId=null){
+    if(!requestId)return;
+    go('requests');
+    const card=document.getElementById('supplier-request-'+requestId);
+    if(!card)return;
+    card.classList.add('is-highlighted');
+    card.scrollIntoView({behavior:'smooth',block:'center'});
+    setTimeout(()=>card.classList.remove('is-highlighted'),3500);
+    if(productId){
+      const selector=responseId
+        ? `.sourcing-catalog-form[data-response-id="${CSS.escape(String(responseId))}"]:not([data-relink])`
+        : '.sourcing-catalog-form:not([data-relink])';
+      const form=card.querySelector(selector);
+      const select=form?.elements?.product_id;
+      if(select&&[...select.options].some(o=>String(o.value)===String(productId))){
+        select.value=productId;
+        select.focus({preventScroll:true});
+      }
+    }
+  }
+
+  function beginSourcingProduct(context){
+    SOURCING_RETURN=context||null;
+    go('add');
+    if(SOURCING_RETURN?.title){
+      msg(local(
+        `Creating a product for “${SOURCING_RETURN.title}”. After publishing, IzzyDrop will return you to the request to review the link.`,
+        `أنت تنشئ منتجًا لطلب “${SOURCING_RETURN.title}”. بعد النشر سيعيدك IzzyDrop إلى الطلب لمراجعة الربط.`
+      ));
+    }
   }
 
   function orderFor(id){return ORDERS.find(o=>o.id===id)||{}}
@@ -510,6 +543,11 @@
     resetVariantBuilder();
     setLoading();
     await load();
+    const sourcingRequest=new URLSearchParams(location.search).get('sourcing');
+    if(sourcingRequest){
+      focusSourcingRequest(sourcingRequest);
+      history.replaceState({},document.title,location.pathname);
+    }
     return true;
   }
 
@@ -832,7 +870,7 @@
   }
 
   function renderSourcingRequests(){
-    window.IZZY_SOURCING.renderSupplier(SOURCING_BOARD,PRODUCTS,()=>load(false),()=>go('add'));
+    window.IZZY_SOURCING.renderSupplier(SOURCING_BOARD,PRODUCTS,()=>load(false),context=>beginSourcingProduct(context));
   }
 
   function renderSamples(){
@@ -1888,9 +1926,19 @@
       resetVariantBuilder();
       setVariantAdvanced(false);
       setVariantFlow(false,false);
+      const sourcingReturn=SOURCING_RETURN;
       await load(false);
-      go('products');
-      msg(`Product published · SKU ${result.sku}${uploaded? ` · ${uploaded} photo${uploaded===1?'':'s'}`:''}.`);
+      if(sourcingReturn?.requestId){
+        SOURCING_RETURN=null;
+        focusSourcingRequest(sourcingReturn.requestId,pid,sourcingReturn.responseId);
+        msg(local(
+          `Product published · SKU ${result.sku}. Review the preselected product below, then press Link sourced product.`,
+          `تم نشر المنتج · SKU ${result.sku}. راجع المنتج المحدد بالأسفل ثم اضغط ربط المنتج المورّد.`
+        ));
+      }else{
+        go('products');
+        msg(`Product published · SKU ${result.sku}${uploaded? ` · ${uploaded} photo${uploaded===1?'':'s'}`:''}.`);
+      }
     }catch(err){
       if(PENDING_PRODUCT_PUBLISH){
         console.warn(err);
