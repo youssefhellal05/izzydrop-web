@@ -81,9 +81,27 @@
             <h1 id="page-title">Products</h1>
             <p id="page-subtitle" class="muted">Browse products and add the ones you want to sell.</p>
           </div>
-          <div class="account-chip">
-            <span class="account-avatar">D</span>
-            <div><b>Dropshipper</b><small id="user-email"></small></div>
+          <div class="dropshipper-top-actions">
+            <div class="notification-wrap">
+              <button id="dropshipper-notification-bell" class="notification-bell" aria-label="Notifications" aria-expanded="false" type="button">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16h12l-1.5-2V10a4.5 4.5 0 0 0-9 0v4zM10 19h4"/></svg>
+                <span id="dropshipper-notification-count" class="notification-count" hidden>0</span>
+              </button>
+              <div id="dropshipper-notification-panel" class="notification-panel dropshipper-notification-panel" hidden>
+                <div class="notification-panel-head notification-panel-head-actions">
+                  <div><b>Notifications</b><small id="dropshipper-notification-summary">You are all caught up</small></div>
+                  <button id="dropshipper-mark-all-read" class="auth-text-button" type="button" hidden>Mark all read</button>
+                </div>
+                <div id="dropshipper-notification-list" class="notification-list"></div>
+                <div class="notification-panel-footer">
+                  <button id="dropshipper-load-more-alerts" class="auth-text-button" type="button" hidden>Load older notifications</button>
+                </div>
+              </div>
+            </div>
+            <div class="account-chip">
+              <span class="account-avatar">D</span>
+              <div><b>Dropshipper</b><small id="user-email"></small></div>
+            </div>
           </div>
         </header>
         <div id="dash-status" class="status"></div>
