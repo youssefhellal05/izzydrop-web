@@ -1,6 +1,8 @@
 (async()=>{
-  const slug=new URLSearchParams(location.search).get('slug');
-  const from=new URLSearchParams(location.search).get('from');
+  const params=new URLSearchParams(location.search);
+  const slug=params.get('slug');
+  const from=params.get('from');
+  const sourcingRequest=params.get('request');
   const box=document.getElementById('product'),st=document.getElementById('status');
   if(!slug){st.textContent='Product link is missing.';st.className='status bad';return}
 
@@ -45,6 +47,7 @@
 
   try{
     const adminView=from==='admin';
+    const supplierView=from==='supplier';
     const p=adminView?await loadAdminProduct():await IZZY.rpc('public_product',{_slug:slug},false);
     if(!p){st.textContent=adminView?'Product not found.':'This product is not available.';st.className='status bad';return}
     const displayName=window.IZZY_I18N?.productName(p)||p.name||'';
@@ -60,7 +63,7 @@
     const images=(p.images||[]).filter(x=>x?.url);
     const session=IZZY.session();
     let isDropshipper=false,alreadyLinked=false;
-    if(!adminView&&session?.user?.id){
+    if(!adminView&&!supplierView&&session?.user?.id){
       try{
         const d=await IZZY.request(`/rest/v1/dropshippers?select=id&profile_id=eq.${encodeURIComponent(session.user.id)}&limit=1`);
         isDropshipper=!!d?.length;
@@ -105,8 +108,10 @@
       const inStock=Number(v.stock_quantity)>0;
       return `<button type="button" class="variant product-variant-choice ${inStock?'':'is-unavailable'}" data-variant-image="${IZZY.esc(v.image_url||main||'')}" data-variant-price="${Number.isFinite(vp)?vp:''}" data-variant-supplier="${Number.isFinite(sp)?sp:''}" ${inStock?'':'disabled aria-disabled="true"'}><div><b>${IZZY.esc(variantLabel(v))}</b><small>${IZZY.esc(v.sku||'')}${priceText}</small></div><span class="tag ${inStock?'ok':'warn'}">${inStock?`${Number(v.stock_quantity||0)} ${isAr?'متوفر':'in stock'}`:(isAr?'نفد المخزون':'Out of stock')}</span></button>`;
     }).join('') || `<div class="notice">${isAr?'لا توجد خيارات متاحة.':'No variants listed.'}</div>`;
+    const supplierBackHref='supplier.html'+(sourcingRequest?'?sourcing='+encodeURIComponent(sourcingRequest):'');
+    const supplierBackLabel=isAr?'العودة إلى طلب التوريد →':'← Back to sourcing request';
     box.innerHTML=`
-      ${from==='app'?`<a class="product-back" href="app.html">${isAr?'العودة إلى المنتجات →':'← Back to products'}</a>`:from==='admin'?'<a class="product-back" href="admin.html">← Back to Admin</a>':''}
+      ${from==='app'?`<a class="product-back" href="app.html">${isAr?'العودة إلى المنتجات →':'← Back to products'}</a>`:from==='admin'?'<a class="product-back" href="admin.html">← Back to Admin</a>':supplierView?`<a class="product-back" href="${IZZY.esc(supplierBackHref)}">${IZZY.esc(supplierBackLabel)}</a>`:''}
       <div class="product-detail product-detail-polished">
         <div class="product-gallery-wrap">
           <div class="gallery product-main-gallery" id="main-gallery">
@@ -141,7 +146,7 @@
           </div>
 
           <div class="product-detail-actions">
-            ${adminView?'<a class="btn" href="admin.html">Back to Admin</a>':isDropshipper?`<button id="use-product" class="btn" ${totalStock<=0?'disabled':''}>${alreadyLinked?(isAr?'عرض في منتجاتي':'View in My Products'):(isAr?'أضف إلى منتجاتي':'Add to My Products')}</button><button id="request-sample" class="btn secondary" ${totalStock<=0?'disabled':''}>${isAr?'طلب عينة':'Request sample'}</button>`:`<a class="btn" href="login.html?type=dropshipper">${isAr?'سجّل الدخول لإضافته إلى منتجاتك':'Log in to add to My Products'}</a>`}
+            ${adminView?'<a class="btn" href="admin.html">Back to Admin</a>':supplierView?`<a class="btn" href="${IZZY.esc(supplierBackHref)}">${isAr?'العودة إلى طلب التوريد':'Back to sourcing request'}</a>`:isDropshipper?`<button id="use-product" class="btn" ${totalStock<=0?'disabled':''}>${alreadyLinked?(isAr?'عرض في منتجاتي':'View in My Products'):(isAr?'أضف إلى منتجاتي':'Add to My Products')}</button><button id="request-sample" class="btn secondary" ${totalStock<=0?'disabled':''}>${isAr?'طلب عينة':'Request sample'}</button>`:`<a class="btn" href="login.html?type=dropshipper">${isAr?'سجّل الدخول لإضافته إلى منتجاتك':'Log in to add to My Products'}</a>`}
           </div>
           <div id="product-action-status" class="status"></div>
         </section>
