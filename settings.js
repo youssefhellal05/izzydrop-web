@@ -62,7 +62,7 @@
               <input id="low-stock-threshold" type="number" min="0" max="1000000" step="1" placeholder="5">
               <button class="btn settings-save" type="submit">Save notifications</button>
             </form>
-            <div class="notice settings-note">Your preferences are saved now. IzzyDrop will use these switches as notification delivery is connected to each marketplace event.</div>
+            <div class="notice settings-note">These switches control your in-app supplier alerts now. Email delivery will use the same preferences when supplier email notifications are connected.</div>
           </div>
         </section>`:''}
 
