@@ -148,39 +148,69 @@
       </div>`;
 
     let imageRequestId=0;
+    let requestedMainImage=main||'';
     const setMainImage=url=>{
       const img=document.getElementById('main-product-image');
       const gallery=document.getElementById('main-gallery');
-      if(!img||!url||img.getAttribute('src')===url)return;
+      if(!img||!url)return;
 
       const requestId=++imageRequestId;
+      requestedMainImage=url;
+
+      const removeImageState=()=>{
+        gallery?.querySelector('.product-image-loading')?.remove();
+        gallery?.querySelector('.product-image-error')?.remove();
+      };
+
+      if(img.getAttribute('src')===url){
+        removeImageState();
+        img.style.opacity='1';
+        img.style.visibility='visible';
+        img.removeAttribute('aria-busy');
+        document.querySelectorAll('.product-thumb').forEach(x=>x.classList.toggle('on',x.dataset.image===url));
+        return;
+      }
+
       img.style.opacity='0';
+      img.style.visibility='visible';
       img.setAttribute('aria-busy','true');
+      gallery?.querySelector('.product-image-error')?.remove();
 
       let loader=gallery?.querySelector('.product-image-loading');
       if(gallery&&!loader){
         loader=document.createElement('div');
         loader.className='product-image-loading';
         loader.textContent=isAr?'جارٍ تحميل الصورة…':'Loading image…';
-        loader.style.cssText='position:absolute;inset:0;display:grid;place-items:center;font-weight:700;color:#6b7280;background:rgba(255,255,255,.82);z-index:2;';
+        loader.style.cssText='position:absolute;inset:0;display:grid;place-items:center;font-weight:700;color:#6b7280;background:var(--card,#fff);z-index:2;';
         gallery.style.position='relative';
         gallery.appendChild(loader);
       }
 
       const preload=new Image();
       preload.onload=()=>{
-        if(requestId!==imageRequestId)return;
+        if(requestId!==imageRequestId||requestedMainImage!==url)return;
         img.src=url;
         img.style.opacity='1';
+        img.style.visibility='visible';
         img.removeAttribute('aria-busy');
         loader?.remove();
+        gallery?.querySelector('.product-image-error')?.remove();
         document.querySelectorAll('.product-thumb').forEach(x=>x.classList.toggle('on',x.dataset.image===url));
       };
       preload.onerror=()=>{
-        if(requestId!==imageRequestId)return;
-        img.style.opacity='1';
+        if(requestId!==imageRequestId||requestedMainImage!==url)return;
+        img.style.opacity='0';
+        img.style.visibility='hidden';
         img.removeAttribute('aria-busy');
         loader?.remove();
+        if(gallery&&!gallery.querySelector('.product-image-error')){
+          const fallback=document.createElement('div');
+          fallback.className='product-image-error';
+          fallback.textContent=isAr?'الصورة غير متاحة':'Image unavailable';
+          fallback.style.cssText='position:absolute;inset:0;display:grid;place-items:center;font-weight:700;color:var(--muted,#6b7280);background:var(--card,#fff);z-index:1;';
+          gallery.appendChild(fallback);
+        }
+        document.querySelectorAll('.product-thumb').forEach(x=>x.classList.remove('on'));
       };
       preload.src=url;
     };
