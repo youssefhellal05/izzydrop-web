@@ -615,26 +615,73 @@
     `;
   }
 
+  function supplierNotificationEnabled(key){
+    const prefs=SUP?.notification_preferences||{};
+    return prefs[key]!==false;
+  }
+
   function renderNotifications(){
     const notes=[];
-    ITEMS.filter(i=>supplierOrderState(i)==='new').slice(0,6).forEach(i=>{
-      const o=orderFor(i.order_id),p=productFor(i.supplier_product_id);
-      notes.push({
-        kind:'order',
-        title:'New order',
-        text:`${productName(p)||'Product'} × ${Number(i.quantity||1)} for ${o.customer_name||'customer'}`,
-        view:'orders',
-        filter:'new'
+
+    if(supplierNotificationEnabled('new_order')){
+      ITEMS.filter(i=>supplierOrderState(i)==='new').slice(0,6).forEach(i=>{
+        const o=orderFor(i.order_id),p=productFor(i.supplier_product_id);
+        notes.push({
+          kind:'order',
+          title:local('New order','طلب جديد'),
+          text:local(
+            `${productName(p)||'Product'} × ${Number(i.quantity||1)} for ${o.customer_name||'customer'}`,
+            `${productName(p)||'المنتج'} × ${Number(i.quantity||1)} للعميل ${o.customer_name||''}`
+          ),
+          view:'orders',
+          filter:'new'
+        });
       });
-    });
-    PRODUCTS.filter(lowStockProduct).slice(0,6).forEach(p=>{
-      notes.push({
-        kind:'stock',
-        title:local('Low stock','مخزون منخفض'),
-        text:local(`${productName(p)} has ${totalStock(p.id)} total units left`,`${productName(p)} متبقي منه ${totalStock(p.id)} وحدة`),
+    }
+
+    if(supplierNotificationEnabled('order_cancelled')){
+      const since=Date.now()-24*60*60*1000;
+      const cancelledByOrder=new Map();
+      ITEMS.filter(i=>supplierOrderState(i)==='cancelled'&&new Date(i.updated_at||i.created_at).getTime()>=since)
+        .forEach(i=>{if(!cancelledByOrder.has(i.order_id))cancelledByOrder.set(i.order_id,i)});
+      [...cancelledByOrder.values()].slice(0,4).forEach(i=>{
+        const o=orderFor(i.order_id),p=productFor(i.supplier_product_id);
+        notes.push({
+          kind:'cancel',
+          title:local('Order cancelled','تم إلغاء طلب'),
+          text:local(
+            `${productName(p)||'Product'} · ${o.external_order_ref||String(o.id||'').slice(0,8)}`,
+            `${productName(p)||'المنتج'} · ${o.external_order_ref||String(o.id||'').slice(0,8)}`
+          ),
+          view:'orders',
+          filter:'cancelled'
+        });
+      });
+    }
+
+    if(supplierNotificationEnabled('low_stock')){
+      PRODUCTS.filter(lowStockProduct).slice(0,6).forEach(p=>{
+        notes.push({
+          kind:'stock',
+          title:local('Low stock','مخزون منخفض'),
+          text:local(`${productName(p)} has ${totalStock(p.id)} total units left`,`${productName(p)} متبقي منه ${totalStock(p.id)} وحدة`),
+          view:'products'
+        });
+      });
+    }
+
+    if(supplierNotificationEnabled('product_updates')){
+      PRODUCTS.filter(p=>p.admin_blocked).slice(0,4).forEach(p=>notes.push({
+        kind:'product',
+        title:local('Product restricted by IzzyDrop','تم تقييد المنتج بواسطة IzzyDrop'),
+        text:local(
+          `${productName(p)||'Product'} is currently blocked from the marketplace.`,
+          `${productName(p)||'المنتج'} محظور حاليًا من الظهور في السوق.`
+        ),
         view:'products'
-      });
-    });
+      }));
+    }
+
     SAMPLES.filter(x=>x.status==='requested').slice(0,4).forEach(x=>notes.push({
       kind:'sample',
       title:local('New sample request','طلب عينة جديد'),
@@ -645,9 +692,9 @@
     $('#notification-count').textContent=notes.length;
     $('#notification-count').hidden=notes.length===0;
     $('#notification-list').innerHTML=notes.map(n=>`<button class="notification-item" data-note-view="${n.view}" ${n.filter?`data-note-filter="${n.filter}"`:''}>
-      <span class="notification-item-icon">${n.kind==='order'?'↗':'!'}</span>
+      <span class="notification-item-icon">${n.kind==='order'?'↗':n.kind==='cancel'?'×':'!'}</span>
       <span><b>${IZZY.esc(n.title)}</b><small>${IZZY.esc(n.text)}</small></span>
-    </button>`).join('')||'<div class="empty-mini"><b>You are all caught up.</b><span>No supplier alerts right now.</span></div>';
+    </button>`).join('')||`<div class="empty-mini"><b>${local('You are all caught up.','أنت متابع لكل شيء.')}</b><span>${local('No supplier alerts right now.','لا توجد تنبيهات للمورّد حاليًا.')}</span></div>`;
 
     document.querySelectorAll('.notification-item').forEach(b=>b.onclick=()=>{
       if(b.dataset.noteFilter)setOrderFilter(b.dataset.noteFilter);
@@ -2018,6 +2065,15 @@
   });
   document.querySelectorAll('[data-supplier-order-filter]').forEach(b=>b.onclick=()=>setOrderFilter(b.dataset.supplierOrderFilter));
   if($('#supplier-load-more-orders'))$('#supplier-load-more-orders').onclick=loadMoreSupplierOrders;
+
+  window.addEventListener('izzy:supplier-notification-preferences',e=>{
+    if(!SUP)return;
+    const detail=e.detail||{};
+    if(detail.preferences)SUP.notification_preferences={...detail.preferences};
+    if(Number.isFinite(Number(detail.lowStockThreshold)))SUP.low_stock_threshold=Number(detail.lowStockThreshold);
+    renderOverview();
+    renderNotifications();
+  });
 
   $('#notification-bell').onclick=e=>{
     e.stopPropagation();
