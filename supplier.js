@@ -871,12 +871,19 @@
   }
 
   async function load(showMessage=false){
-    const [supplierRows,products,variants,orders,items,board,categories,samples,settlements,metrics]=await Promise.all([
+    const sectionError=(selector,label)=>{
+      const el=$(selector);
+      if(!el)return;
+      el.innerHTML=`<div class="notice bad"><b>${IZZY.esc(label)} could not refresh.</b><span>Your other workspace sections are still available.</span><button class="btn secondary section-retry" type="button">Retry</button></div>`;
+      const retry=el.querySelector('.section-retry');
+      if(retry)retry.onclick=()=>load(false);
+    };
+
+    const results=await Promise.allSettled([
       IZZY.request(`/rest/v1/suppliers?select=id,business_name,status,low_stock_threshold,notification_preferences&id=eq.${encodeURIComponent(SUP.id)}&limit=1`),
       IZZY.request(`/rest/v1/supplier_products?select=*&supplier_id=eq.${encodeURIComponent(SUP.id)}&order=created_at.desc`),
       IZZY.request('/rest/v1/product_variants?select=*&order=created_at.asc'),
       IZZY.request(`/rest/v1/orders?select=*&order=created_at.desc&limit=${ORDER_PAGE_SIZE}`),
-      Promise.resolve([]),
       IZZY.rpc('sourcing_board'),
       IZZY.request('/rest/v1/categories?select=id,name,name_ar&order=name.asc'),
       IZZY.rpc('supplier_samples'),
@@ -884,36 +891,76 @@
       IZZY.rpc('supplier_dashboard_metrics')
     ]);
 
+    const [rSupplier,rProducts,rVariants,rOrders,rBoard,rCategories,rSamples,rSettlements,rMetrics]=results;
+    const failures=[];
+    const take=(r,current,label)=>{
+      if(r.status==='fulfilled')return r.value;
+      failures.push(label);
+      return current;
+    };
+
+    const supplierRows=take(rSupplier,[],'account');
     if(supplierRows?.[0]){
       SUP={...SUP,...supplierRows[0]};
       $('#business').textContent=SUP.business_name||'Supplier';
     }
-    PRODUCTS=products||[];
-    VARIANTS=variants||[];
-    ORDERS=orders||[];
-    ITEMS=await fetchSupplierItemsForOrders(ORDERS);
-    SOURCING_BOARD=board||{};
-    CATEGORIES=categories||[];
-    SAMPLES=Array.isArray(samples)?samples:[];
-    SETTLEMENTS=Array.isArray(settlements)?settlements:[];
-    SUPPLIER_METRICS=metrics||{};
-    ORDER_HAS_MORE=ORDERS.length===ORDER_PAGE_SIZE;
-    updateSupplierOrderPager();
 
-    if(PRODUCTS.length){
-      const ids=PRODUCTS.map(p=>p.id).join(',');
-      IMAGES=await IZZY.request(`/rest/v1/product_images?select=*&product_id=in.(${ids})&order=position.asc`);
-    }else IMAGES=[];
+    PRODUCTS=take(rProducts,PRODUCTS,'Products')||[];
+    VARIANTS=take(rVariants,VARIANTS,'variants')||[];
+    SOURCING_BOARD=take(rBoard,SOURCING_BOARD,'Sourcing')||{};
+    CATEGORIES=take(rCategories,CATEGORIES,'categories')||[];
+    SAMPLES=take(rSamples,SAMPLES,'Samples')||[];
+    SETTLEMENTS=take(rSettlements,SETTLEMENTS,'Payouts')||[];
+    SUPPLIER_METRICS=take(rMetrics,SUPPLIER_METRICS,'overview metrics')||{};
+
+    if(rOrders.status==='fulfilled'){
+      ORDERS=rOrders.value||[];
+      try{
+        ITEMS=await fetchSupplierItemsForOrders(ORDERS);
+        ORDER_HAS_MORE=ORDERS.length===ORDER_PAGE_SIZE;
+        updateSupplierOrderPager();
+      }catch(e){
+        failures.push('order items');
+        if(!ITEMS.length)sectionError('#orders',local('Orders','الطلبات'));
+      }
+    }else{
+      failures.push('Orders');
+      if(!ORDERS.length)sectionError('#orders',local('Orders','الطلبات'));
+    }
+
+    if(rProducts.status==='fulfilled'&&PRODUCTS.length){
+      try{
+        const ids=PRODUCTS.map(p=>p.id).join(',');
+        IMAGES=await IZZY.request(`/rest/v1/product_images?select=*&product_id=in.(${ids})&order=position.asc`);
+      }catch(e){
+        failures.push('product images');
+      }
+    }else if(!PRODUCTS.length){
+      IMAGES=[];
+    }
+
+    if(rProducts.status==='rejected'&&!PRODUCTS.length)sectionError('#products',local('Products','المنتجات'));
+    if(rBoard.status==='rejected'&&!Object.keys(SOURCING_BOARD||{}).length)sectionError('#supplier-requests',local('Sourcing requests','طلبات التوريد'));
+    if(rSamples.status==='rejected'&&!SAMPLES.length)sectionError('#supplier-samples',local('Samples','العينات'));
+    if(rSettlements.status==='rejected'&&!SETTLEMENTS.length)sectionError('#supplier-money-list',local('Payouts','المدفوعات'));
 
     refreshCategorySelects();
     renderOverview();
     renderNotifications();
-    renderProducts();
-    renderSourcingRequests();
-    renderSamples();
-    renderOrders();
-    renderMoney();
-    if(showMessage)msg('Supplier workspace updated.');
+    if(!(rProducts.status==='rejected'&&!PRODUCTS.length))renderProducts();
+    if(!(rBoard.status==='rejected'&&!Object.keys(SOURCING_BOARD||{}).length))renderSourcingRequests();
+    if(!(rSamples.status==='rejected'&&!SAMPLES.length))renderSamples();
+    if(!(rOrders.status==='rejected'&&!ORDERS.length))renderOrders();
+    if(!(rSettlements.status==='rejected'&&!SETTLEMENTS.length))renderMoney();
+
+    if(failures.length){
+      msg(local(
+        `Some sections could not refresh: ${[...new Set(failures)].join(', ')}. Working sections are still available.`,
+        `تعذر تحديث بعض الأقسام: ${[...new Set(failures)].join('، ')}. باقي الأقسام ما زالت متاحة.`
+      ),true);
+    }else if(showMessage){
+      msg('Supplier workspace updated.');
+    }
   }
 
   async function toggleProduct(btn){
