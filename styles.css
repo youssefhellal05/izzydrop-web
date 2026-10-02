@@ -377,6 +377,13 @@ html[data-theme="dark"] .product-thumb.on{border-color:#f4f6f8}
 .supplier-side nav button:first-child svg{fill:currentColor;stroke:none}
 .supplier-side nav button.on{background:#111318;color:#fff}
 .supplier-top-actions{display:flex;align-items:center;gap:10px}
+.dropshipper-top-actions{display:flex;align-items:center;gap:10px}
+.notification-panel-head-actions{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.notification-panel-footer{display:flex;justify-content:center;padding:10px 14px;border-top:1px solid var(--line);background:var(--card)}
+.dropshipper-notification-item.is-unread{background:var(--soft);box-shadow:inset 3px 0 0 var(--text)}
+.dropshipper-notification-item.is-unread b{font-weight:950}
+.notification-time{font-size:10px!important;opacity:.8}
+
 .notification-wrap{position:relative}
 .notification-bell{position:relative;width:44px;height:44px;border:1px solid var(--line);border-radius:13px;background:var(--card);color:var(--text);display:grid;place-items:center;cursor:pointer}
 .notification-bell svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
