@@ -596,13 +596,20 @@
   }
 
   async function load(showMessage=true){
-    const [suppliers,profiles,products,variants,orders,items,dropshippers,settings,audit,admins,shippingSettings,orderShipping,settlements,metrics]=await Promise.all([
+    const sectionError=(selector,label)=>{
+      const el=$(selector);
+      if(!el)return;
+      el.innerHTML=`<div class="notice bad"><b>${IZZY.esc(label)} could not refresh.</b><span>Other Control Center sections are still available.</span><button class="btn secondary section-retry" type="button">Retry</button></div>`;
+      const retry=el.querySelector('.section-retry');
+      if(retry)retry.onclick=()=>load(false);
+    };
+
+    const results=await Promise.allSettled([
       IZZY.request('/rest/v1/suppliers?select=*&order=created_at.desc'),
       IZZY.request('/rest/v1/profiles?select=id,full_name,phone,business_name,created_at'),
       IZZY.request('/rest/v1/supplier_products?select=*&order=created_at.desc'),
       IZZY.request('/rest/v1/product_variants?select=*&order=created_at.desc'),
       IZZY.request(`/rest/v1/orders?select=*&order=created_at.desc&limit=${ORDER_PAGE_SIZE}`),
-      Promise.resolve([]),
       IZZY.request('/rest/v1/dropshippers?select=id,profile_id,business_name,status,created_at'),
       IZZY.request('/rest/v1/marketplace_settings?select=default_commission_rate&id=eq.true&limit=1'),
       IZZY.request('/rest/v1/audit_log?select=*&order=created_at.desc&limit=50'),
@@ -613,39 +620,79 @@
       IZZY.rpc('admin_dashboard_metrics')
     ]);
 
-    SUPPLIERS=suppliers||[];
-    PROFILES=profiles||[];
-    PRODUCTS=products||[];
-    VARIANTS=variants||[];
-    ORDERS=orders||[];
-    ITEMS=await fetchAdminItemsForOrders(ORDERS);
-    DROPSHIPPERS=dropshippers||[];
-    DEFAULT_COMMISSION=Number(settings?.[0]?.default_commission_rate??0);
-    AUDIT=audit||[];
-    ADMINS=Array.isArray(admins)?admins:[];
-    SHIPPING_SETTINGS=shippingSettings||{};
-    ORDER_SHIPPING=Array.isArray(orderShipping)?orderShipping:[];
-    SETTLEMENTS=Array.isArray(settlements)?settlements:[];
-    ADMIN_METRICS=metrics||{};
-    ORDER_HAS_MORE=ORDERS.length===ORDER_PAGE_SIZE;
-    updateAdminOrderPager();
+    const [
+      rSuppliers,rProfiles,rProducts,rVariants,rOrders,rDropshippers,rSettings,
+      rAudit,rAdmins,rShippingSettings,rOrderShipping,rSettlements,rMetrics
+    ]=results;
+    const failures=[];
+    const take=(r,current,label)=>{
+      if(r.status==='fulfilled')return r.value;
+      failures.push(label);
+      return current;
+    };
 
-    if(PRODUCTS.length){
-      const ids=PRODUCTS.map(p=>p.id).join(',');
-      IMAGES=await IZZY.request(`/rest/v1/product_images?select=*&product_id=in.(${ids})&order=position.asc`);
-    }else IMAGES=[];
+    SUPPLIERS=take(rSuppliers,SUPPLIERS,'Suppliers')||[];
+    PROFILES=take(rProfiles,PROFILES,'profiles')||[];
+    PRODUCTS=take(rProducts,PRODUCTS,'Products')||[];
+    VARIANTS=take(rVariants,VARIANTS,'variants')||[];
+    DROPSHIPPERS=take(rDropshippers,DROPSHIPPERS,'dropshippers')||[];
+    const settings=take(rSettings,null,'commission settings');
+    if(settings)DEFAULT_COMMISSION=Number(settings?.[0]?.default_commission_rate??DEFAULT_COMMISSION);
+    AUDIT=take(rAudit,AUDIT,'Audit')||[];
+    ADMINS=take(rAdmins,ADMINS,'Admins')||[];
+    SHIPPING_SETTINGS=take(rShippingSettings,SHIPPING_SETTINGS,'Shipping')||{};
+    ORDER_SHIPPING=take(rOrderShipping,ORDER_SHIPPING,'order shipping')||[];
+    SETTLEMENTS=take(rSettlements,SETTLEMENTS,'Settlements')||[];
+    ADMIN_METRICS=take(rMetrics,ADMIN_METRICS,'overview metrics')||{};
+
+    if(rOrders.status==='fulfilled'){
+      ORDERS=rOrders.value||[];
+      try{
+        ITEMS=await fetchAdminItemsForOrders(ORDERS);
+        ORDER_HAS_MORE=ORDERS.length===ORDER_PAGE_SIZE;
+        updateAdminOrderPager();
+      }catch(e){
+        failures.push('order items');
+        if(!ITEMS.length)sectionError('#orders','Orders');
+      }
+    }else{
+      failures.push('Orders');
+      if(!ORDERS.length)sectionError('#orders','Orders');
+    }
+
+    if(rProducts.status==='fulfilled'&&PRODUCTS.length){
+      try{
+        const ids=PRODUCTS.map(p=>p.id).join(',');
+        IMAGES=await IZZY.request(`/rest/v1/product_images?select=*&product_id=in.(${ids})&order=position.asc`);
+      }catch(e){
+        failures.push('product images');
+      }
+    }else if(!PRODUCTS.length){
+      IMAGES=[];
+    }
+
+    if(rSuppliers.status==='rejected'&&!SUPPLIERS.length)sectionError('#suppliers','Suppliers');
+    if(rProducts.status==='rejected'&&!PRODUCTS.length)sectionError('#products','Products');
+    if(rSettlements.status==='rejected'&&!SETTLEMENTS.length)sectionError('#settlements','Settlements');
+    if(rAdmins.status==='rejected'&&!ADMINS.length)sectionError('#admin-accounts','Admins');
 
     populateSupplierFilters();
     renderOverview();
     renderNotifications();
-    renderSuppliers();
-    renderProducts();
-    renderOrders();
-    renderSettlements();
+    if(!(rSuppliers.status==='rejected'&&!SUPPLIERS.length))renderSuppliers();
+    if(!(rProducts.status==='rejected'&&!PRODUCTS.length))renderProducts();
+    if(!(rOrders.status==='rejected'&&!ORDERS.length))renderOrders();
+    if(!(rSettlements.status==='rejected'&&!SETTLEMENTS.length))renderSettlements();
     renderCommissions();
     renderShipping();
-    renderAdmins();
-    if(showMessage)msg('');
+    if(!(rAdmins.status==='rejected'&&!ADMINS.length))renderAdmins();
+    if(rAudit.status==='rejected'&&!AUDIT.length)sectionError('#audit-activity','Audit history');
+
+    if(failures.length){
+      msg(`Some sections could not refresh: ${[...new Set(failures)].join(', ')}. Working sections are still available.`,true);
+    }else if(showMessage){
+      msg('');
+    }
   }
 
   $('#supplier-search').oninput=renderSuppliers;
