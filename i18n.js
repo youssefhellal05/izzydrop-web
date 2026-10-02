@@ -294,6 +294,93 @@
     'Your products and stock.':'منتجاتك ومخزونك.',
     'Ship customer orders.':'اشحن طلبات العملاء.',
     'Products dropshippers want sourced.':'منتجات يبحث عنها الدروبشيبرز.',
+    'Sourcing requests':'طلبات التوريد',
+    'Products the community wants suppliers to find.':'منتجات يريد المجتمع من المورّدين العثور عليها.',
+    'Sourced products':'المنتجات المورّدة',
+    'Real published products linked to community sourcing requests.':'منتجات منشورة فعليًا مرتبطة بطلبات التوريد المجتمعية.',
+    'We want this product':'نريد هذا المنتج',
+    'Post a product missing from IzzyDrop. The community shows demand; suppliers find supply in Egypt, China or elsewhere.':'اطلب منتجًا غير موجود على IzzyDrop. يوضّح المجتمع حجم الطلب، ويبحث المورّدون عنه في مصر أو الصين أو أي مكان آخر.',
+    'Stocked products already available in the marketplace.':'منتجات متوفرة بالفعل في السوق.',
+    'Products our community wants suppliers to find.':'منتجات يريد المجتمع من المورّدين توفيرها.',
+    'Found by suppliers and published to Products, with sourcing history kept here.':'منتجات وجدها المورّدون ونشروها في المنتجات، مع الاحتفاظ بسجل التوريد هنا.',
+    'Community opportunity board':'لوحة فرص المجتمع',
+    'Show interest, discuss requirements and follow supplier progress. No orders or catalog links are created here.':'أظهر اهتمامك وناقش المتطلبات وتابع تقدم المورّدين. لا يتم إنشاء طلبات أو ربط منتجات تلقائيًا من هنا.',
+    'Search requests':'ابحث في الطلبات',
+    'All requests':'كل الطلبات',
+    'Open opportunities':'الفرص المفتوحة',
+    'My requests':'طلباتي',
+    'Request this product to record demand. This does not create a customer order or add it to My Products. Recommended retail is guidance only.':'اطلب هذا المنتج لتسجيل الطلب عليه. هذا لا ينشئ طلب عميل ولا يضيفه إلى منتجاتي. سعر البيع المقترح إرشادي فقط.',
+    'Not specified':'غير محدد',
+    'Open request':'طلب مفتوح',
+    'Suppliers sourcing':'المورّدون يبحثون عنه',
+    'Sourced':'تم التوريد',
+    'Closed':'مغلق',
+    'Archived':'مؤرشف',
+    'Withdrawn':'تم الانسحاب',
+    'Product reference ↗':'مرجع المنتج ↖',
+    'Target supplier cost:':'تكلفة المورّد المستهدفة:',
+    'Expected demand:':'الطلب المتوقع:',
+    'interested dropshippers':'دروبشيبرز مهتمون',
+    'Linked product unavailable':'المنتج المرتبط غير متاح',
+    'Awaiting published product':'في انتظار منتج منشور',
+    'No eligible published product is linked. Create the product normally, then link it here.':'لا يوجد منتج منشور صالح مرتبط حاليًا. أنشئ المنتج بالطريقة المعتادة ثم اربطه هنا.',
+    'Guidance only — you choose your selling price.':'إرشادي فقط — أنت تختار سعر البيع.',
+    'Current stock':'المخزون الحالي',
+    'Across enabled variants. No stock is reserved by interest.':'عبر الخيارات المفعلة. الاهتمام لا يحجز أي مخزون.',
+    'Community demand':'طلب المجتمع',
+    'interested':'مهتمون',
+    'Supplier:':'المورّد:',
+    'Suggested:':'المقترح:',
+    'Stock:':'المخزون:',
+    'IzzyDrop Supplier':'مورّد IzzyDrop',
+    'View published product →':'عرض المنتج المنشور ←',
+    'View sourced product →':'عرض المنتج المورّد ←',
+    'Published catalog link needed.':'يلزم ربط منتج منشور من الكتالوج.',
+    'Finding this product. Commercial information comes from the published product.':'يجري البحث عن هذا المنتج. البيانات التجارية تأتي من المنتج المنشور.',
+    'Saving…':'جارٍ الحفظ…',
+    'Your request ·':'طلبك ·',
+    'Withdraw interest':'إلغاء الاهتمام',
+    'Request closed':'الطلب مغلق',
+    "I'm interested":'أنا مهتم',
+    'Close request':'إغلاق الطلب',
+    'Suppliers can start sourcing this product independently.':'يمكن لكل مورّد بدء البحث عن هذا المنتج بشكل مستقل.',
+    'Community discussion':'نقاش المجتمع',
+    'You':'أنت',
+    'Edit your comment':'تعديل تعليقك',
+    'Save comment':'حفظ التعليق',
+    'No comments yet. Share the features or demand you need.':'لا توجد تعليقات بعد. شارك المواصفات أو حجم الطلب الذي تحتاجه.',
+    'Comment':'تعليق',
+    'Post comment':'نشر التعليق',
+    'No sourcing requests in this view':'لا توجد طلبات توريد في هذا العرض',
+    'Sourced product':'منتج مورّد',
+    'Published through the normal Products flow. Prices, variants and stock below come from the catalog. Adding to My Products is your choice.':'تم نشره من خلال مسار المنتجات المعتاد. الأسعار والخيارات والمخزون أدناه تأتي من الكتالوج. إضافته إلى منتجاتي اختيارك.',
+    'Open original community request →':'فتح طلب المجتمع الأصلي ←',
+    'No sourced products yet':'لا توجد منتجات مورّدة بعد',
+    'Choose a product':'اختر منتجًا',
+    'Fix linked product':'إصلاح المنتج المرتبط',
+    'Linked the wrong product?':'هل ربطت المنتج الخطأ؟',
+    'Choose another active published product from your catalog.':'اختر منتجًا منشورًا ونشطًا آخر من كتالوجك.',
+    'You can replace the linked product. Interested dropshippers will be notified again so they do not keep using the wrong offer.':'يمكنك استبدال المنتج المرتبط. سيتم تنبيه الدروبشيبرز المهتمين مرة أخرى حتى لا يستمروا في استخدام العرض الخطأ.',
+    'Correct published product':'المنتج المنشور الصحيح',
+    'No eligible active products are available. Publish or reactivate a product with an enabled variant first.':'لا توجد منتجات نشطة صالحة. انشر منتجًا أو أعد تفعيله مع وجود خيار مفعّل أولًا.',
+    'Update linked product':'تحديث المنتج المرتبط',
+    'This changes only this sourcing link. It does not alter the product, stock, orders or My Products.':'هذا يغيّر رابط التوريد فقط. لا يغيّر المنتج أو المخزون أو الطلبات أو منتجاتي.',
+    'Start sourcing':'ابدأ التوريد',
+    'Let the community know you are working on finding this product.':'أخبر المجتمع أنك تعمل على العثور على هذا المنتج.',
+    'Your progress':'تقدمك',
+    'Open published product':'فتح المنتج المنشور',
+    'Your linked product is currently unavailable. You can repair the link below or manage its publication in Products.':'المنتج المرتبط غير متاح حاليًا. يمكنك إصلاح الرابط أدناه أو إدارة نشره من المنتجات.',
+    'Manage products':'إدارة المنتجات',
+    'This request was closed by its owner.':'تم إغلاق هذا الطلب بواسطة صاحبه.',
+    'Start sourcing → Find / obtain product → Create product normally → Link published product → Sourced':'ابدأ التوريد ← اعثر على المنتج / احصل عليه ← أنشئ المنتج بالطريقة المعتادة ← اربط المنتج المنشور ← تم التوريد',
+    'When you have this product ready, create it in Products. IzzyDrop will bring you back to this request and preselect the product for you to review before linking.':'عندما يصبح المنتج جاهزًا، أنشئه في المنتجات. سيعيدك IzzyDrop إلى هذا الطلب ويحدد المنتج مسبقًا لتراجعه قبل الربط.',
+    'Create product in Products':'إنشاء المنتج في المنتجات',
+    'Refresh published products':'تحديث المنتجات المنشورة',
+    'Your published product':'منتجك المنشور',
+    'No eligible products yet. Publish a product with at least one enabled variant, then refresh.':'لا توجد منتجات صالحة بعد. انشر منتجًا يحتوي على خيار مفعّل واحد على الأقل ثم حدّث.',
+    'Link sourced product':'ربط المنتج المورّد',
+    'Notifies interested dropshippers. The community request stays open to other suppliers.':'يتم تنبيه الدروبشيبرز المهتمين، ويظل طلب المجتمع مفتوحًا للمورّدين الآخرين.',
+    'No sourcing opportunities yet':'لا توجد فرص توريد بعد',
     'Create a product in three simple steps.':'أنشئ منتجًا في ثلاث خطوات بسيطة.',
     'Sample requests from dropshippers.':'طلبات عينات من الدروبشيبرز.',
     'Three simple steps. IzzyDrop handles the technical parts.':'ثلاث خطوات بسيطة، وIzzyDrop يتولى التفاصيل التقنية.',
@@ -671,7 +758,16 @@
     'Tracking number':'رقم التتبع',
     'e.g. Wireless earbuds':'مثال: سماعات لاسلكية',
     'Leave blank for IzzyDrop to create one':'اتركه فارغًا ليُنشئه IzzyDrop',
-    'What is the product, what makes it useful, and what should a dropshipper know?':'ما هو المنتج؟ وما أهم مميزاته؟ وما الذي يجب أن يعرفه الدروبشيبر؟'
+    'What is the product, what makes it useful, and what should a dropshipper know?':'ما هو المنتج؟ وما أهم مميزاته؟ وما الذي يجب أن يعرفه الدروبشيبر؟',
+    'What product are you looking for?':'ما المنتج الذي تبحث عنه؟',
+    'Description / requirements: features, materials, size, quality…':'الوصف / المتطلبات: المزايا، الخامات، المقاس، الجودة…',
+    'Product/source link (optional)':'رابط المنتج / المصدر (اختياري)',
+    'Image URL (optional)':'رابط الصورة (اختياري)',
+    'Target cost EGP (optional)':'التكلفة المستهدفة بالجنيه (اختياري)',
+    'Expected quantity / demand (optional)':'الكمية / الطلب المتوقع (اختياري)',
+    'Additional notes (optional)':'ملاحظات إضافية (اختياري)',
+    'Search requests':'ابحث في الطلبات',
+    'What would make this product useful for your store?':'ما الذي يجعل هذا المنتج مناسبًا لمتجرك؟'
   };
 
   const keys={
@@ -754,6 +850,26 @@
     if(available){node.nodeValue=raw.replace(trimmed,`${available[1]} منتج متاح`);return}
     const total=trimmed.match(/^(\d+) total products?$/i);
     if(total){node.nodeValue=raw.replace(trimmed,`${total[1]} إجمالي المنتجات`);return}
+    const units=trimmed.match(/^(\d+) units$/i);
+    if(units){node.nodeValue=raw.replace(trimmed,`${units[1]} وحدة`);return}
+    const interestedDropshippers=trimmed.match(/^(\d+) interested dropshippers$/i);
+    if(interestedDropshippers){node.nodeValue=raw.replace(trimmed,`${interestedDropshippers[1]} دروبشيبرز مهتمون`);return}
+    const interested=trimmed.match(/^(\d+) interested$/i);
+    if(interested){node.nodeValue=raw.replace(trimmed,`${interested[1]} مهتمون`);return}
+    const variants=trimmed.match(/^Variants \((\d+)\)$/i);
+    if(variants){node.nodeValue=raw.replace(trimmed,`الخيارات (${variants[1]})`);return}
+    const discussion=trimmed.match(/^Community discussion \((\d+)\)$/i);
+    if(discussion){node.nodeValue=raw.replace(trimmed,`نقاش المجتمع (${discussion[1]})`);return}
+    const ownRequest=trimmed.match(/^Your request · (.+)$/i);
+    if(ownRequest){node.nodeValue=raw.replace(trimmed,`طلبك · ${ownRequest[1]}`);return}
+    const variantCount=trimmed.match(/^(.* · )(\d+) variants$/i);
+    if(variantCount){node.nodeValue=raw.replace(trimmed,`${variantCount[1]}${variantCount[2]} خيارات`);return}
+    const supplierLine=trimmed.match(/^Supplier: (.+)$/i);
+    if(supplierLine){node.nodeValue=raw.replace(trimmed,`المورّد: ${supplierLine[1]}`);return}
+    const suggestedLine=trimmed.match(/^Suggested: (.+)$/i);
+    if(suggestedLine){node.nodeValue=raw.replace(trimmed,`المقترح: ${suggestedLine[1]}`);return}
+    const stockLine=trimmed.match(/^Stock: (.+)$/i);
+    if(stockLine){node.nodeValue=raw.replace(trimmed,`المخزون: ${stockLine[1]}`);return}
   }
 
   function scan(root=document.body){
