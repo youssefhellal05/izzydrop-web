@@ -389,7 +389,7 @@
           <div><small>COD collected from customer</small><b>${IZZY.money(x.customer_collected_amount||0,'EGP')}</b></div>
           <div><small>Expected COD</small><b>${IZZY.money(x.expected_cod_amount??x.customer_collected_amount??0,'EGP')}</b></div>
           <div><small>Courier remitted</small><b>${x.cod_remitted_amount==null?'—':IZZY.money(x.cod_remitted_amount,'EGP')}</b></div>
-          <div><small>Difference</small><b class="${Number(x.remittance_difference||0)===0?'positive':'negative'}">${IZZY.money(x.remittance_difference||0,'EGP')}</b></div>
+          <div><small>Difference</small><b class="${Number(x.cod_remitted_amount==null?(x.expected_cod_amount??x.customer_collected_amount??0):(x.remittance_difference??0))===0?'positive':'negative'}">${IZZY.money(x.cod_remitted_amount==null?(x.expected_cod_amount??x.customer_collected_amount??0):(x.remittance_difference??0),'EGP')}</b></div>
           <div><small>Customer delivery fee</small><b>${IZZY.money(x.customer_shipping_fee_amount||0,'EGP')}</b></div>
           <div><small>Courier cost</small><b>${x.courier_cost_amount==null?'—':IZZY.money(x.courier_cost_amount,'EGP')}</b></div>
           <div><small>Shipping margin</small><b>${x.shipping_margin_amount==null?'—':IZZY.money(x.shipping_margin_amount,'EGP')}</b></div>
