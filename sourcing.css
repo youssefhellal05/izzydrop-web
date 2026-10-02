@@ -26,3 +26,16 @@ html[data-theme="dark"] .sourcing-facts b{color:var(--text,#f4f6f8)}
 .sourcing-post:target,.sourcing-post.is-highlighted{outline:3px solid #5b74ff;outline-offset:3px}
 .sourcing-alert-stack{display:grid;gap:10px;margin-bottom:18px}
 @media(max-width:600px){.sourcing-facts>span{min-width:130px}.sourcing-image{width:100%;height:190px}}
+
+html[dir="rtl"] .sourcing-post,
+html[dir="rtl"] .sourcing-comment,
+html[dir="rtl"] .sourcing-catalog-form,
+html[dir="rtl"] .sourcing-comment-form{text-align:right}
+html[dir="rtl"] .sourcing-post-actions,
+html[dir="rtl"] .sourcing-facts,
+html[dir="rtl"] .sourcing-progress{direction:rtl}
+html[dir="rtl"] .sourcing-controls{direction:rtl}
+html[dir="rtl"] .sourcing-controls input,
+html[dir="rtl"] .sourcing-controls select{text-align:right}
+html[dir="rtl"] .sourcing-catalog-form select,
+html[dir="rtl"] .sourcing-comment-form textarea{text-align:right}
