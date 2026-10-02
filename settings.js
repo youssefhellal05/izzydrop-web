@@ -194,6 +194,7 @@
         important_announcements:document.getElementById('notify-announcements').checked
       };
       await IZZY.request(`/rest/v1/suppliers?id=eq.${encodeURIComponent(account.id)}`,{method:'PATCH',body:JSON.stringify({notification_preferences:preferences,low_stock_threshold:threshold,updated_at:new Date().toISOString()})});
+      window.dispatchEvent(new CustomEvent('izzy:supplier-notification-preferences',{detail:{preferences,lowStockThreshold:threshold}}));
       status('Notification preferences saved.');
       await loadSettings();
     }catch(err){status(err.message,true)}
