@@ -1,8 +1,10 @@
 // Community sourcing tracks discovery; products are created only through the normal supplier product flow.
 (()=>{
-  const esc=v=>IZZY.esc(v), money=v=>v==null?'Not specified':IZZY.money(v,'EGP');
+  const ar=()=>window.IZZY_I18N?.isArabic?.()===true;
+  const local=(en,arText)=>ar()?arText:en;
+  const esc=v=>IZZY.esc(v), money=v=>v==null?local('Not specified','غير محدد'):IZZY.money(v,'EGP');
   const safeUrl=v=>{try{const u=new URL(v);return ['http:','https:'].includes(u.protocol)?u.href:''}catch{return ''}};
-  const image=url=>safeUrl(url)?'<img class="sourcing-image" src="'+esc(safeUrl(url))+'" alt="Requested product" loading="lazy">':'';
+  const image=url=>safeUrl(url)?'<img class="sourcing-image" src="'+esc(safeUrl(url))+'" alt="'+esc(local('Requested product','المنتج المطلوب'))+'" loading="lazy">':'';
   const state=s=>({open:'Open request',sourcing:'Suppliers sourcing',sourced:'Sourced',closed:'Closed',archived:'Archived',withdrawn:'Withdrawn'}[s]||s);
   const tag=s=>'<span class="tag '+(s==='sourced'?'ok':'warn')+'">'+esc(state(s))+'</span>';
   const empty=t=>'<div class="empty-state"><div class="empty-icon">⌕</div><h3>'+esc(t)+'</h3></div>';
@@ -38,7 +40,7 @@
       (o.catalog_product?'<span>'+esc(o.catalog_product.name)+' · '+range(o.catalog_product,'supplier_price')+'</span><a class="auth-text-button" href="'+esc(link)+'">'+(context==='supplier'?'View published product →':'View sourced product →')+'</a>':'<span>'+(o.status==='sourced'?'Published catalog link needed.':'Finding this product. Commercial information comes from the published product.')+'</span>')+'</div>';
   };
   async function action(button,fn,refresh){
-    const label=button.textContent;button.disabled=true;button.textContent='Saving…';
+    const label=button.textContent;button.disabled=true;button.textContent=local('Saving…','جارٍ الحفظ…');
     const card=button.closest('article')||button.parentElement;
     let status=card.querySelector('.sourcing-action-status');
     if(!status){status=document.createElement('p');status.className='status sourcing-action-status';status.setAttribute('role','status');card.append(status)}
@@ -47,7 +49,7 @@
   function bindDemand(root,refresh){
     root.querySelectorAll('[data-interest-request]').forEach(b=>b.onclick=()=>{
       const currentlyInterested=b.dataset.interested==='1';
-      if(currentlyInterested&&!confirm('Withdraw interest from this request? This also clears your interest in sourced offers for this request.'))return;
+      if(currentlyInterested&&!confirm(local('Withdraw interest from this request? This also clears your interest in sourced offers for this request.','إلغاء اهتمامك بهذا الطلب؟ سيؤدي ذلك أيضًا إلى إزالة اهتمامك بأي عروض مورّدة مرتبطة بهذا الطلب.')))return;
       return action(b,()=>IZZY.rpc('sourcing_set_interest',{
         _request_id:b.dataset.interestRequest,
         _response_id:null,
@@ -63,7 +65,7 @@
       }),refresh);
     });
     root.querySelectorAll('.sourcing-comment-form').forEach(f=>f.onsubmit=e=>{e.preventDefault();return action(f.querySelector('button'),()=>IZZY.rpc('sourcing_comment',{_request_id:f.dataset.requestId,_body:f.elements.body.value.trim(),_comment_id:f.dataset.commentId||null}),refresh)});
-    root.querySelectorAll('[data-close-request]').forEach(b=>b.onclick=()=>{if(confirm('Close this request? Existing sourced offers remain visible; new comments and demand will stop.'))return action(b,()=>IZZY.rpc('sourcing_close_request',{_request_id:b.dataset.closeRequest}),refresh)});
+    root.querySelectorAll('[data-close-request]').forEach(b=>b.onclick=()=>{if(confirm(local('Close this request? Existing sourced offers remain visible; new comments and demand will stop.','إغلاق هذا الطلب؟ ستظل العروض المورّدة الحالية ظاهرة، لكن سيتوقف استقبال التعليقات والاهتمام الجديد.')))return action(b,()=>IZZY.rpc('sourcing_close_request',{_request_id:b.dataset.closeRequest}),refresh)});
   }
   let boardFilter='all',boardSearch='';
   function renderDropshipper(board,refresh){
@@ -156,7 +158,7 @@
       e.preventDefault();
       const next=f.elements.product_id.value;
       const current=f.dataset.currentProduct||'';
-      if(f.dataset.relink==='1'&&current&&next!==current&&!confirm('Replace the linked sourced product? Interested dropshippers will be alerted to the corrected product.'))return;
+      if(f.dataset.relink==='1'&&current&&next!==current&&!confirm(local('Replace the linked sourced product? Interested dropshippers will be alerted to the corrected product.','استبدال المنتج المورّد المرتبط؟ سيتم تنبيه الدروبشيبرز المهتمين بالمنتج الصحيح.')))return;
       return action(e.submitter||f.querySelector('button'),()=>IZZY.rpc('sourcing_link_catalog',{_response_id:f.dataset.responseId,_product_id:next}),refresh);
     });
   }
