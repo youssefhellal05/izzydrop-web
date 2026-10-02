@@ -372,7 +372,7 @@
       return m;
     },new Map()).values()];
 
-    const awaiting=groups.filter(g=>g[0]?.settlement_status==='ready'&&g[0]?.cod_remittance_status!=='remitted');
+    const awaiting=groups.filter(g=>g[0]?.settlement_status==='ready'&&!['remitted','reversed'].includes(g[0]?.cod_remittance_status));
     const supplierPending=rows.filter(x=>x.supplier_payout_status==='pending').reduce((n,x)=>n+Number(x.supplier_net_amount||0),0);
     const dropshipperPending=rows.filter(x=>x.dropshipper_payout_status==='pending').reduce((n,x)=>n+Number(x.dropshipper_profit_amount||0),0);
     const commissionReady=rows.filter(x=>x.cod_remittance_status==='remitted'&&x.settlement_status==='ready').reduce((n,x)=>n+Number(x.platform_commission_amount||0),0);
@@ -386,36 +386,73 @@
 
     el.innerHTML=groups.map(group=>{
       const x=group[0];
-      const remitReady=x.settlement_status==='ready'&&!['remitted','reversal_required'].includes(x.cod_remittance_status);
+      const remitReady=x.settlement_status==='ready'&&!['remitted','reversal_required','reversed'].includes(x.cod_remittance_status);
       const remitted=x.cod_remittance_status==='remitted';
       const reversal=x.cod_remittance_status==='reversal_required';
+      const reversed=x.cod_remittance_status==='reversed';
       const discrepancy=['partial','disputed','not_remitted'].includes(x.cod_remittance_status)&&x.cod_remitted_amount!=null;
-      const itemRows=group.map(i=>`<div class="admin-order-item">
-        <div>
-          <b>${IZZY.esc(i.supplier_name||'Supplier')}</b>
-          <small>Supplier gross ${IZZY.money(i.supplier_gross_amount||0,'EGP')} · IzzyDrop ${IZZY.money(i.platform_commission_amount||0,'EGP')}</small>
-        </div>
-        <div>
-          <b>Supplier payout ${IZZY.money(i.supplier_net_amount||0,'EGP')}</b>
-          <span class="tag ${i.supplier_payout_status==='paid'?'ok':i.supplier_payout_status==='pending'?'warn':i.supplier_payout_status==='reversal_required'?'bad':''}">${IZZY.esc(i.supplier_payout_status||'')}</span>
-          ${i.supplier_payout_status==='pending'?`<button class="btn secondary supplier-payout-paid" data-item-id="${i.order_item_id}">Mark supplier paid</button>`:''}
-        </div>
-        <div>
-          <b>${IZZY.esc(i.dropshipper_name||'Dropshipper')}</b>
-          <small>Profit ${IZZY.money(i.dropshipper_profit_amount||0,'EGP')}</small>
-        </div>
-        <div>
-          <span class="tag ${i.dropshipper_payout_status==='paid'?'ok':i.dropshipper_payout_status==='pending'?'warn':i.dropshipper_payout_status==='reversal_required'?'bad':''}">${IZZY.esc(i.dropshipper_payout_status||'')}</span>
-          ${i.dropshipper_payout_status==='pending'?`<button class="btn secondary dropshipper-payout-paid" data-item-id="${i.order_item_id}">Mark dropshipper paid</button>`:''}
-        </div>
-      </div>`).join('');
+
+      const itemRows=group.map(i=>{
+        const supplierEvidence=(i.supplier_payout_method||i.supplier_payout_reference)
+          ? `<small>Paid ${i.supplier_paid_at?fmtDateTime(i.supplier_paid_at):''}${i.supplier_payout_method?' · '+IZZY.esc(i.supplier_payout_method):''}${i.supplier_payout_reference?' · Ref '+IZZY.esc(i.supplier_payout_reference):''}</small>`
+          : '';
+        const dropshipperEvidence=(i.dropshipper_payout_method||i.dropshipper_payout_reference)
+          ? `<small>Paid ${i.dropshipper_paid_at?fmtDateTime(i.dropshipper_paid_at):''}${i.dropshipper_payout_method?' · '+IZZY.esc(i.dropshipper_payout_method):''}${i.dropshipper_payout_reference?' · Ref '+IZZY.esc(i.dropshipper_payout_reference):''}</small>`
+          : '';
+        const supplierAction=i.supplier_payout_status==='pending'
+          ? `<button class="btn secondary record-supplier-payout" data-item-id="${i.order_item_id}">Record supplier payout</button>`
+          : i.supplier_payout_status==='paid'&&!i.supplier_payout_reference
+            ? `<button class="auth-text-button record-supplier-payout" data-item-id="${i.order_item_id}">Add payout evidence</button>`
+            : i.supplier_payout_status==='reversal_required'
+              ? `<button class="btn secondary resolve-payout-reversal" data-item-id="${i.order_item_id}" data-party="supplier">Resolve supplier reversal</button>`
+              : '';
+        const dropshipperAction=i.dropshipper_payout_status==='pending'
+          ? `<button class="btn secondary record-dropshipper-payout" data-item-id="${i.order_item_id}">Record dropshipper payout</button>`
+          : i.dropshipper_payout_status==='paid'&&!i.dropshipper_payout_reference
+            ? `<button class="auth-text-button record-dropshipper-payout" data-item-id="${i.order_item_id}">Add payout evidence</button>`
+            : i.dropshipper_payout_status==='reversal_required'
+              ? `<button class="btn secondary resolve-payout-reversal" data-item-id="${i.order_item_id}" data-party="dropshipper">Resolve dropshipper reversal</button>`
+              : '';
+        const supplierReversal=i.supplier_reversal_resolved_at
+          ? `<small>Reversal ${IZZY.esc(i.supplier_reversal_resolution||'resolved')} · Ref ${IZZY.esc(i.supplier_reversal_reference||'—')} · ${fmtDateTime(i.supplier_reversal_resolved_at)}</small>`
+          : '';
+        const dropshipperReversal=i.dropshipper_reversal_resolved_at
+          ? `<small>Reversal ${IZZY.esc(i.dropshipper_reversal_resolution||'resolved')} · Ref ${IZZY.esc(i.dropshipper_reversal_reference||'—')} · ${fmtDateTime(i.dropshipper_reversal_resolved_at)}</small>`
+          : '';
+
+        return `<div class="admin-order-item">
+          <div>
+            <b>${IZZY.esc(i.supplier_name||'Supplier')}</b>
+            <small>Supplier gross ${IZZY.money(i.supplier_gross_amount||0,'EGP')} · IzzyDrop ${IZZY.money(i.platform_commission_amount||0,'EGP')}</small>
+          </div>
+          <div>
+            <b>Supplier payout ${IZZY.money(i.supplier_net_amount||0,'EGP')}</b>
+            <span class="tag ${i.supplier_payout_status==='paid'?'ok':i.supplier_payout_status==='pending'?'warn':i.supplier_payout_status==='reversal_required'?'bad':''}">${IZZY.esc(i.supplier_payout_status||'')}</span>
+            ${supplierEvidence}${supplierReversal}${supplierAction}
+          </div>
+          <div>
+            <b>${IZZY.esc(i.dropshipper_name||'Dropshipper')}</b>
+            <small>Profit ${IZZY.money(i.dropshipper_profit_amount||0,'EGP')}</small>
+          </div>
+          <div>
+            <span class="tag ${i.dropshipper_payout_status==='paid'?'ok':i.dropshipper_payout_status==='pending'?'warn':i.dropshipper_payout_status==='reversal_required'?'bad':''}">${IZZY.esc(i.dropshipper_payout_status||'')}</span>
+            ${dropshipperEvidence}${dropshipperReversal}${dropshipperAction}
+          </div>
+        </div>`;
+      }).join('');
+
+      const remittanceEvidence=x.remittance_reference
+        ? `<div class="notice"><b>COD remittance evidence</b><span>Ref ${IZZY.esc(x.remittance_reference)}${x.remittance_note?' · '+IZZY.esc(x.remittance_note):''}</span></div>`
+        : (remitted||reversal||reversed)
+          ? `<div class="notice bad"><b>COD remittance evidence missing</b><span>This remittance was recorded without a reference.</span><button class="btn secondary add-remittance-evidence" data-order-id="${x.order_id}">Add evidence</button></div>`
+          : '';
 
       return `<article class="card admin-order-card">
         <div class="admin-order-head">
           <div><b>${IZZY.esc(x.external_order_ref||String(x.order_id).slice(0,8))}</b><small>${fmtDateTime(x.created_at)}</small></div>
           <div class="admin-order-statuses">
             <span class="tag ${x.settlement_status==='ready'?'ok':x.settlement_status==='pending'?'warn':'bad'}">${IZZY.esc(x.settlement_status||'')}</span>
-            <span class="tag ${remitted?'ok':remitReady?'warn':reversal?'bad':''}">${IZZY.esc(x.cod_remittance_status||'')}</span>
+            <span class="tag ${remitted||reversed?'ok':remitReady?'warn':reversal?'bad':''}">${IZZY.esc(x.cod_remittance_status||'')}</span>
           </div>
         </div>
         <div class="admin-order-summary">
@@ -429,22 +466,25 @@
           <div><small>Payment</small><b>${IZZY.esc(x.payment_status||'')}</b><span>${IZZY.esc(x.order_status||'')}</span></div>
         </div>
         ${remitReady?`<div class="fulfillment-box">
-          <div><b>Courier COD remittance</b><small>Confirm only after the courier has transferred the money to IzzyDrop.</small></div>
+          <div><b>Courier COD remittance</b><small>Confirm only after the courier has transferred the money to IzzyDrop. A settlement reference is required.</small></div>
           <div class="fulfillment-fields">
             <button class="btn confirm-remittance" data-order-id="${x.order_id}" data-collected="${Number(x.expected_cod_amount??x.customer_collected_amount??0)}">Record COD remittance</button>
           </div>
         </div>`:''}
         ${discrepancy?`<div class="fulfillment-box"><div><b>Reconciliation required</b><small>Payout eligibility: blocked until the difference is resolved.</small></div><button class="btn secondary resolve-remittance" data-order-id="${x.order_id}">Resolve discrepancy</button></div>`:''}
-        ${x.remittance_note?`<div class="notice">${IZZY.esc(x.remittance_note)}${x.remittance_reference?` · Ref ${IZZY.esc(x.remittance_reference)}`:''}</div>`:''}
-        ${reversal?'<div class="notice">This order was reversed after remittance. Manual reconciliation is required.</div>':''}
+        ${remittanceEvidence}
+        ${reversal?'<div class="notice bad"><b>Payout reversal required</b><span>This order was reversed after remittance. Resolve every reversal-required payout below with a reference and resolution note.</span></div>':''}
+        ${reversed?`<div class="notice"><b>Reversal reconciled</b><span>${x.reversal_resolution_reference?'Ref '+IZZY.esc(x.reversal_resolution_reference):''}${x.reversal_resolved_at?' · '+fmtDateTime(x.reversal_resolved_at):''}</span></div>`:''}
         <div class="admin-order-items">${itemRows}</div>
       </article>`;
     }).join('')||'<div class="empty-state"><div class="empty-icon">EGP</div><h3>No settlements yet</h3><p>Delivered COD orders will appear here.</p></div>';
 
     document.querySelectorAll('.confirm-remittance').forEach(b=>b.onclick=()=>confirmCodRemittance(b));
     document.querySelectorAll('.resolve-remittance').forEach(b=>b.onclick=()=>resolveCodDiscrepancy(b));
-    document.querySelectorAll('.supplier-payout-paid').forEach(b=>b.onclick=()=>markSupplierPayoutPaid(b));
-    document.querySelectorAll('.dropshipper-payout-paid').forEach(b=>b.onclick=()=>markDropshipperPayoutPaid(b));
+    document.querySelectorAll('.add-remittance-evidence').forEach(b=>b.onclick=()=>addCodRemittanceEvidence(b));
+    document.querySelectorAll('.record-supplier-payout').forEach(b=>b.onclick=()=>recordSupplierPayout(b));
+    document.querySelectorAll('.record-dropshipper-payout').forEach(b=>b.onclick=()=>recordDropshipperPayout(b));
+    document.querySelectorAll('.resolve-payout-reversal').forEach(b=>b.onclick=()=>resolvePayoutReversal(b));
   }
 
   async function confirmCodRemittance(btn){
@@ -457,15 +497,32 @@
     if(costRaw===null)return;
     const cost=costRaw.trim()===''?null:Number(costRaw);
     if(cost!==null&&(!Number.isFinite(cost)||cost<0)){msg('Enter a valid courier cost.',true);return}
-    let reason=null,reference=null;
-    if(amount!==collected){reason=prompt('This is a discrepancy. Enter the reason (required):','');if(!reason?.trim()){msg('A reason is required for a partial or zero remittance.',true);return}reference=prompt('Enter the courier/remittance reference (required):','');if(!reference?.trim()){msg('A reference is required for a discrepancy.',true);return}}
+    const reference=prompt('Courier settlement / bank transfer reference (required):','');
+    if(!reference?.trim()){msg('A remittance reference is required.',true);return}
+    let reason=null;
+    if(amount!==collected){
+      reason=prompt('This is a discrepancy. Enter the reason (required):','');
+      if(!reason?.trim()){msg('A reason is required for a partial or zero remittance.',true);return}
+    }
     if(!confirm(amount===collected?'Confirm that this COD money has actually reached IzzyDrop?':'Record this discrepancy without releasing payouts?'))return;
     btn.disabled=true;
     try{
-      await IZZY.rpc('admin_confirm_cod_remittance',{_order_id:btn.dataset.orderId,_remitted_amount:amount,_courier_cost:cost,_resolution_reason:reason,_reference:reference});
+      await IZZY.rpc('admin_confirm_cod_remittance',{_order_id:btn.dataset.orderId,_remitted_amount:amount,_courier_cost:cost,_resolution_reason:reason,_reference:reference.trim()});
       msg(amount===collected?'COD remittance fully reconciled. Payouts are now eligible.':'COD discrepancy recorded. Payouts remain blocked.');
       await load(false);
       go('settlements');
+    }catch(e){msg(e.message,true);btn.disabled=false}
+  }
+
+  async function addCodRemittanceEvidence(btn){
+    const reference=prompt('Courier settlement / bank transfer reference (required):','');
+    if(!reference?.trim())return;
+    const note=prompt('Evidence note (optional):','');
+    btn.disabled=true;
+    try{
+      await IZZY.rpc('admin_add_cod_remittance_evidence',{_order_id:btn.dataset.orderId,_reference:reference.trim(),_note:note?.trim()||null});
+      msg('COD remittance evidence saved.');
+      await load(false);go('settlements');
     }catch(e){msg(e.message,true);btn.disabled=false}
   }
 
@@ -477,25 +534,50 @@
     try{await IZZY.rpc('admin_resolve_cod_discrepancy',{_order_id:btn.dataset.orderId,_resolution_reason:reason,_reference:reference,_approve_payout:approve});msg(approve?'Discrepancy resolved; payouts are eligible.':'Discrepancy recorded; payouts remain blocked.');await load(false);go('settlements')}catch(e){msg(e.message,true);btn.disabled=false}
   }
 
-  async function markSupplierPayoutPaid(btn){
-    if(!confirm('Confirm the supplier payout was actually sent?'))return;
+  async function recordSupplierPayout(btn){
+    const method=prompt('Supplier payment method (for example InstaPay, bank transfer, wallet):','InstaPay');
+    if(!method?.trim())return;
+    const reference=prompt('Supplier payment reference / transaction ID (required):','');
+    if(!reference?.trim())return;
+    const note=prompt('Payment note (optional):','');
+    if(!confirm('Confirm this supplier payout was actually sent?'))return;
     btn.disabled=true;
     try{
-      await IZZY.rpc('admin_mark_supplier_payout_paid',{_order_item_id:btn.dataset.itemId});
-      msg('Supplier payout marked paid.');
-      await load(false);
-      go('settlements');
+      const result=await IZZY.rpc('admin_record_supplier_payout',{_order_item_id:btn.dataset.itemId,_payment_method:method.trim(),_reference:reference.trim(),_note:note?.trim()||null});
+      msg(result?.evidence_backfilled?'Supplier payout evidence added.':'Supplier payout recorded with evidence.');
+      await load(false);go('settlements');
     }catch(e){msg(e.message,true);btn.disabled=false}
   }
 
-  async function markDropshipperPayoutPaid(btn){
-    if(!confirm('Confirm the dropshipper payout was actually sent?'))return;
+  async function recordDropshipperPayout(btn){
+    const method=prompt('Dropshipper payment method (for example InstaPay, bank transfer, wallet):','InstaPay');
+    if(!method?.trim())return;
+    const reference=prompt('Dropshipper payment reference / transaction ID (required):','');
+    if(!reference?.trim())return;
+    const note=prompt('Payment note (optional):','');
+    if(!confirm('Confirm this dropshipper payout was actually sent?'))return;
     btn.disabled=true;
     try{
-      await IZZY.rpc('admin_mark_dropshipper_payout_paid',{_order_item_id:btn.dataset.itemId});
-      msg('Dropshipper payout marked paid.');
-      await load(false);
-      go('settlements');
+      const result=await IZZY.rpc('admin_record_dropshipper_payout',{_order_item_id:btn.dataset.itemId,_payment_method:method.trim(),_reference:reference.trim(),_note:note?.trim()||null});
+      msg(result?.evidence_backfilled?'Dropshipper payout evidence added.':'Dropshipper payout recorded with evidence.');
+      await load(false);go('settlements');
+    }catch(e){msg(e.message,true);btn.disabled=false}
+  }
+
+  async function resolvePayoutReversal(btn){
+    const party=btn.dataset.party;
+    const resolution=String(prompt('Resolution type: recovered, offset, waived, or other','recovered')||'').trim().toLowerCase();
+    if(!['recovered','offset','waived','other'].includes(resolution)){msg('Choose recovered, offset, waived, or other.',true);return}
+    const reference=prompt('Resolution reference / evidence ID (required):','');
+    if(!reference?.trim())return;
+    const note=prompt('Explain how this reversal was resolved (required):','');
+    if(!note?.trim())return;
+    if(!confirm(`Resolve this ${party} reversal as ${resolution}?`))return;
+    btn.disabled=true;
+    try{
+      await IZZY.rpc('admin_resolve_payout_reversal',{_order_item_id:btn.dataset.itemId,_party:party,_resolution:resolution,_reference:reference.trim(),_note:note.trim()});
+      msg(`${party==='supplier'?'Supplier':'Dropshipper'} reversal resolved.`);
+      await load(false);go('settlements');
     }catch(e){msg(e.message,true);btn.disabled=false}
   }
 
