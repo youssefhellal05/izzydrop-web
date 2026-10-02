@@ -12,7 +12,12 @@
     <span>Expected demand: <b>${r.expected_quantity==null?'Not specified':esc(r.expected_quantity)+' units'}</b></span>
     <span><b>${Number(r.interest_count||0)}</b> interested dropshippers</span></div>
     ${sourceLink(r.source_url)}${r.notes&&r.notes!==r.description?'<p class="muted">'+esc(r.notes)+'</p>':''}`;
-  const productLink=p=>p?.public_slug?'product.html?slug='+encodeURIComponent(p.public_slug)+'&from=app':'';
+  const productLink=(p,from='app',requestId=null)=>{
+    if(!p?.public_slug)return '';
+    const params=new URLSearchParams({slug:p.public_slug,from});
+    if(requestId)params.set('request',requestId);
+    return 'product.html?'+params.toString();
+  };
   const range=(p,key)=>{const values=(p.variants||[]).map(v=>v[key]).filter(v=>v!=null).map(Number);if(!values.length)return 'Not specified';const lo=Math.min(...values),hi=Math.max(...values);return IZZY.money(lo,p.currency||'EGP')+(hi!==lo?' – '+IZZY.money(hi,p.currency||'EGP'):'')};
   const responseTag=o=>o.status==='sourced'&&!o.catalog_product?'<span class="tag warn">'+(o.catalog_product_id?'Linked product unavailable':'Awaiting published product')+'</span>':tag(o.status);
   const offerDetails=(o,r)=>{
@@ -25,8 +30,13 @@
       '<details class="sourcing-variants"><summary>Variants ('+(p.variants||[]).length+')</summary>'+
       (p.variants||[]).map(v=>'<div class="sourcing-progress"><b>'+esc(v.name)+'</b><span>Supplier: '+IZZY.money(v.supplier_price,p.currency||'EGP')+'</span><span>Suggested: '+(v.suggested_retail==null?'Not specified':IZZY.money(v.suggested_retail,p.currency||'EGP'))+'</span><span>Stock: '+Number(v.stock||0)+'</span></div>').join('')+'</details>';
   };
-  const offerPreview=(o,r)=>'<div class="sourcing-progress"><b>'+esc(o.supplier_name||'IzzyDrop Supplier')+'</b> '+responseTag(o)+
-    (o.catalog_product?'<span>'+esc(o.catalog_product.name)+' · '+range(o.catalog_product,'supplier_price')+'</span><a class="auth-text-button" href="app.html?sourced='+encodeURIComponent(o.id)+'">View sourced product →</a>':'<span>'+(o.status==='sourced'?'Published catalog link needed.':'Finding this product. Commercial information comes from the published product.')+'</span>')+'</div>';
+  const offerPreview=(o,r,context='dropshipper')=>{
+    const link=o.catalog_product
+      ? (context==='supplier'?productLink(o.catalog_product,'supplier',r.id):'app.html?sourced='+encodeURIComponent(o.id))
+      : '';
+    return '<div class="sourcing-progress"><b>'+esc(o.supplier_name||'IzzyDrop Supplier')+'</b> '+responseTag(o)+
+      (o.catalog_product?'<span>'+esc(o.catalog_product.name)+' · '+range(o.catalog_product,'supplier_price')+'</span><a class="auth-text-button" href="'+esc(link)+'">'+(context==='supplier'?'View published product →':'View sourced product →')+'</a>':'<span>'+(o.status==='sourced'?'Published catalog link needed.':'Finding this product. Commercial information comes from the published product.')+'</span>')+'</div>';
+  };
   async function action(button,fn,refresh){
     const label=button.textContent;button.disabled=true;button.textContent='Saving…';
     const card=button.closest('article')||button.parentElement;
@@ -53,7 +63,7 @@
         ${image(r.image_url)}${details(r)}
         <div class="sourcing-post-actions"><button class="btn secondary" data-interest-request="${r.id}" ${r.interested||closed?'disabled':''}>${r.interested?'Interested ✓':"I'm interested"}</button>
         ${r.is_mine&&!closed?'<button class="auth-text-button" data-close-request="'+r.id+'">Close request</button>':''}</div>
-        <div class="sourcing-progress-list">${responses.filter(o=>o.request_id===r.id).map(o=>offerPreview(o,r)).join('')||'<p class="muted">Suppliers can start sourcing this product independently.</p>'}</div>
+        <div class="sourcing-progress-list">${responses.filter(o=>o.request_id===r.id).map(o=>offerPreview(o,r,'dropshipper')).join('')||'<p class="muted">Suppliers can start sourcing this product independently.</p>'}</div>
         <details class="sourcing-discussion"><summary>Community discussion (${discussion.length})</summary>
           ${discussion.map(c=>`<div class="sourcing-comment"><small>${c.is_mine?'You':'Dropshipper'} · ${new Date(c.created_at).toLocaleString()}</small><p>${esc(c.body)}</p>
           ${c.is_mine&&!closed?`<details><summary>Edit your comment</summary><form class="sourcing-comment-form" data-request-id="${r.id}" data-comment-id="${c.id}"><textarea name="body" required maxlength="2000" aria-label="Edit comment">${esc(c.body)}</textarea><button class="btn secondary">Save comment</button></form></details>`:''}</div>`).join('')||'<p class="muted">No comments yet. Share the features or demand you need.</p>'}
@@ -84,31 +94,55 @@
   function renderSupplier(board,products,refresh,createProduct){
     const root=document.querySelector('#supplier-requests');if(!root)return;
     const eligible=board?.eligible_products||[];
+    const productOptions=(selectedId='')=>'<option value="">Choose a product</option>'+
+      eligible.map(p=>'<option value="'+esc(p.id)+'" '+(String(p.id)===String(selectedId)?'selected':'')+'>'+esc(p.name)+' · '+esc(range(p,'supplier_price'))+' · '+p.variants.length+' variants</option>').join('');
+
+    const correctionForm=(o,r)=>{
+      const unavailable=o.catalog_product_id&&!o.catalog_product;
+      return '<details class="sourcing-relink" '+(unavailable?'open':'')+'><summary>'+(unavailable?'Fix linked product':'Linked the wrong product?')+'</summary>'+
+        '<p class="muted">'+(unavailable?'Choose another active published product from your catalog.':'You can replace the linked product. Interested dropshippers will be notified again so they do not keep using the wrong offer.')+'</p>'+
+        '<form class="sourcing-catalog-form" data-relink="1" data-response-id="'+o.id+'" data-request-id="'+r.id+'" data-current-product="'+esc(o.catalog_product_id||'')+'">'+
+        '<label>Correct published product<select name="product_id" required>'+productOptions(o.catalog_product_id||'')+'</select></label>'+
+        (eligible.length?'':'<p class="muted">No eligible active products are available. Publish or reactivate a product with an enabled variant first.</p>')+
+        '<button class="btn secondary" type="submit" '+(!eligible.length?'disabled':'')+'>Update linked product</button>'+
+        '<small>This changes only this sourcing link. It does not alter the product, stock, orders or My Products.</small></form></details>';
+    };
+
     root.innerHTML=(board?.requests||[]).filter(r=>!['closed','archived'].includes(r.status)||(board.responses||[]).some(o=>o.request_id===r.id&&o.is_mine)).map(r=>{
       const o=(board.responses||[]).find(o=>o.request_id===r.id&&o.is_mine),closed=['closed','archived'].includes(r.status);
-      return '<article class="card order-card sourcing-post"><div class="order-card-head"><h3>'+esc(r.title)+'</h3>'+tag(r.status)+'</div>'+
+      return '<article class="card order-card sourcing-post" id="supplier-request-'+r.id+'"><div class="order-card-head"><h3>'+esc(r.title)+'</h3>'+tag(r.status)+'</div>'+
         image(r.image_url)+details(r)+
         '<details class="sourcing-discussion"><summary>Community discussion</summary>'+(board.comments||[]).filter(c=>c.request_id===r.id).map(c=>'<div class="sourcing-comment"><p>'+esc(c.body)+'</p></div>').join('')+'</details>'+
-        '<div class="sourcing-progress-list">'+(board.responses||[]).filter(x=>x.request_id===r.id&&!x.is_mine).map(x=>offerPreview(x,r)).join('')+'</div>'+
+        '<div class="sourcing-progress-list">'+(board.responses||[]).filter(x=>x.request_id===r.id&&!x.is_mine).map(x=>offerPreview(x,r,'supplier')).join('')+'</div>'+
         (!o?(closed?'':'<button class="btn" data-start-sourcing="'+r.id+'">Start sourcing</button><p class="muted">Let the community know you are working on finding this product.</p>'):
         '<div class="notice"><b>Your progress</b> '+responseTag(o)+'</div>'+
-        (o.catalog_product?image(o.catalog_product.image_url)+offerDetails(o,r)+'<a class="btn secondary" href="'+esc(productLink(o.catalog_product))+'">Open published product</a>':
-         o.catalog_product_id?'<p class="muted">Your linked product is currently unavailable. Manage its publication and enabled variants in Products.</p><button class="btn secondary" data-manage-products>Manage products</button>':
+        (o.catalog_product?image(o.catalog_product.image_url)+offerDetails(o,r)+
+          '<div class="sourcing-post-actions"><a class="btn secondary" href="'+esc(productLink(o.catalog_product,'supplier',r.id))+'">Open published product</a></div>'+
+          correctionForm(o,r):
+         o.catalog_product_id?'<p class="muted">Your linked product is currently unavailable. You can repair the link below or manage its publication in Products.</p><div class="sourcing-post-actions"><button class="btn secondary" data-manage-products>Manage products</button></div>'+correctionForm(o,r):
          closed?'<p class="muted">This request was closed by its owner.</p>':
          '<p class="notice">Start sourcing → Find / obtain product → Create product normally → Link published product → Sourced</p>'+
-         '<p>When you have this product ready, create it in Products, then return here and link it. Use the normal images, prices, stock and variants.</p>'+
-         '<div class="sourcing-post-actions"><button class="btn secondary" data-create-product>Create product in Products</button><button class="auth-text-button" data-refresh-sourcing>Refresh published products</button></div>'+
-         '<form class="sourcing-catalog-form" data-response-id="'+o.id+'"><label>Your published product<select name="product_id" required><option value="">Choose a product</option>'+
-         eligible.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name)+' · '+esc(range(p,'supplier_price'))+' · '+p.variants.length+' variants</option>').join('')+
+         '<p>When you have this product ready, create it in Products. IzzyDrop will bring you back to this request and preselect the product for you to review before linking.</p>'+
+         '<div class="sourcing-post-actions"><button class="btn secondary" data-create-product data-request-id="'+r.id+'" data-response-id="'+o.id+'" data-request-title="'+esc(r.title)+'">Create product in Products</button><button class="auth-text-button" data-refresh-sourcing>Refresh published products</button></div>'+
+         '<form class="sourcing-catalog-form" data-response-id="'+o.id+'" data-request-id="'+r.id+'"><label>Your published product<select name="product_id" required>'+productOptions()+
          '</select></label>'+(eligible.length?'':'<p class="muted">No eligible products yet. Publish a product with at least one enabled variant, then refresh.</p>')+
          '<button class="btn" type="submit" '+(!eligible.length?'disabled':'')+'>Link sourced product</button><small>Notifies interested dropshippers. The community request stays open to other suppliers.</small></form>'))+'</article>';
     }).join('')||empty('No sourcing opportunities yet');
+
     root.querySelectorAll('[data-start-sourcing]').forEach(b=>b.onclick=()=>action(b,()=>IZZY.rpc('sourcing_start',{_request_id:b.dataset.startSourcing}),refresh));
-    root.querySelectorAll('[data-create-product]').forEach(b=>b.onclick=()=>createProduct?createProduct():document.querySelector('.supplier-add-nav').click());
+    root.querySelectorAll('[data-create-product]').forEach(b=>b.onclick=()=>createProduct?createProduct({
+      requestId:b.dataset.requestId,
+      responseId:b.dataset.responseId,
+      title:b.dataset.requestTitle||''
+    }):document.querySelector('.supplier-add-nav').click());
     root.querySelectorAll('[data-manage-products]').forEach(b=>b.onclick=()=>document.querySelector('button[data-view="products"]').click());
     root.querySelectorAll('[data-refresh-sourcing]').forEach(b=>b.onclick=()=>action(b,async()=>{},refresh));
     root.querySelectorAll('.sourcing-catalog-form').forEach(f=>f.onsubmit=e=>{
-      e.preventDefault();return action(e.submitter||f.querySelector('button'),()=>IZZY.rpc('sourcing_link_catalog',{_response_id:f.dataset.responseId,_product_id:f.elements.product_id.value}),refresh);
+      e.preventDefault();
+      const next=f.elements.product_id.value;
+      const current=f.dataset.currentProduct||'';
+      if(f.dataset.relink==='1'&&current&&next!==current&&!confirm('Replace the linked sourced product? Interested dropshippers will be alerted to the corrected product.'))return;
+      return action(e.submitter||f.querySelector('button'),()=>IZZY.rpc('sourcing_link_catalog',{_response_id:f.dataset.responseId,_product_id:next}),refresh);
     });
   }
   window.IZZY_SOURCING={renderDropshipper,renderSupplier};
