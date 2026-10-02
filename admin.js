@@ -1,6 +1,7 @@
 (()=>{
   const $=s=>document.querySelector(s);
-  let SUPPLIERS=[],PROFILES=[],PRODUCTS=[],VARIANTS=[],IMAGES=[],ORDERS=[],ITEMS=[],DROPSHIPPERS=[],AUDIT=[],ADMINS=[],SETTLEMENTS=[],SHIPPING_SETTINGS={},ORDER_SHIPPING=[],DEFAULT_COMMISSION=0,SELECTED_SUPPLIER=null,SESSION=null,ORDER_OPEN_ONLY=false;
+  let SUPPLIERS=[],PROFILES=[],PRODUCTS=[],VARIANTS=[],IMAGES=[],ORDERS=[],ITEMS=[],DROPSHIPPERS=[],AUDIT=[],ADMINS=[],SETTLEMENTS=[],SHIPPING_SETTINGS={},ORDER_SHIPPING=[],ADMIN_METRICS={},DEFAULT_COMMISSION=0,SELECTED_SUPPLIER=null,SESSION=null,ORDER_OPEN_ONLY=false,ORDER_HAS_MORE=false;
+  const ORDER_PAGE_SIZE=50;
 
   const VIEW_COPY={
     overview:['Overview','Monitor the marketplace and handle what needs attention.'],
@@ -42,6 +43,38 @@
   function supplierFor(id){return SUPPLIERS.find(s=>s.id===id)||{}}
   function productFor(id){return PRODUCTS.find(p=>p.id===id)||{}}
   function itemsForOrder(id){return ITEMS.filter(i=>i.order_id===id)}
+
+  async function fetchAdminItemsForOrders(rows){
+    if(!rows?.length)return [];
+    const ids=rows.map(o=>o.id).filter(Boolean);
+    if(!ids.length)return [];
+    return IZZY.request(`/rest/v1/order_items?select=*&order_id=in.(${ids.join(',')})&order=created_at.desc`);
+  }
+
+  function updateAdminOrderPager(){
+    const btn=$('#admin-load-more-orders');
+    if(!btn)return;
+    btn.hidden=!ORDER_HAS_MORE;
+    btn.disabled=false;
+    btn.textContent='Load older orders';
+  }
+
+  async function loadMoreAdminOrders(){
+    const btn=$('#admin-load-more-orders');
+    if(btn){btn.disabled=true;btn.textContent='Loading…';}
+    try{
+      const page=await IZZY.request(`/rest/v1/orders?select=*&order=created_at.desc&limit=${ORDER_PAGE_SIZE}&offset=${ORDERS.length}`);
+      const pageItems=await fetchAdminItemsForOrders(page||[]);
+      ORDERS=[...ORDERS,...(page||[])];
+      ITEMS=[...ITEMS,...(pageItems||[])];
+      ORDER_HAS_MORE=(page||[]).length===ORDER_PAGE_SIZE;
+      renderOrders();
+      updateAdminOrderPager();
+    }catch(e){
+      msg(e.message,true);
+      if(btn){btn.disabled=false;btn.textContent='Load older orders';}
+    }
+  }
   function variantsForProduct(id){return VARIANTS.filter(v=>v.product_id===id)}
   function shippingForOrder(id){return ORDER_SHIPPING.find(x=>x.order_id===id)||{}}
   function totalStock(id){return variantsForProduct(id).reduce((n,v)=>n+Number(v.stock_quantity||0),0)}
@@ -90,7 +123,7 @@
     const pending=SUPPLIERS.filter(s=>s.status==='pending').length;
     const approved=SUPPLIERS.filter(s=>s.status==='approved').length;
     const activeProducts=PRODUCTS.filter(p=>p.status==='active').length;
-    const openOrders=ORDERS.filter(o=>['pending','processing','shipped','in_transit'].includes(o.status)).length;
+    const openOrders=Number(ADMIN_METRICS.open_orders??ORDERS.filter(o=>['pending','processing','shipped','in_transit'].includes(o.status)).length);
     const low=lowStockProducts();
 
     $('#stat-pending-suppliers').textContent=pending;
@@ -125,7 +158,7 @@
     });
 
     const totalStock=VARIANTS.reduce((n,v)=>n+Number(v.stock_quantity||0),0);
-    const delivered=ORDERS.filter(o=>o.status==='delivered').length;
+    const delivered=Number(ADMIN_METRICS.delivered_orders??ORDERS.filter(o=>o.status==='delivered').length);
     $('#marketplace-snapshot').innerHTML=`
       <div><small>Total products</small><strong>${PRODUCTS.length}</strong></div>
       <div><small>Total stock units</small><strong>${totalStock}</strong></div>
@@ -297,7 +330,7 @@
 
   function renderOrders(){
     const rows=filteredOrders();
-    $('#admin-order-results-meta').textContent=`${rows.length} order${rows.length===1?'':'s'} shown`;
+    $('#admin-order-results-meta').textContent=`${rows.length} order${rows.length===1?'':'s'} shown · ${ORDERS.length} loaded`;
     $('#orders').innerHTML=rows.map(o=>{
       const items=itemsForOrder(o.id);
       const d=DROPSHIPPERS.find(x=>x.id===o.dropshipper_id);
@@ -563,20 +596,21 @@
   }
 
   async function load(showMessage=true){
-    const [suppliers,profiles,products,variants,orders,items,dropshippers,settings,audit,admins,shippingSettings,orderShipping,settlements]=await Promise.all([
+    const [suppliers,profiles,products,variants,orders,items,dropshippers,settings,audit,admins,shippingSettings,orderShipping,settlements,metrics]=await Promise.all([
       IZZY.request('/rest/v1/suppliers?select=*&order=created_at.desc'),
       IZZY.request('/rest/v1/profiles?select=id,full_name,phone,business_name,created_at'),
       IZZY.request('/rest/v1/supplier_products?select=*&order=created_at.desc'),
       IZZY.request('/rest/v1/product_variants?select=*&order=created_at.desc'),
-      IZZY.request('/rest/v1/orders?select=*&order=created_at.desc&limit=250'),
-      IZZY.request('/rest/v1/order_items?select=*&order=created_at.desc&limit=500'),
+      IZZY.request(`/rest/v1/orders?select=*&order=created_at.desc&limit=${ORDER_PAGE_SIZE}`),
+      Promise.resolve([]),
       IZZY.request('/rest/v1/dropshippers?select=id,profile_id,business_name,status,created_at'),
       IZZY.request('/rest/v1/marketplace_settings?select=default_commission_rate&id=eq.true&limit=1'),
       IZZY.request('/rest/v1/audit_log?select=*&order=created_at.desc&limit=50'),
       IZZY.rpc('admin_list_accounts'),
       IZZY.rpc('admin_shipping_settings'),
       IZZY.rpc('admin_order_shipping_costs'),
-      IZZY.rpc('admin_settlements')
+      IZZY.rpc('admin_settlements'),
+      IZZY.rpc('admin_dashboard_metrics')
     ]);
 
     SUPPLIERS=suppliers||[];
@@ -584,7 +618,7 @@
     PRODUCTS=products||[];
     VARIANTS=variants||[];
     ORDERS=orders||[];
-    ITEMS=items||[];
+    ITEMS=await fetchAdminItemsForOrders(ORDERS);
     DROPSHIPPERS=dropshippers||[];
     DEFAULT_COMMISSION=Number(settings?.[0]?.default_commission_rate??0);
     AUDIT=audit||[];
@@ -592,6 +626,9 @@
     SHIPPING_SETTINGS=shippingSettings||{};
     ORDER_SHIPPING=Array.isArray(orderShipping)?orderShipping:[];
     SETTLEMENTS=Array.isArray(settlements)?settlements:[];
+    ADMIN_METRICS=metrics||{};
+    ORDER_HAS_MORE=ORDERS.length===ORDER_PAGE_SIZE;
+    updateAdminOrderPager();
 
     if(PRODUCTS.length){
       const ids=PRODUCTS.map(p=>p.id).join(',');
@@ -619,6 +656,7 @@
   $('#admin-order-search').oninput=()=>renderOrders();
   $('#admin-order-status').onchange=()=>{ORDER_OPEN_ONLY=false;renderOrders()};
   $('#admin-order-supplier').onchange=()=>renderOrders();
+  if($('#admin-load-more-orders'))$('#admin-load-more-orders').onclick=loadMoreAdminOrders;
 
   $('#commission-supplier').onchange=e=>{SELECTED_SUPPLIER=e.target.value;renderCommissions()};
 
