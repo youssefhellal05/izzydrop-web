@@ -1,7 +1,8 @@
 (()=>{
   const $=s=>document.querySelector(s);
-  let PRODUCTS=[],LINKED_PRODUCTS=[],LINKS=[],INTEGRATIONS=[],INTEGRATION_VARIANTS=[],ORDERS=[],ITEMS=[],SOURCING_BOARD={},SAMPLES=[],ALERTS=[],SETTLEMENTS=[],COD={},SHIPPING={},PRICE_RANGES=[],ORDER_VARIANTS=[],SESSION=null,DROPSHIPPER=null,ORDER_FILTER='all',CURRENT_WEB_TOKEN=null,ORDER_HAS_MORE=false;
+  let PRODUCTS=[],LINKED_PRODUCTS=[],LINKS=[],INTEGRATIONS=[],INTEGRATION_VARIANTS=[],ORDERS=[],ITEMS=[],SOURCING_BOARD={},SAMPLES=[],ALERTS=[],SETTLEMENTS=[],COD={},SHIPPING={},PRICE_RANGES=[],ORDER_VARIANTS=[],SESSION=null,DROPSHIPPER=null,ORDER_FILTER='all',CURRENT_WEB_TOKEN=null,ORDER_HAS_MORE=false,ALERT_HAS_MORE=false,ALERT_METRICS={};
   const ORDER_PAGE_SIZE=50;
+  const ALERT_PAGE_SIZE=25;
 
   const VIEW_COPY={
     products:['Products','Find products to sell.'],
@@ -661,15 +662,127 @@
     window.IZZY_SOURCING.renderDropshipper(SOURCING_BOARD,()=>load(false));
   }
 
+  function alertIcon(type){
+    if(type==='price_change')return 'EGP';
+    if(type==='out_of_stock')return '0';
+    if(type==='low_stock')return '!';
+    if(String(type||'').startsWith('sourcing'))return '↗';
+    return '•';
+  }
+
+  function alertDestination(a){
+    if(a?.sourcing_response_id)return {kind:'sourced',id:a.sourcing_response_id};
+    if(['price_change','low_stock','out_of_stock'].includes(a?.alert_type))return {kind:'view',view:'linked'};
+    return null;
+  }
+
+  async function markAlertRead(id){
+    const alert=ALERTS.find(a=>String(a.id)===String(id));
+    if(!alert||alert.read_at)return;
+    await IZZY.request(`/rest/v1/dropshipper_alerts?id=eq.${encodeURIComponent(id)}`,{
+      method:'PATCH',
+      body:JSON.stringify({read_at:new Date().toISOString()})
+    });
+    alert.read_at=new Date().toISOString();
+    ALERT_METRICS.unread_count=Math.max(0,Number(ALERT_METRICS.unread_count||0)-1);
+  }
+
+  async function openAlert(id){
+    const a=ALERTS.find(x=>String(x.id)===String(id));
+    if(!a)return;
+    try{
+      await markAlertRead(a.id);
+      renderAlerts();
+    }catch(e){
+      status(e.message,true);
+    }
+    const dest=alertDestination(a);
+    if(dest?.kind==='sourced'){
+      location.href='app.html?sourced='+encodeURIComponent(dest.id);
+      return;
+    }
+    if(dest?.kind==='view')go(dest.view);
+  }
+
+  async function loadOlderAlerts(){
+    const btn=$('#dropshipper-load-more-alerts');
+    if(btn){btn.disabled=true;btn.textContent=local('Loading…','جارٍ التحميل…');}
+    try{
+      const older=await IZZY.request(`/rest/v1/dropshipper_alerts?select=*&order=created_at.desc&limit=${ALERT_PAGE_SIZE}&offset=${ALERTS.length}`);
+      ALERTS=[...ALERTS,...(older||[])];
+      ALERT_HAS_MORE=Number(ALERT_METRICS.total_count||0)>ALERTS.length || ((older||[]).length===ALERT_PAGE_SIZE&&!ALERT_METRICS.total_count);
+      renderAlerts();
+    }catch(e){
+      status(e.message,true);
+      if(btn){btn.disabled=false;btn.textContent=local('Load older notifications','تحميل إشعارات أقدم');}
+    }
+  }
+
+  async function markAllAlertsRead(){
+    const btn=$('#dropshipper-mark-all-read');
+    if(btn){btn.disabled=true;btn.textContent=local('Marking…','جارٍ التحديث…');}
+    try{
+      await IZZY.request('/rest/v1/dropshipper_alerts?read_at=is.null',{
+        method:'PATCH',
+        body:JSON.stringify({read_at:new Date().toISOString()})
+      });
+      const now=new Date().toISOString();
+      ALERTS.forEach(a=>{if(!a.read_at)a.read_at=now});
+      ALERT_METRICS.unread_count=0;
+      renderAlerts();
+    }catch(e){
+      status(e.message,true);
+      if(btn){btn.disabled=false;btn.textContent=local('Mark all read','تحديد الكل كمقروء');}
+    }
+  }
+
   function renderAlerts(){
     const unread=(ALERTS||[]).filter(a=>!a.read_at);
-    const html=rows=>rows.map(a=>`<div class="notice alert-notice"><b>${IZZY.esc(a.title)}</b><span>${IZZY.esc(a.message)}</span>${a.sourcing_response_id?`<a class="btn secondary" href="app.html?sourced=${encodeURIComponent(a.sourcing_response_id)}">Open sourced product</a>`:''}<button class="auth-text-button mark-alert" data-id="${a.id}">Mark read</button></div>`).join('');
-    const inventory=$('#inventory-alerts');if(inventory)inventory.innerHTML=html(unread.slice(0,8));
-    document.querySelectorAll('.sourcing-alert-stack').forEach(el=>el.innerHTML=html(unread.filter(a=>a.sourcing_response_id).slice(0,8)));
+    const unreadCount=Number(ALERT_METRICS.unread_count??unread.length);
+    const totalCount=Number(ALERT_METRICS.total_count??ALERTS.length);
+    ALERT_HAS_MORE=totalCount>ALERTS.length || (!ALERT_METRICS.total_count&&ALERTS.length===ALERT_PAGE_SIZE);
+
+    const inlineHtml=rows=>rows.map(a=>`<div class="notice alert-notice"><b>${IZZY.esc(a.title)}</b><span>${IZZY.esc(a.message)}</span>${a.sourcing_response_id?`<a class="btn secondary" href="app.html?sourced=${encodeURIComponent(a.sourcing_response_id)}">${local('Open sourced product','فتح المنتج المورّد')}</a>`:''}<button class="auth-text-button mark-alert" data-id="${a.id}">${local('Mark read','تحديد كمقروء')}</button></div>`).join('');
+    const inventory=$('#inventory-alerts');if(inventory)inventory.innerHTML=inlineHtml(unread.slice(0,8));
+    document.querySelectorAll('.sourcing-alert-stack').forEach(el=>el.innerHTML=inlineHtml(unread.filter(a=>a.sourcing_response_id).slice(0,8)));
+
+    const count=$('#dropshipper-notification-count');
+    if(count){
+      count.textContent=unreadCount>99?'99+':String(unreadCount);
+      count.hidden=unreadCount===0;
+    }
+    const summary=$('#dropshipper-notification-summary');
+    if(summary)summary.textContent=unreadCount
+      ? local(`${unreadCount} unread`,`${unreadCount} غير مقروء`)
+      : local('You are all caught up','لا توجد إشعارات غير مقروءة');
+
+    const markAll=$('#dropshipper-mark-all-read');
+    if(markAll){
+      markAll.hidden=unreadCount===0;
+      markAll.disabled=false;
+      markAll.textContent=local('Mark all read','تحديد الكل كمقروء');
+    }
+
+    const panelList=$('#dropshipper-notification-list');
+    if(panelList){
+      panelList.innerHTML=(ALERTS||[]).map(a=>`<button class="notification-item dropshipper-notification-item ${a.read_at?'':'is-unread'}" type="button" data-open-alert="${a.id}">
+        <span class="notification-item-icon">${IZZY.esc(alertIcon(a.alert_type))}</span>
+        <span><b>${IZZY.esc(a.title||local('Notification','إشعار'))}</b><small>${IZZY.esc(a.message||'')}</small><small class="notification-time">${new Date(a.created_at).toLocaleString()}</small></span>
+      </button>`).join('')||`<div class="empty-mini"><b>${local('No notifications yet','لا توجد إشعارات بعد')}</b><span>${local('Price, stock and sourcing updates will appear here.','ستظهر هنا تحديثات الأسعار والمخزون والتوريد.')}</span></div>`;
+    }
+
+    const loadMore=$('#dropshipper-load-more-alerts');
+    if(loadMore){
+      loadMore.hidden=!ALERT_HAS_MORE;
+      loadMore.disabled=false;
+      loadMore.textContent=local('Load older notifications','تحميل إشعارات أقدم');
+    }
+
     document.querySelectorAll('.mark-alert').forEach(b=>b.onclick=async()=>{
       b.disabled=true;
-      try{await IZZY.request(`/rest/v1/dropshipper_alerts?id=eq.${encodeURIComponent(b.dataset.id)}`,{method:'PATCH',body:JSON.stringify({read_at:new Date().toISOString()})});await load(false)}catch(e){status(e.message,true);b.disabled=false}
+      try{await markAlertRead(b.dataset.id);renderAlerts()}catch(e){status(e.message,true);b.disabled=false}
     });
+    document.querySelectorAll('[data-open-alert]').forEach(b=>b.onclick=()=>openAlert(b.dataset.openAlert));
   }
 
   async function load(showMessage=false){
@@ -691,7 +804,8 @@
         IZZY.request(`/rest/v1/orders?select=*&order=created_at.desc&limit=${ORDER_PAGE_SIZE}`),
         IZZY.rpc('sourcing_board'),
         IZZY.rpc('dropshipper_samples'),
-        IZZY.request('/rest/v1/dropshipper_alerts?select=*&order=created_at.desc&limit=50'),
+        IZZY.request(`/rest/v1/dropshipper_alerts?select=*&order=created_at.desc&limit=${ALERT_PAGE_SIZE}`),
+        IZZY.rpc('dropshipper_alert_metrics'),
         IZZY.rpc('dropshipper_cod_metrics'),
         IZZY.rpc('marketplace_shipping_quote',{},false),
         IZZY.rpc('marketplace_variant_price_ranges'),
@@ -700,7 +814,7 @@
 
       const [
         rProducts,rLinkedProducts,rLinks,rIntegrations,rIntegrationVariants,rOrders,
-        rSourcing,rSamples,rAlerts,rCod,rShipping,rPriceRanges,rSettlements
+        rSourcing,rSamples,rAlerts,rAlertMetrics,rCod,rShipping,rPriceRanges,rSettlements
       ]=results;
       const failures=[];
       const take=(r,current,label)=>{
@@ -717,6 +831,8 @@
       SOURCING_BOARD=take(rSourcing,SOURCING_BOARD,'Sourcing')||{};
       SAMPLES=take(rSamples,SAMPLES,'Samples')||[];
       ALERTS=take(rAlerts,ALERTS,'Alerts')||[];
+      ALERT_METRICS=take(rAlertMetrics,ALERT_METRICS,'notification count')||{};
+      ALERT_HAS_MORE=Number(ALERT_METRICS.total_count||0)>ALERTS.length || (!ALERT_METRICS.total_count&&ALERTS.length===ALERT_PAGE_SIZE);
       COD=take(rCod,COD,'COD summary')||{};
       SHIPPING=take(rShipping,SHIPPING,'Shipping')||{};
       PRICE_RANGES=take(rPriceRanges,PRICE_RANGES,'price ranges')||[];
@@ -1022,6 +1138,24 @@
     }catch(err){s.textContent=err.message;s.className='status bad';/* keep the key so a retry is the same attempt */}
     finally{btn.disabled=SHIPPING?.available!==true;btn.textContent='Send order to IzzyDrop';renderOrderPreview()}
   };
+
+  const notificationBell=$('#dropshipper-notification-bell');
+  const notificationPanel=$('#dropshipper-notification-panel');
+  if(notificationBell&&notificationPanel){
+    notificationBell.onclick=e=>{
+      e.stopPropagation();
+      const next=notificationPanel.hidden;
+      notificationPanel.hidden=!next;
+      notificationBell.setAttribute('aria-expanded',next?'true':'false');
+    };
+    notificationPanel.onclick=e=>e.stopPropagation();
+    document.addEventListener('click',()=>{
+      notificationPanel.hidden=true;
+      notificationBell.setAttribute('aria-expanded','false');
+    });
+  }
+  if($('#dropshipper-mark-all-read'))$('#dropshipper-mark-all-read').onclick=markAllAlertsRead;
+  if($('#dropshipper-load-more-alerts'))$('#dropshipper-load-more-alerts').onclick=loadOlderAlerts;
 
   showDash().catch(e=>{
     const g=$('#gate-message');
