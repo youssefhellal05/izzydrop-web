@@ -1126,19 +1126,34 @@
       };
 
       const rows=[...document.querySelectorAll('.edit-variant-row[data-variant-id]')];
-      const variantsPayload=rows.map(row=>({
-        id:row.dataset.variantId,
-        expected_updated_at:row.dataset.expectedUpdatedAt,
-        expected_stock:Number(row.dataset.expectedStock),
-        variant_name:row.querySelector('[data-edit-variant-name]').value.trim()||'Default',
-        sku:row.querySelector('[data-edit-variant-sku]').value.trim()||null,
-        stock_quantity:Number(row.querySelector('[data-edit-variant-stock]').value||0),
-        cost_price:row.querySelector('[data-edit-variant-cost]').value===''?null:Number(row.querySelector('[data-edit-variant-cost]').value),
-        suggested_retail_price:row.querySelector('[data-edit-variant-retail]').value===''?null:Number(row.querySelector('[data-edit-variant-retail]').value),
-        weight_grams:row.querySelector('[data-edit-variant-weight]').value===''?null:Number(row.querySelector('[data-edit-variant-weight]').value),
-        variant_image_url:row.querySelector('[data-edit-variant-image]').value||null,
-        is_enabled:row.querySelector('[data-edit-variant-enabled]').checked
-      }));
+      const variantsPayload=rows.map(row=>{
+        const payload={
+          id:row.dataset.variantId,
+          expected_updated_at:row.dataset.expectedUpdatedAt,
+          expected_stock:Number(row.dataset.expectedStock),
+          variant_name:row.querySelector('[data-edit-variant-name]').value.trim()||'Default',
+          sku:row.querySelector('[data-edit-variant-sku]').value.trim()||null,
+          stock_quantity:Number(row.querySelector('[data-edit-variant-stock]').value||0),
+          cost_price:row.querySelector('[data-edit-variant-cost]').value===''?null:Number(row.querySelector('[data-edit-variant-cost]').value),
+          suggested_retail_price:row.querySelector('[data-edit-variant-retail]').value===''?null:Number(row.querySelector('[data-edit-variant-retail]').value),
+          weight_grams:row.querySelector('[data-edit-variant-weight]').value===''?null:Number(row.querySelector('[data-edit-variant-weight]').value),
+          variant_image_url:row.querySelector('[data-edit-variant-image]').value||null,
+          is_enabled:row.querySelector('[data-edit-variant-enabled]').checked
+        };
+        const optionInputs=[...row.querySelectorAll('[data-edit-option-key]')];
+        if(optionInputs.length){
+          const options={};
+          optionInputs.forEach(input=>{
+            const value=input.value.trim();
+            if(!value)throw Error(`${input.dataset.editOptionKey} cannot be blank.`);
+            options[input.dataset.editOptionKey]=value;
+          });
+          payload.option_values=options;
+        }
+        const barcodeInput=row.querySelector('[data-edit-variant-barcode]');
+        if(barcodeInput)payload.barcode=barcodeInput.value.trim()||null;
+        return payload;
+      });
 
       await IZZY.rpc('supplier_update_product_v3',{
         _product_id:id,
