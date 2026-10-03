@@ -4,6 +4,20 @@
   const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   const money=(n,c='EGP')=>{try{return new Intl.NumberFormat('en-EG',{style:'currency',currency:c||'EGP'}).format(Number(n||0))}catch{return `${Number(n||0)} ${c||'EGP'}`}};
   const uid=()=>globalThis.crypto?.randomUUID?.()||('iz-'+Date.now()+'-'+Math.random().toString(16).slice(2));
+  const fingerprint=async payload=>{
+    const text=JSON.stringify(payload);
+    if(globalThis.crypto?.subtle&&globalThis.TextEncoder){
+      const bytes=new TextEncoder().encode(text);
+      const digest=await crypto.subtle.digest('SHA-256',bytes);
+      return [...new Uint8Array(digest)].map(b=>b.toString(16).padStart(2,'0')).join('');
+    }
+    let h1=2166136261,h2=2246822519;
+    for(let i=0;i<text.length;i++){
+      h1=Math.imul(h1^text.charCodeAt(i),16777619);
+      h2=Math.imul(h2^text.charCodeAt(i),3266489917);
+    }
+    return `${(h1>>>0).toString(16)}${(h2>>>0).toString(16)}`;
+  };
 
   function labels(ar){
     return ar?{
@@ -166,7 +180,19 @@
       const close=shadow.querySelector('.iz-close');
       const submit=shadow.querySelector('.iz-submit');
       const status=shadow.querySelector('.iz-status');
-      let requestKey=uid();
+      const attemptStorageKey=`izzydrop:storefront-attempt:v1:${token}:${p.id||'product'}`;
+      let fallbackAttempt=null;
+      const readAttempt=()=>{
+        try{return JSON.parse(sessionStorage.getItem(attemptStorageKey)||'null')||fallbackAttempt}catch(e){return fallbackAttempt}
+      };
+      const writeAttempt=attempt=>{
+        fallbackAttempt=attempt;
+        try{sessionStorage.setItem(attemptStorageKey,JSON.stringify(attempt))}catch(e){}
+      };
+      const clearAttempt=()=>{
+        fallbackAttempt=null;
+        try{sessionStorage.removeItem(attemptStorageKey)}catch(e){}
+      };
 
       open?.addEventListener('click',()=>{form.hidden=false;open.hidden=true});
       close?.addEventListener('click',()=>{form.hidden=true;open.hidden=false;status.textContent='';status.className='iz-status'});
@@ -190,16 +216,25 @@
 
         submit.disabled=true;submit.textContent=L.sending;status.textContent='';
         try{
-          const result=await sendOrder(token,{
+          const request={
             variant_id:variant,quantity:qty,customer_name:customerName,customer_phone:phone,
-            customer_email:email||null,address1:address,city,governorate,
-            idempotency_key:requestKey,website:hp
+            customer_email:email||null,address1:address,city,governorate,website:hp
+          };
+          const requestFingerprint=await fingerprint(request);
+          let attempt=readAttempt();
+          if(!attempt||attempt.fingerprint!==requestFingerprint){
+            attempt={key:uid(),fingerprint:requestFingerprint};
+            writeAttempt(attempt);
+          }
+          const result=await sendOrder(token,{
+            ...request,
+            idempotency_key:attempt.key
           });
+          clearAttempt();
           status.textContent=`${L.success} ✓ ${result.reference||''}`;
           status.className='iz-status ok';
           submit.hidden=true;
           close.textContent=L.close;
-          requestKey=uid();
         }catch(e){
           status.textContent=(e?.message||L.error);
           status.className='iz-status bad';
