@@ -1102,8 +1102,11 @@
 
   $('#edit-product-form').onsubmit=async e=>{
     e.preventDefault();
+    const form=e.currentTarget;
+    if(form.dataset.atomicSaving==='1')return;
+    form.dataset.atomicSaving='1';
     const id=$('#edit-product-id').value,p=productFor(id),btn=$('#save-product-edit');
-    if(!p)return;
+    if(!p){delete form.dataset.atomicSaving;return}
     btn.disabled=true;btn.textContent=local('Saving…','جارٍ الحفظ…');
     const st=$('#edit-product-status');st.textContent=local('Saving product…','جارٍ حفظ المنتج…');st.className='status';
     try{
@@ -1173,6 +1176,7 @@
         : err.message;
       st.className='status bad';
     }finally{
+      delete form.dataset.atomicSaving;
       btn.disabled=false;
       btn.textContent=local('Save changes','حفظ التغييرات');
     }
