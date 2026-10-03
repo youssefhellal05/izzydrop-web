@@ -7,7 +7,9 @@
   let VARIANT_GENERATION_SIGNATURE='';
   let ADD_PREVIEW_OBJECT_URL=null;
   let PENDING_PRODUCT_PUBLISH=null;
+  const SOURCING_RETURN_KEY='izzydrop:sourcing-return-v1';
   let SOURCING_RETURN=null;
+  try{SOURCING_RETURN=JSON.parse(sessionStorage.getItem(SOURCING_RETURN_KEY)||'null')}catch(e){sessionStorage.removeItem(SOURCING_RETURN_KEY)}
   let EDIT_PRODUCT_SNAPSHOT=null;
   let SUPPLIER_METRICS={},ORDER_HAS_MORE=false;
   const ORDER_PAGE_SIZE=50;
@@ -29,6 +31,10 @@
   };
 
   function go(v){
+    if(v!=='add'&&SOURCING_RETURN){
+      SOURCING_RETURN=null;
+      try{sessionStorage.removeItem(SOURCING_RETURN_KEY)}catch(e){}
+    }
     document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('on',b.dataset.view===v));
     document.querySelectorAll('.view').forEach(x=>x.hidden=true);
     const panel=$('#view-'+v);
@@ -68,6 +74,10 @@
 
   function beginSourcingProduct(context){
     SOURCING_RETURN=context||null;
+    try{
+      if(SOURCING_RETURN)sessionStorage.setItem(SOURCING_RETURN_KEY,JSON.stringify(SOURCING_RETURN));
+      else sessionStorage.removeItem(SOURCING_RETURN_KEY);
+    }catch(e){}
     go('add');
     if(SOURCING_RETURN?.title){
       msg(local(
@@ -544,9 +554,14 @@
     resetVariantBuilder();
     setLoading();
     await load();
-    const sourcingRequest=new URLSearchParams(location.search).get('sourcing');
+    const returnParams=new URLSearchParams(location.search);
+    const sourcingRequest=returnParams.get('sourcing');
+    const sourcingProduct=returnParams.get('product');
+    const sourcingResponse=returnParams.get('response');
     if(sourcingRequest){
-      focusSourcingRequest(sourcingRequest);
+      focusSourcingRequest(sourcingRequest,sourcingProduct,sourcingResponse);
+      SOURCING_RETURN=null;
+      try{sessionStorage.removeItem(SOURCING_RETURN_KEY)}catch(e){}
       history.replaceState({},document.title,location.pathname);
     }
     return true;
@@ -2003,6 +2018,7 @@
       await load(false);
       if(sourcingReturn?.requestId){
         SOURCING_RETURN=null;
+        try{sessionStorage.removeItem(SOURCING_RETURN_KEY)}catch(e){}
         focusSourcingRequest(sourcingReturn.requestId,pid,sourcingReturn.responseId);
         msg(local(
           `Product published · SKU ${result.sku}. Review the preselected product below, then press Link sourced product.`,
