@@ -487,7 +487,7 @@
   }
 
   function makeEmbedCode(token){
-    return `<div data-izzydrop-token="${token}"></div>\n<script src="https://youssefhellal05.github.io/izzydrop-web/izzydrop-widget.js?v=20260925-shipping1" async><\/script>`;
+    return `<div data-izzydrop-token="${token}"></div>\n<script src="https://youssefhellal05.github.io/izzydrop-web/izzydrop-widget.js?v=20261003-refresh-retry1" async><\/script>`;
   }
 
   async function openWebSetup(productId){
