@@ -1,6 +1,7 @@
 (()=>{
   const $=s=>document.querySelector(s);
   const DRAFT_KEY='izzy_variant_product_draft_v1';
+  const SOURCING_RETURN_KEY='izzydrop:sourcing-return-v1';
   const DB_NAME='izzy_product_drafts_v1';
   const STORE='files';
   const MAX_FILES=6;
@@ -11,6 +12,8 @@
   let files=[];
   let variantState=new Map();
   let generatedSignature='';
+  let sourcingReturn=null;
+  try{sourcingReturn=JSON.parse(sessionStorage.getItem(SOURCING_RETURN_KEY)||'null')}catch(e){sessionStorage.removeItem(SOURCING_RETURN_KEY)}
 
   const status=(text,bad=false)=>{const el=$('#variant-status');if(el){el.textContent=text||'';el.className='status variant-status'+(bad?' bad':'')}};
 
@@ -274,8 +277,30 @@
         const source=variants[Number(created.index)],url=source?.image_index==null?null:uploadedUrls[source.image_index]||null;
         if(url)await IZZY.request(`/rest/v1/product_variants?id=eq.${encodeURIComponent(created.id)}`,{method:'PATCH',body:JSON.stringify({variant_image_url:url,updated_at:new Date().toISOString()})});
       }
-      sessionStorage.removeItem(DRAFT_KEY);await clearDraftFiles();
-      location.href='supplier.html?view=products&created=1';
+
+      btn.textContent='Finishing product…';
+      await IZZY.request(`/rest/v1/supplier_products?id=eq.${encodeURIComponent(pid)}`,{
+        method:'PATCH',
+        body:JSON.stringify({status:'active',updated_at:new Date().toISOString()})
+      });
+
+      sessionStorage.removeItem(DRAFT_KEY);
+      await clearDraftFiles();
+
+      const returnContext=sourcingReturn;
+      try{sessionStorage.removeItem(SOURCING_RETURN_KEY)}catch(e){}
+      sourcingReturn=null;
+
+      if(returnContext?.requestId){
+        const params=new URLSearchParams({
+          sourcing:String(returnContext.requestId),
+          product:String(pid)
+        });
+        if(returnContext.responseId)params.set('response',String(returnContext.responseId));
+        location.href='supplier.html?'+params.toString();
+      }else{
+        location.href='supplier.html?view=products&created=1';
+      }
     }catch(err){status(err.message||'Could not publish product.',true);btn.disabled=false;btn.textContent='Publish variant product'}
   };
 
