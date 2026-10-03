@@ -738,6 +738,7 @@
   };
 
   const placeholderAr={
+    'Search products':'ابحث عن المنتجات',
     'Search products or SKU':'ابحث عن منتج أو SKU',
     'Search products, suppliers or SKU':'ابحث عن منتج أو مورّد أو SKU',
     'Search supplier or owner':'ابحث عن مورّد أو مالك',
