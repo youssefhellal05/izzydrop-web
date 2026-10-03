@@ -213,7 +213,7 @@
     const available=p.available!==false;
     const reason=p.availability_reason||local('This product is currently unavailable.','هذا المنتج غير متاح حاليًا.');
     const details=available&&p.public_slug?productDetailsUrl(p):null;
-    return `<article class="card linked-product-card ${available?'':'is-unavailable'}">
+    return `<article class="card linked-product-card ${available?'':'is-unavailable'}" data-linked-product-id="${IZZY.esc(p.product_id||l.supplier_product_id||'')}">
       <div class="linked-product-main">
         <a class="linked-thumb" href="${details||'#'}">
           ${p.primary_image_url?`<img src="${IZZY.esc(p.primary_image_url)}" alt="">`:'IZ'}
@@ -672,8 +672,21 @@
 
   function alertDestination(a){
     if(a?.sourcing_response_id)return {kind:'sourced',id:a.sourcing_response_id};
-    if(['price_change','low_stock','out_of_stock'].includes(a?.alert_type))return {kind:'view',view:'linked'};
+    if(['price_change','low_stock','out_of_stock'].includes(a?.alert_type)){
+      return {kind:'linked',productId:a?.supplier_product_id||a?.metadata?.product_id||null};
+    }
     return null;
+  }
+
+  function focusLinkedProduct(productId){
+    if(!productId)return;
+    requestAnimationFrame(()=>{
+      const card=document.querySelector(`.linked-product-card[data-linked-product-id="${CSS.escape(String(productId))}"]`);
+      if(!card)return;
+      card.classList.add('is-alert-target');
+      card.scrollIntoView({behavior:'smooth',block:'center'});
+      setTimeout(()=>card.classList.remove('is-alert-target'),3500);
+    });
   }
 
   async function markAlertRead(id){
@@ -701,7 +714,10 @@
       location.href='app.html?sourced='+encodeURIComponent(dest.id);
       return;
     }
-    if(dest?.kind==='view')go(dest.view);
+    if(dest?.kind==='linked'){
+      go('linked');
+      focusLinkedProduct(dest.productId);
+    }
   }
 
   async function loadOlderAlerts(){
