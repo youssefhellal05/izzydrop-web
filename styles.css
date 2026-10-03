@@ -1811,3 +1811,6 @@ html[data-theme="dark"] .product-create-section.is-current{box-shadow:0 16px 34p
   .policy-flow{align-items:stretch;flex-direction:column}
   .policy-flow b{transform:rotate(90deg);align-self:center}
 }
+
+.linked-product-card.is-alert-target{outline:2px solid var(--text);outline-offset:3px;box-shadow:0 18px 42px rgba(17,19,24,.14)}
+html[data-theme="dark"] .linked-product-card.is-alert-target{box-shadow:0 18px 42px rgba(0,0,0,.28)}
