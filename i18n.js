@@ -17,9 +17,11 @@
     'Full name':'الاسم الكامل',
     'Supplier':'المورّد',
     'Dropshipper':'الدروبشيبر',
+    'IzzyDrop Supplier Workspace':'مساحة عمل مورّد IzzyDrop',
     'IzzyDrop Dropshipper Workspace':'مساحة عمل دروبشيبر IzzyDrop',
     'Products':'المنتجات',
     'Money':'الأموال',
+    'Payouts':'المدفوعات',
     'My products':'منتجاتي',
     'Orders':'الطلبات',
     'Settings':'الإعدادات',
@@ -95,6 +97,7 @@
     'Today':'اليوم',
     'Needs attention':'يحتاج انتباهك',
     'Low stock':'مخزون منخفض',
+    'Paused products are hidden from dropshippers.':'المنتجات المتوقفة مخفية عن الدروبشيبرز.',
     'Active products':'المنتجات النشطة',
     'New orders':'طلبات جديدة',
     'Needs fulfillment':'طلبات تحتاج تنفيذ',
@@ -864,6 +867,8 @@
     if(interestedDropshippers){node.nodeValue=raw.replace(trimmed,`${interestedDropshippers[1]} دروبشيبرز مهتمون`);return}
     const interested=trimmed.match(/^(\d+) interested$/i);
     if(interested){node.nodeValue=raw.replace(trimmed,`${interested[1]} مهتمون`);return}
+    const pausedProducts=trimmed.match(/^(\d+) paused products$/i);
+    if(pausedProducts){node.nodeValue=raw.replace(trimmed,`${pausedProducts[1]} منتجات متوقفة`);return}
     const variants=trimmed.match(/^Variants \((\d+)\)$/i);
     if(variants){node.nodeValue=raw.replace(trimmed,`الخيارات (${variants[1]})`);return}
     const discussion=trimmed.match(/^Community discussion \((\d+)\)$/i);
