@@ -9,11 +9,11 @@
   const tag=s=>'<span class="tag '+(s==='sourced'?'ok':'warn')+'">'+esc(state(s))+'</span>';
   const empty=t=>'<div class="empty-state"><div class="empty-icon">⌕</div><h3>'+esc(t)+'</h3></div>';
   const sourceLink=url=>safeUrl(url)?'<a href="'+esc(safeUrl(url))+'" target="_blank" rel="noopener noreferrer">Product reference ↗</a>':'';
-  const details=r=>`<p class="sourcing-description">${esc(r.description||r.notes||'')}</p>
+  const details=r=>`<p class="sourcing-description" translate="no">${esc(r.description||r.notes||'')}</p>
     <div class="sourcing-facts"><span>Target supplier cost: <b>${money(r.target_cost)}</b></span>
     <span>Expected demand: <b>${r.expected_quantity==null?'Not specified':esc(r.expected_quantity)+' units'}</b></span>
     <span><b>${Number(r.interest_count||0)}</b> interested dropshippers</span></div>
-    ${sourceLink(r.source_url)}${r.notes&&r.notes!==r.description?'<p class="muted">'+esc(r.notes)+'</p>':''}`;
+    ${sourceLink(r.source_url)}${r.notes&&r.notes!==r.description?'<p class="muted" translate="no">'+esc(r.notes)+'</p>':''}`;
   const productLink=(p,from='app',requestId=null)=>{
     if(!p?.public_slug)return '';
     const params=new URLSearchParams({slug:p.public_slug,from});
@@ -24,20 +24,20 @@
   const responseTag=o=>o.status==='sourced'&&!o.catalog_product?'<span class="tag warn">'+(o.catalog_product_id?'Linked product unavailable':'Awaiting published product')+'</span>':tag(o.status);
   const offerDetails=(o,r)=>{
     const p=o.catalog_product;if(!p)return '<p class="muted">No eligible published product is linked. Create the product normally, then link it here.</p>';
-    return '<h4>'+esc(p.name)+'</h4><div class="sourcing-facts sourcing-commercial">'+
+    return '<h4 translate="no">'+esc(p.name)+'</h4><div class="sourcing-facts sourcing-commercial">'+
       '<span>Supplier price <b>'+range(p,'supplier_price')+'</b></span>'+
       '<span>Suggested retail <b>'+range(p,'suggested_retail')+'</b><small>Guidance only — you choose your selling price.</small></span>'+
       '<span>Current stock <b>'+(p.variants||[]).reduce((n,v)=>n+Number(v.stock||0),0)+'</b><small>Across enabled variants. No stock is reserved by interest.</small></span>'+
       '<span>Community demand <b>'+Number(r?.interest_count||0)+' interested</b></span></div>'+
       '<details class="sourcing-variants"><summary>Variants ('+(p.variants||[]).length+')</summary>'+
-      (p.variants||[]).map(v=>'<div class="sourcing-progress"><b>'+esc(v.name)+'</b><span>Supplier: '+IZZY.money(v.supplier_price,p.currency||'EGP')+'</span><span>Suggested: '+(v.suggested_retail==null?'Not specified':IZZY.money(v.suggested_retail,p.currency||'EGP'))+'</span><span>Stock: '+Number(v.stock||0)+'</span></div>').join('')+'</details>';
+      (p.variants||[]).map(v=>'<div class="sourcing-progress"><b translate="no">'+esc(v.name)+'</b><span>Supplier: '+IZZY.money(v.supplier_price,p.currency||'EGP')+'</span><span>Suggested: '+(v.suggested_retail==null?'Not specified':IZZY.money(v.suggested_retail,p.currency||'EGP'))+'</span><span>Stock: '+Number(v.stock||0)+'</span></div>').join('')+'</details>';
   };
   const offerPreview=(o,r,context='dropshipper')=>{
     const link=o.catalog_product
       ? (context==='supplier'?productLink(o.catalog_product,'supplier',r.id):'app.html?sourced='+encodeURIComponent(o.id))
       : '';
-    return '<div class="sourcing-progress"><b>'+esc(o.supplier_name||'IzzyDrop Supplier')+'</b> '+responseTag(o)+
-      (o.catalog_product?'<span>'+esc(o.catalog_product.name)+' · '+range(o.catalog_product,'supplier_price')+'</span><a class="auth-text-button" href="'+esc(link)+'">'+(context==='supplier'?'View published product →':'View sourced product →')+'</a>':'<span>'+(o.status==='sourced'?'Published catalog link needed.':'Finding this product. Commercial information comes from the published product.')+'</span>')+'</div>';
+    return '<div class="sourcing-progress"><b translate="no">'+esc(o.supplier_name||'IzzyDrop Supplier')+'</b> '+responseTag(o)+
+      (o.catalog_product?'<span><span translate="no">'+esc(o.catalog_product.name)+'</span> · '+range(o.catalog_product,'supplier_price')+'</span><a class="auth-text-button" href="'+esc(link)+'">'+(context==='supplier'?'View published product →':'View sourced product →')+'</a>':'<span>'+(o.status==='sourced'?'Published catalog link needed.':'Finding this product. Commercial information comes from the published product.')+'</span>')+'</div>';
   };
   async function action(button,fn,refresh){
     const label=button.textContent;button.disabled=true;button.textContent=local('Saving…','جارٍ الحفظ…');
@@ -76,14 +76,14 @@
       const closed=['closed','archived'].includes(r.status);
       const discussion=comments.filter(c=>c.request_id===r.id);
       return `<article class="card order-card sourcing-post" id="request-${r.id}">
-        <div class="order-card-head"><div><h3>${esc(r.title)}</h3><small>${r.is_mine?'Your request · ':''}${new Date(r.created_at).toLocaleDateString()}</small></div>${tag(r.status)}</div>
+        <div class="order-card-head"><div><h3 translate="no">${esc(r.title)}</h3><small>${r.is_mine?'Your request · ':''}${new Date(r.created_at).toLocaleDateString()}</small></div>${tag(r.status)}</div>
         ${image(r.image_url)}${details(r)}
         <div class="sourcing-post-actions"><button class="btn secondary" data-interest-request="${r.id}" data-interested="${r.interested?'1':'0'}" ${closed&&!r.interested?'disabled':''}>${r.interested?'Withdraw interest':closed?'Request closed':"I'm interested"}</button>
         ${r.is_mine&&!closed?'<button class="auth-text-button" data-close-request="'+r.id+'">Close request</button>':''}</div>
         <div class="sourcing-progress-list">${responses.filter(o=>o.request_id===r.id).map(o=>offerPreview(o,r,'dropshipper')).join('')||'<p class="muted">Suppliers can start sourcing this product independently.</p>'}</div>
         <details class="sourcing-discussion"><summary>Community discussion (${discussion.length})</summary>
-          ${discussion.map(c=>`<div class="sourcing-comment"><small>${c.is_mine?'You':'Dropshipper'} · ${new Date(c.created_at).toLocaleString()}</small><p>${esc(c.body)}</p>
-          ${c.is_mine&&!closed?`<details><summary>Edit your comment</summary><form class="sourcing-comment-form" data-request-id="${r.id}" data-comment-id="${c.id}"><textarea name="body" required maxlength="2000" aria-label="Edit comment">${esc(c.body)}</textarea><button class="btn secondary">Save comment</button></form></details>`:''}</div>`).join('')||'<p class="muted">No comments yet. Share the features or demand you need.</p>'}
+          ${discussion.map(c=>`<div class="sourcing-comment"><small>${c.is_mine?'You':'Dropshipper'} · ${new Date(c.created_at).toLocaleString()}</small><p translate="no">${esc(c.body)}</p>
+          ${c.is_mine&&!closed?`<details><summary>Edit your comment</summary><form class="sourcing-comment-form" data-request-id="${r.id}" data-comment-id="${c.id}"><textarea name="body" required maxlength="2000" aria-label="Edit comment" translate="no">${esc(c.body)}</textarea><button class="btn secondary">Save comment</button></form></details>`:''}</div>`).join('')||'<p class="muted">No comments yet. Share the features or demand you need.</p>'}
           ${!closed?`<form class="sourcing-comment-form" data-request-id="${r.id}"><label>Comment<textarea name="body" required maxlength="2000" placeholder="What would make this product useful for your store?"></textarea></label><button class="btn secondary">Post comment</button></form>`:''}
         </details></article>`;
     }).join('')||empty('No sourcing requests in this view');
@@ -97,7 +97,7 @@
         const r=requests.find(r=>r.id===o.request_id)||{};
         const closed=['closed','archived'].includes(r.status);
         return `<article class="card order-card sourcing-post" id="sourced-${o.id}">
-          <div class="order-card-head"><div><h3>${esc(r.title||'Sourced product')}</h3><small>${esc(o.supplier_name||'IzzyDrop Supplier')}</small></div>${tag('sourced')}</div>
+          <div class="order-card-head"><div><h3 translate="no">${esc(r.title||'Sourced product')}</h3><small translate="no">${esc(o.supplier_name||'IzzyDrop Supplier')}</small></div>${tag('sourced')}</div>
           ${image(o.catalog_product.image_url)}<div class="notice">Published through the normal Products flow. Prices, variants and stock below come from the catalog. Adding to My Products is your choice.</div>
           ${offerDetails(o,r)}
           <a class="auth-text-button" href="app.html?request=${encodeURIComponent(r.id)}">Open original community request →</a>
@@ -127,9 +127,9 @@
 
     root.innerHTML=(board?.requests||[]).filter(r=>!['closed','archived'].includes(r.status)||(board.responses||[]).some(o=>o.request_id===r.id&&o.is_mine)).map(r=>{
       const o=(board.responses||[]).find(o=>o.request_id===r.id&&o.is_mine),closed=['closed','archived'].includes(r.status);
-      return '<article class="card order-card sourcing-post" id="supplier-request-'+r.id+'"><div class="order-card-head"><h3>'+esc(r.title)+'</h3>'+tag(r.status)+'</div>'+
+      return '<article class="card order-card sourcing-post" id="supplier-request-'+r.id+'"><div class="order-card-head"><h3 translate="no">'+esc(r.title)+'</h3>'+tag(r.status)+'</div>'+
         image(r.image_url)+details(r)+
-        '<details class="sourcing-discussion"><summary>Community discussion</summary>'+(board.comments||[]).filter(c=>c.request_id===r.id).map(c=>'<div class="sourcing-comment"><p>'+esc(c.body)+'</p></div>').join('')+'</details>'+
+        '<details class="sourcing-discussion"><summary>Community discussion</summary>'+(board.comments||[]).filter(c=>c.request_id===r.id).map(c=>'<div class="sourcing-comment"><p translate="no">'+esc(c.body)+'</p></div>').join('')+'</details>'+
         '<div class="sourcing-progress-list">'+(board.responses||[]).filter(x=>x.request_id===r.id&&!x.is_mine).map(x=>offerPreview(x,r,'supplier')).join('')+'</div>'+
         (!o?(closed?'':'<button class="btn" data-start-sourcing="'+r.id+'">Start sourcing</button><p class="muted">Let the community know you are working on finding this product.</p>'):
         '<div class="notice"><b>Your progress</b> '+responseTag(o)+'</div>'+
