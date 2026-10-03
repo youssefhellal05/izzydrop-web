@@ -104,22 +104,14 @@
     };
   }
 
-  async function saveVariantCard(row){
-    const id=row.dataset.variantId;
-    if(!id)return;
-    const button=row.querySelector('[data-save-one-variant]');
-    if(button){button.disabled=true;button.textContent='Saving…'}
-    setCardStatus(row,'Saving this variant…');
+  function saveVariantCard(row){
+    if(!row.dataset.variantId)return;
     try{
-      const body=readVariantBody(row,true);
-      await IZZY.request(`/rest/v1/product_variants?id=eq.${encodeURIComponent(id)}`,{method:'PATCH',body:JSON.stringify(body)});
-      const title=row.querySelector('.variant-edit-card-head b');
-      if(title)title.textContent=body.variant_name||'Variant';
-      setCardStatus(row,'Variant saved.','ok');
+      readVariantBody(row,true);
+      setCardStatus(row,'Saving safely with the full product…');
+      form.requestSubmit();
     }catch(err){
-      setCardStatus(row,err.message||'Could not save this variant.','bad');
-    }finally{
-      if(button){button.disabled=false;button.textContent='Save this variant'}
+      setCardStatus(row,err.message||'Could not save these changes.','bad');
     }
   }
 
@@ -169,9 +161,8 @@
     setCardStatus(row,'Uploading variant photo…');
     const url=await IZZY.uploadProductImage(path,file);
     await IZZY.request('/rest/v1/product_images',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({product_id:productId,url,position:(images||[]).length})});
-    await IZZY.request(`/rest/v1/product_variants?id=eq.${encodeURIComponent(variantId)}`,{method:'PATCH',body:JSON.stringify({variant_image_url:url,updated_at:new Date().toISOString()})});
     await refreshPhotoSelects(productId,row,url);
-    setCardStatus(row,'Variant photo updated.','ok');
+    setCardStatus(row,'Photo uploaded. Save changes to assign it to this variant.','ok');
   }
 
   function buildOptionEditor(row,options){
@@ -250,7 +241,7 @@
       try{await uploadVariantPhoto(row,selected)}catch(err){setCardStatus(row,err.message||'Could not upload photo.','bad')}
       finally{upload.disabled=false;upload.textContent='Upload / change variant photo'}
     };
-    const save=document.createElement('button');save.type='button';save.className='btn';save.dataset.saveOneVariant='1';save.textContent='Save this variant';save.onclick=()=>saveVariantCard(row);
+    const save=document.createElement('button');save.type='button';save.className='btn';save.dataset.saveOneVariant='1';save.textContent='Save changes';save.onclick=()=>saveVariantCard(row);
     left.append(upload,file,save);
     const status=document.createElement('span');status.className='variant-edit-status';
     actions.append(left,status);row.appendChild(actions);
@@ -274,25 +265,9 @@
     }catch(err){console.warn('Could not enhance variant editor',err)}
   }
 
-  const originalSubmit=form.onsubmit;
-  if(originalSubmit&&!form.dataset.variantExtrasWrapped){
-    form.dataset.variantExtrasWrapped='1';
-    form.onsubmit=async function(event){
-      event.preventDefault();
-      try{
-        for(const row of document.querySelectorAll('#edit-variant-list [data-variant-id]')){
-          if(!row.querySelector('[data-edit-option-key]')&&!row.querySelector('[data-edit-variant-barcode]'))continue;
-          const body=readVariantBody(row,false);
-          await IZZY.request(`/rest/v1/product_variants?id=eq.${encodeURIComponent(row.dataset.variantId)}`,{method:'PATCH',body:JSON.stringify(body)});
-        }
-      }catch(err){
-        const status=$('#edit-product-status')||$('#status');
-        if(status){status.textContent=err.message||'Could not save variant details.';status.className='status bad'}
-        return;
-      }
-      return originalSubmit.call(this,event);
-    };
-  }
+  // All variant fields, including option values and barcode, are saved by
+  // supplier.js through supplier_update_product_v3. Do not PATCH variants here.
+
 
   new MutationObserver(()=>{
     if(!modal.hidden)setTimeout(()=>enhanceVariantEditor(),80);
