@@ -2,6 +2,62 @@
   const C=window.IZZY_CONFIG;
   const KEY='izzy_session';
   const THEME_KEY='izzy_theme';
+  const PROTECTED_PAGES=new Set(['app.html','supplier.html','admin.html','supplier-variant.html']);
+  let refreshPromise=null;
+  const currentPage=()=>location.pathname.split('/').pop()||'index.html';
+  const isProtectedPage=()=>PROTECTED_PAGES.has(currentPage());
+  function redirectToLogin(reason='session_expired'){
+    if(!isProtectedPage())return;
+    const url=new URL('login.html',location.href);
+    url.searchParams.set('reason',reason);
+    location.replace(url.href);
+  }
+  function clearInvalidSession(reason='session_expired'){
+    localStorage.removeItem(KEY);
+    redirectToLogin(reason);
+  }
+  function isDefinitiveRefreshFailure(response,data){
+    if(response.status===400||response.status===401)return true;
+    const raw=String(data?.error_code||data?.code||data?.error_description||data?.message||data?.error||'');
+    return /invalid refresh|refresh token.*(not found|already used|expired)|session.*not found/i.test(raw);
+  }
+  async function refreshSession(){
+    if(refreshPromise)return refreshPromise;
+    refreshPromise=(async()=>{
+      const starting=window.IZZY?.session?.();
+      if(!starting?.refresh_token)return {ok:false,invalid:!!starting?.access_token};
+      const refreshToken=starting.refresh_token;
+      try{
+        const response=await fetch(C.supabaseUrl+'/auth/v1/token?grant_type=refresh_token',{
+          method:'POST',
+          headers:jsonHeaders(),
+          body:JSON.stringify({refresh_token:refreshToken})
+        });
+        const data=await readJson(response);
+        if(!response.ok){
+          const invalid=isDefinitiveRefreshFailure(response,data);
+          if(invalid){
+            const current=window.IZZY?.session?.();
+            if(current?.refresh_token===refreshToken)clearInvalidSession('session_expired');
+          }
+          return {ok:false,invalid};
+        }
+
+        const current=window.IZZY?.session?.();
+        if(!current||current.refresh_token!==refreshToken){
+          return {ok:false,invalid:false,stale:true};
+        }
+
+        window.IZZY.saveSession(data);
+        return {ok:true,session:data};
+      }catch(error){
+        return {ok:false,invalid:false,error};
+      }finally{
+        refreshPromise=null;
+      }
+    })();
+    return refreshPromise;
+  }
   const savedTheme=localStorage.getItem(THEME_KEY)==='dark'?'dark':'light';
   document.documentElement.dataset.theme=savedTheme;
   const jsonHeaders=(token)=>({apikey:C.supabaseKey,'Content-Type':'application/json',...(token?{Authorization:`Bearer ${token}`}:{})});
@@ -9,9 +65,14 @@
   async function request(path,opt={}){
     const session=IZZY.session();
     let r=await fetch(C.supabaseUrl+path,{...opt,headers:{...jsonHeaders(session?.access_token),...(opt.headers||{})}});
-    if(r.status===401&&session?.refresh_token){
-      const ok=await IZZY.refresh();
-      if(ok){const s=IZZY.session();r=await fetch(C.supabaseUrl+path,{...opt,headers:{...jsonHeaders(s?.access_token),...(opt.headers||{})}})}
+    if(r.status===401&&session?.access_token){
+      const refreshed=await refreshSession();
+      if(refreshed.ok){
+        const s=IZZY.session();
+        r=await fetch(C.supabaseUrl+path,{...opt,headers:{...jsonHeaders(s?.access_token),...(opt.headers||{})}});
+      }else if(refreshed.invalid){
+        throw Error('Your session has expired. Please log in again.');
+      }
     }
     const d=await readJson(r);
     if(!r.ok)throw Error(d?.message||d?.error_description||d?.error||d?.text||'Request failed');
@@ -24,7 +85,7 @@
     session(){try{return JSON.parse(localStorage.getItem(KEY)||'null')}catch{return null}},
     saveSession(s){localStorage.setItem(KEY,JSON.stringify(s))},
     logout(){localStorage.removeItem(KEY)},
-    async refresh(){const s=this.session();if(!s?.refresh_token)return false;const r=await fetch(C.supabaseUrl+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:jsonHeaders(),body:JSON.stringify({refresh_token:s.refresh_token})});if(!r.ok)return false;this.saveSession(await r.json());return true},
+    async refresh(){const result=await refreshSession();return result.ok},
     async login(email,password){const r=await fetch(C.supabaseUrl+'/auth/v1/token?grant_type=password',{method:'POST',headers:jsonHeaders(),body:JSON.stringify({email,password})});const d=await readJson(r);if(!r.ok)throw Error(d?.error_description||d?.message||'Login failed');this.saveSession(d);return d},
     async consumeAuthRedirect(){const raw=location.hash.startsWith('#')?location.hash.slice(1):'';if(!raw)return null;const p=new URLSearchParams(raw);const access_token=p.get('access_token'),refresh_token=p.get('refresh_token'),type=p.get('type');if(!access_token)return null;const ur=await fetch(C.supabaseUrl+'/auth/v1/user',{headers:jsonHeaders(access_token)});const user=await readJson(ur);if(!ur.ok)throw Error(user?.message||'Could not open invite');const session={access_token,refresh_token,token_type:p.get('token_type')||'bearer',expires_in:Number(p.get('expires_in')||3600),user};this.saveSession(session);history.replaceState({},document.title,location.pathname+location.search);return {type,session}},
     async requestPasswordReset(email){
@@ -73,6 +134,21 @@
     money(n,c='EGP'){try{return new Intl.NumberFormat('en-EG',{style:'currency',currency:c||'EGP'}).format(Number(n||0))}catch{return `${n||0} ${c||'EGP'}`}},
     productUrl(slug){return `${location.origin}${location.pathname.replace(/[^/]*$/,'')}product.html?slug=${encodeURIComponent(slug)}`}
   };
+
+  window.addEventListener('storage',event=>{
+    if(event.key!==KEY)return;
+    if(!event.newValue){
+      redirectToLogin('signed_out');
+      return;
+    }
+    if(event.oldValue&&event.newValue&&isProtectedPage()){
+      try{
+        const before=JSON.parse(event.oldValue);
+        const after=JSON.parse(event.newValue);
+        if(before?.user?.id&&after?.user?.id&&before.user.id!==after.user.id)location.reload();
+      }catch{}
+    }
+  });
 
   function installPasswordToggles(){
     document.querySelectorAll('input[type="password"]').forEach(input=>{
