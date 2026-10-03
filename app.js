@@ -1109,14 +1109,41 @@
   $('#order-product').onchange=loadOrderVariants;
   $('#order-variant').onchange=renderOrderPreview;
   $('#order-qty').oninput=renderOrderPreview;
-  let activeOrderIdempotencyKey=null;
+
+  let fallbackManualOrderAttempt=null;
+  const manualOrderAttemptStorageKey=()=>`izzydrop:manual-order-attempt:v1:${SESSION?.user?.id||'session'}`;
+  const hashAttemptPayload=async payload=>{
+    const text=JSON.stringify(payload);
+    if(globalThis.crypto?.subtle&&globalThis.TextEncoder){
+      const bytes=new TextEncoder().encode(text);
+      const digest=await crypto.subtle.digest('SHA-256',bytes);
+      return [...new Uint8Array(digest)].map(b=>b.toString(16).padStart(2,'0')).join('');
+    }
+    let h1=2166136261,h2=2246822519;
+    for(let i=0;i<text.length;i++){
+      h1=Math.imul(h1^text.charCodeAt(i),16777619);
+      h2=Math.imul(h2^text.charCodeAt(i),3266489917);
+    }
+    return `${(h1>>>0).toString(16)}${(h2>>>0).toString(16)}`;
+  };
+  const readManualOrderAttempt=()=>{
+    try{return JSON.parse(sessionStorage.getItem(manualOrderAttemptStorageKey())||'null')||fallbackManualOrderAttempt}catch(e){return fallbackManualOrderAttempt}
+  };
+  const writeManualOrderAttempt=attempt=>{
+    fallbackManualOrderAttempt=attempt;
+    try{sessionStorage.setItem(manualOrderAttemptStorageKey(),JSON.stringify(attempt))}catch(e){}
+  };
+  const clearManualOrderAttempt=()=>{
+    fallbackManualOrderAttempt=null;
+    try{sessionStorage.removeItem(manualOrderAttemptStorageKey())}catch(e){}
+  };
+
   $('#order-form').onsubmit=async e=>{
     e.preventDefault();
     const s=$('#order-status'),btn=$('#order-submit');
     btn.disabled=true;btn.textContent='Sending…';s.textContent='Creating order…';s.className='status';
     try{
-      if(!activeOrderIdempotencyKey)activeOrderIdempotencyKey=crypto.randomUUID();
-      const orderId=await IZZY.rpc('create_dropshipper_order',{
+      const request={
         _product_id:$('#order-product').value,
         _variant_id:$('#order-variant').value,
         _quantity:Number($('#order-qty').value||1),
@@ -1124,18 +1151,27 @@
         _customer_phone:$('#order-customer-phone').value.trim(),
         _customer_email:$('#order-customer-email').value.trim()||null,
         _shipping_address:{address1:$('#order-address1').value.trim(),city:$('#order-city').value.trim(),governorate:$('#order-governorate').value.trim()},
-        _external_order_ref:$('#order-ref').value.trim()||null,
-        _idempotency_key:activeOrderIdempotencyKey
+        _external_order_ref:$('#order-ref').value.trim()||null
+      };
+      const fingerprint=await hashAttemptPayload(request);
+      let attempt=readManualOrderAttempt();
+      if(!attempt||attempt.fingerprint!==fingerprint){
+        attempt={key:crypto.randomUUID(),fingerprint};
+        writeManualOrderAttempt(attempt);
+      }
+      const orderId=await IZZY.rpc('create_dropshipper_order',{
+        ...request,
+        _idempotency_key:attempt.key
       });
+      clearManualOrderAttempt();
       s.textContent='Order created ✓ '+String(orderId).slice(0,8);
       $('#order-form').reset();
       $('#order-variant').innerHTML='<option value="">Choose variant</option>';
       $('#order-variant').disabled=true;
       $('#order-create-card').hidden=true;
       $('#toggle-order-form').hidden=false;
-      activeOrderIdempotencyKey=null;
       await load();
-    }catch(err){s.textContent=err.message;s.className='status bad';/* keep the key so a retry is the same attempt */}
+    }catch(err){s.textContent=err.message;s.className='status bad';/* keep the persisted attempt so refresh/retry uses the same key */}
     finally{btn.disabled=SHIPPING?.available!==true;btn.textContent='Send order to IzzyDrop';renderOrderPreview()}
   };
 
