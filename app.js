@@ -19,6 +19,11 @@
   const productDescription=p=>window.IZZY_I18N?.productDescription(p)||p?.description||'';
   const ar=()=>window.IZZY_I18N?.isArabic?.()===true;
   const local=(en,arText)=>ar()?arText:en;
+  const localizeStaticDropshipperFields=()=>{
+    const productSearch=$('#product-search');
+    if(productSearch)productSearch.placeholder=local('Search products','ابحث عن المنتجات');
+  };
+  localizeStaticDropshipperFields();
   const publicSupplierName=name=>{
     const value=String(name||'').trim();
     const looksLikeEmail=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
