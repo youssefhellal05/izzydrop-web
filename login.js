@@ -169,12 +169,21 @@
     }
   };
 
+  const authReason=new URLSearchParams(location.search).get('reason');
   const requestedType=new URLSearchParams(location.search).get('type');
   if(requestedType==='supplier'||requestedType==='dropshipper'){
     setMode('signup');
     updateSignupRole(requestedType);
   }else{
     updateSignupRole('');
+  }
+
+  if(authReason==='session_expired'){
+    $('#auth-status').textContent='Your session expired. Please log in again.';
+    $('#auth-status').className='status auth-status bad';
+  }else if(authReason==='signed_out'){
+    $('#auth-status').textContent='You were signed out in another tab or device.';
+    $('#auth-status').className='status auth-status';
   }
 
   $('#login-form').onsubmit=async e=>{
