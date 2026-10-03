@@ -26,7 +26,7 @@ if (/\/supplier\.html$/i.test(location.pathname)) {
       document.body.appendChild(sync);
 
       const variantEdit = document.createElement('script');
-      variantEdit.src = 'supplier-variant-edit.js?v=20260925-variantedit1';
+      variantEdit.src = 'supplier-variant-edit.js?v=20261003-atomicvariant1';
       variantEdit.async = false;
       document.body.appendChild(variantEdit);
     };
