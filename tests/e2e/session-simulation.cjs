@@ -24,7 +24,7 @@ async function fixture() {
     if (url.origin !== 'https://qa.invalid') return route.abort();
     if (url.pathname === '/auth/v1/token') {
       if (url.searchParams.get('grant_type') === 'password') {
-        return route.fulfill({ json: session(JSON.parse(route.request().postData()).email) });
+        return route.fulfill({ json: session(JSON.parse(route.request().postData()).email, 'qa-refresh-' + JSON.parse(route.request().postData()).email) });
       }
       if (mode === 'delay') {
         pending = route; if (seen) seen(); return;
