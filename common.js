@@ -4,12 +4,17 @@
   const THEME_KEY='izzy_theme';
   const PROTECTED_PAGES=new Set(['app.html','supplier.html','admin.html','supplier-variant.html']);
   let refreshPromise=null;
+  let checkedToken=null,checkedAt=0;
+  const SESSION_CHECK_MS=30000;
+  const withSessionLock=work=>window.navigator?.locks
+    ?window.navigator.locks.request('izzy-session-refresh',work):work();
   const currentPage=()=>location.pathname.split('/').pop()||'index.html';
   const isProtectedPage=()=>PROTECTED_PAGES.has(currentPage());
   function redirectToLogin(reason='session_expired'){
     if(!isProtectedPage())return;
     const url=new URL('login.html',location.href);
     url.searchParams.set('reason',reason);
+    document.documentElement.style.visibility='hidden';
     location.replace(url.href);
   }
   function clearInvalidSession(reason='session_expired'){
@@ -23,9 +28,14 @@
   }
   async function refreshSession(){
     if(refreshPromise)return refreshPromise;
-    refreshPromise=(async()=>{
+    const requested=window.IZZY?.session?.();
+    refreshPromise=withSessionLock(async()=>{
       const starting=window.IZZY?.session?.();
       if(!starting?.refresh_token)return {ok:false,invalid:!!starting?.access_token};
+      // Another tab may have rotated the shared token while this tab waited.
+      if(starting.refresh_token!==requested?.refresh_token){
+        return {ok:starting.user?.id===requested?.user?.id,stale:true};
+      }
       const refreshToken=starting.refresh_token;
       try{
         const response=await fetch(C.supabaseUrl+'/auth/v1/token?grant_type=refresh_token',{
@@ -49,20 +59,31 @@
         }
 
         window.IZZY.saveSession(data);
+        checkedToken=data.refresh_token;checkedAt=Date.now();
         return {ok:true,session:data};
       }catch(error){
         return {ok:false,invalid:false,error};
-      }finally{
-        refreshPromise=null;
       }
-    })();
+    }).finally(()=>{refreshPromise=null});
     return refreshPromise;
+  }
+  async function validateSession(force=false){
+    if(!isProtectedPage())return {ok:true};
+    const session=window.IZZY?.session?.();
+    if(!session?.access_token||!session?.refresh_token){
+      clearInvalidSession('signed_out');
+      return {ok:false,invalid:true};
+    }
+    if(!force&&session.refresh_token===checkedToken&&Date.now()-checkedAt<SESSION_CHECK_MS)return {ok:true};
+    return refreshSession();
   }
   const savedTheme=localStorage.getItem(THEME_KEY)==='dark'?'dark':'light';
   document.documentElement.dataset.theme=savedTheme;
   const jsonHeaders=(token)=>({apikey:C.supabaseKey,'Content-Type':'application/json',...(token?{Authorization:`Bearer ${token}`}:{})});
   async function readJson(r){const t=await r.text();if(!t)return null;try{return JSON.parse(t)}catch{return {text:t}}}
   async function request(path,opt={}){
+    const validation=await validateSession();
+    if(validation.invalid||validation.stale&&!validation.ok)throw Error('Your session has expired. Please log in again.');
     const session=IZZY.session();
     let r=await fetch(C.supabaseUrl+path,{...opt,headers:{...jsonHeaders(session?.access_token),...(opt.headers||{})}});
     if(r.status===401&&session?.access_token){
@@ -84,7 +105,7 @@
     setTheme(theme){const next=theme==='dark'?'dark':'light';localStorage.setItem(THEME_KEY,next);document.documentElement.dataset.theme=next;const meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.setAttribute('content',next==='dark'?'#0b0d10':'#111318');return next},
     session(){try{return JSON.parse(localStorage.getItem(KEY)||'null')}catch{return null}},
     saveSession(s){localStorage.setItem(KEY,JSON.stringify(s))},
-    logout(){localStorage.removeItem(KEY)},
+    logout(){localStorage.removeItem(KEY);checkedToken=null;checkedAt=0;redirectToLogin('signed_out')},
     async refresh(){const result=await refreshSession();return result.ok},
     async login(email,password){const r=await fetch(C.supabaseUrl+'/auth/v1/token?grant_type=password',{method:'POST',headers:jsonHeaders(),body:JSON.stringify({email,password})});const d=await readJson(r);if(!r.ok)throw Error(d?.error_description||d?.message||'Login failed');this.saveSession(d);return d},
     async consumeAuthRedirect(){const raw=location.hash.startsWith('#')?location.hash.slice(1):'';if(!raw)return null;const p=new URLSearchParams(raw);const access_token=p.get('access_token'),refresh_token=p.get('refresh_token'),type=p.get('type');if(!access_token)return null;const ur=await fetch(C.supabaseUrl+'/auth/v1/user',{headers:jsonHeaders(access_token)});const user=await readJson(ur);if(!ur.ok)throw Error(user?.message||'Could not open invite');const session={access_token,refresh_token,token_type:p.get('token_type')||'bearer',expires_in:Number(p.get('expires_in')||3600),user};this.saveSession(session);history.replaceState({},document.title,location.pathname+location.search);return {type,session}},
@@ -103,7 +124,15 @@
     },
     async updatePassword(password){const s=this.session();if(!s?.access_token)throw Error('Your session has expired. Please log in again.');const r=await fetch(C.supabaseUrl+'/auth/v1/user',{method:'PUT',headers:jsonHeaders(s.access_token),body:JSON.stringify({password})});const d=await readJson(r);if(!r.ok)throw Error(d?.message||d?.error_description||'Could not set password');s.user=d;this.saveSession(s);return d},
     async updateEmail(email){const s=this.session();if(!s?.access_token)throw Error('Your session has expired. Please log in again.');const redirectTo=new URL('login.html',location.href).href;const r=await fetch(C.supabaseUrl+'/auth/v1/user?redirect_to='+encodeURIComponent(redirectTo),{method:'PUT',headers:jsonHeaders(s.access_token),body:JSON.stringify({email})});const d=await readJson(r);if(!r.ok)throw Error(d?.message||d?.error_description||'Could not update email');if(d?.email===email){s.user=d;this.saveSession(s)}return d},
-    async logoutEverywhere(){const s=this.session();if(!s?.access_token){this.logout();return}const r=await fetch(C.supabaseUrl+'/auth/v1/logout?scope=global',{method:'POST',headers:{apikey:C.supabaseKey,Authorization:`Bearer ${s.access_token}`}});if(!r.ok){const d=await readJson(r);throw Error(d?.message||d?.error_description||'Could not sign out all devices')}this.logout()},
+    async logoutEverywhere(){
+      // Serialize with refresh across tabs so logout cannot race token rotation.
+      return withSessionLock(async()=>{
+        const s=this.session();if(!s?.access_token){this.logout();return}
+        const r=await fetch(C.supabaseUrl+'/auth/v1/logout?scope=global',{method:'POST',headers:{apikey:C.supabaseKey,Authorization:`Bearer ${s.access_token}`}});
+        if(!r.ok){const d=await readJson(r);throw Error(d?.message||d?.error_description||'Could not sign out all devices')}
+        if(this.session()?.refresh_token===s.refresh_token)this.logout();
+      });
+    },
     async signup({email,password,fullName,businessName,type}){const redirectTo=new URL('login.html',location.href).href;const r=await fetch(C.supabaseUrl+'/auth/v1/signup?redirect_to='+encodeURIComponent(redirectTo),{method:'POST',headers:jsonHeaders(),body:JSON.stringify({email,password,data:{full_name:fullName,business_name:businessName,requested_account_type:type}})});const d=await readJson(r);if(!r.ok)throw Error(d?.msg||d?.message||d?.error_description||'Sign up failed');if(d?.access_token)this.saveSession(d);return d},
     request,
     async uploadProductImage(path,file){
@@ -149,6 +178,20 @@
       }catch{}
     }
   });
+
+  if(isProtectedPage()){
+    const check=()=>validateSession(true).catch(()=>({ok:false}));
+    // Hide the snapshot before history caching; revalidate before restoring it.
+    window.addEventListener('pagehide',()=>{document.documentElement.style.visibility='hidden'});
+    window.addEventListener('pageshow',async()=>{
+      await check();
+      if(IZZY.session()?.access_token)document.documentElement.style.visibility='';
+    });
+    window.addEventListener('focus',check);
+    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')check()});
+    window.addEventListener('online',check);
+    window.setInterval(()=>{if(document.visibilityState==='visible')check()},SESSION_CHECK_MS);
+  }
 
   function installPasswordToggles(){
     document.querySelectorAll('input[type="password"]').forEach(input=>{
