@@ -182,6 +182,18 @@
     const fullRangeDisplay=sourcedSuggested!=null&&range
       ? rangeMoney(range.retail_min,range.retail_max,p.currency)
       : null;
+    // Use current enabled-variant price ranges when available. For paused products,
+    // the last listed product price is a fallback, not a checkout quote.
+    const rawSupplier=p.supplier_price??p.supplier_cost;
+    const fallbackSupplier=rawSupplier==null?NaN:Number(rawSupplier);
+    const supplierMin=range?Number(range.supplier_min):fallbackSupplier;
+    const supplierMax=range?Number(range.supplier_max):fallbackSupplier;
+    const supplierKnown=Number.isFinite(supplierMin)&&Number.isFinite(supplierMax);
+    const supplierDisplay=supplierKnown?rangeMoney(supplierMin,supplierMax,p.currency):'—';
+    const feeFor=price=>Math.round(price*4)/100;
+    const feeDisplay=supplierKnown?rangeMoney(feeFor(supplierMin),feeFor(supplierMax),p.currency):'—';
+    const totalCostDisplay=supplierKnown?rangeMoney(supplierMin+feeFor(supplierMin),supplierMax+feeFor(supplierMax),p.currency):'—';
+    const varyingSupplierPrices=supplierKnown&&supplierMin!==supplierMax;
     const signedMoney=value=>{
       const n=Number(value);
       if(!Number.isFinite(n))return '—';
@@ -228,6 +240,9 @@
           ${available?'':`<div class="notice bad linked-unavailable-note"><b>${local('Unavailable','غير متاح')}</b><span>${IZZY.esc(reason)}</span></div>`}
           ${sourcedVariant?`<div class="notice"><b>${local('Sourced match','الاختيار المورّد')}: ${IZZY.esc(sourcedVariant)}</b><span>${local('Supplier price','سعر المورّد')} ${IZZY.money(p.sourced_quote_cost||0,p.currency||'EGP')} · ${local('Suggested retail','السعر المقترح')} ${IZZY.money(p.sourced_quote_suggested_retail||0,p.currency||'EGP')} · ${local('suggestion only','اقتراح فقط')}</span></div>`:''}
           <div class="linked-price-grid">
+            <div><small>${local('Supplier price','سعر المورّد')}</small><b>${supplierDisplay}</b>${varyingSupplierPrices?`<span class="price-note">${local('Varies by variant; see Details','يختلف حسب الخيار؛ راجع التفاصيل')}</span>`:''}</div>
+            <div><small>${local('Your IzzyDrop fee (4%)','رسوم IzzyDrop الخاصة بك (4٪)')}</small><b>${feeDisplay}</b></div>
+            <div><small>${local('Your total product cost','إجمالي تكلفة المنتج')}</small><b>${totalCostDisplay}</b><span class="price-note">${local('Supplier price + your fee, excluding delivery','سعر المورد + رسومك، دون التوصيل')}</span></div>
             <div><small>${sourcedSuggested!=null?local('Sourced suggestion','اقتراح الخيار المورّد'):local('Suggested','المقترح')}</small><b>${suggestedDisplay}</b>${sourcedVariant?`<span class="price-note">${IZZY.esc(sourcedVariant)}${fullRangeDisplay?` · ${local('full product range','نطاق المنتج الكامل')} ${fullRangeDisplay}`:''}</span>`:''}</div>
             <label><small>${local('General selling price','سعر البيع العام')}</small><div class="price-editor"><input class="linked-price-input" data-link-id="${l.id}" type="number" min="0" step="0.01" value="${hasCustomSelling?selling:''}" placeholder="${local('Follow supplier suggestions','اتبع اقتراحات المورد')}" ${available?'':'disabled'}><span>${IZZY.esc(p.currency||'EGP')}</span></div><span class="price-note">${hasCustomSelling?local('Custom price','سعر مخصص'):local('Follow variant suggestions','اتبع اقتراح كل خيار')}</span></label>
             <div><small>${differenceLabel}</small><b class="${differenceClassValue>0?'positive':differenceClassValue<0?'negative':''}">${differenceDisplay}</b></div>
