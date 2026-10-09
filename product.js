@@ -99,7 +99,7 @@
     const singleVariant=visibleVariants.length===1?visibleVariants[0]:null;
     const singleSupplier=singleVariant?.supplier_cost==null?null:Number(singleVariant.supplier_cost);
     const singleRetail=singleVariant?.suggested_retail_price==null?null:Number(singleVariant.suggested_retail_price);
-    const singleMargin=singleSupplier!=null&&Number.isFinite(singleRetail)?singleRetail-singleSupplier:null;
+    const singleMargin=singleSupplier!=null&&Number.isFinite(singleRetail)?singleRetail-singleSupplier*1.04:null;
     const initialCustomerTotal=shippingReady?startingRetail+delivery:null;
     const variantHtml=visibleVariants.map(v=>{
       const vp=Number(v.suggested_retail_price);
@@ -128,7 +128,7 @@
           <div class="simple-product-prices product-detail-pricing">
             ${isDropshipper?`<div><small>${isAr?'سعر المورّد':'Supplier price'}</small><b id="product-supplier-price">${singleSupplier!=null?IZZY.money(singleSupplier,p.currency):(isAr?'اختر خيارًا':'Select a variant')}</b></div>`:''}
             <div><small>${isAr?'سعر البيع المقترح':'Suggested sell'}</small><b id="product-suggested-price">${pricePrefix}${IZZY.money(startingRetail,p.currency)}</b></div>
-            ${isDropshipper?`<div><small>${isAr?'هامش المنتج':'Product margin'}</small><b id="product-margin" class="${singleMargin==null?'':singleMargin>=0?'positive':'negative'}">${singleMargin==null?(isAr?'اختر خيارًا':'Select a variant'):IZZY.money(singleMargin,p.currency)}</b><span class="price-note">${isAr?'قبل رسوم IzzyDrop':'before IzzyDrop fee'}</span></div>`:''}
+            ${isDropshipper?`<div><small>${isAr?'رسوم IzzyDrop الخاصة بك (4٪)':'Your IzzyDrop fee (4%)'}</small><b id="product-dropshipper-fee">${singleSupplier!=null?IZZY.money(singleSupplier*0.04,p.currency):(isAr?'اختر خيارًا':'Select a variant')}</b></div><div><small>${isAr?'ربحك المتوقع بعد الرسوم':'Estimated profit after fee'}</small><b id="product-margin" class="${singleMargin==null?'':singleMargin>=0?'positive':'negative'}">${singleMargin==null?(isAr?'اختر خيارًا':'Select a variant'):IZZY.money(singleMargin,p.currency)}</b><span class="price-note">${isAr?'بعد رسوم IzzyDrop الخاصة بك':'after your IzzyDrop fee'}</span></div>`:''}
             <div><small>${isAr?'توصيل القاهرة':'Cairo delivery'}</small><b id="product-delivery-price">${shippingReady?IZZY.money(delivery,shipping.currency||p.currency):(isAr?'قيد الإعداد':'Setup pending')}</b><span class="price-note">${isAr?'يدفعه العميل بشكل منفصل':'paid separately by customer'}</span></div>
             <div><small>${isAr?'إجمالي العميل':'Customer total'}</small><b id="product-customer-total">${initialCustomerTotal==null?'—':pricePrefix+IZZY.money(initialCustomerTotal,p.currency)}</b><span class="price-note">${isAr?'المنتج + التوصيل':'product + delivery'}</span></div>
           </div>
@@ -230,12 +230,14 @@
       const suggestedEl=document.getElementById('product-suggested-price');
       const supplierEl=document.getElementById('product-supplier-price');
       const marginEl=document.getElementById('product-margin');
+      const feeEl=document.getElementById('product-dropshipper-fee');
       const totalEl=document.getElementById('product-customer-total');
       if(priceEl&&Number.isFinite(price))priceEl.textContent=IZZY.money(price,p.currency);
       if(suggestedEl&&Number.isFinite(price))suggestedEl.textContent=IZZY.money(price,p.currency);
       if(supplierEl&&Number.isFinite(supplier))supplierEl.textContent=IZZY.money(supplier,p.currency);
+      if(feeEl&&Number.isFinite(supplier))feeEl.textContent=IZZY.money(supplier*0.04,p.currency);
       if(marginEl&&Number.isFinite(price)&&Number.isFinite(supplier)){
-        const margin=price-supplier;
+        const margin=price-supplier*1.04;
         marginEl.textContent=IZZY.money(margin,p.currency);
         marginEl.className=margin>=0?'positive':'negative';
       }
