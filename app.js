@@ -120,8 +120,8 @@
       const suggested=Number(p.suggested_retail_price||0);
       const supplierDisplay=range?rangeMoney(range.supplier_min,range.supplier_max,p.currency):IZZY.money(supplierPrice,p.currency);
       const suggestedDisplay=range?rangeMoney(range.retail_min,range.retail_max,p.currency):IZZY.money(suggested,p.currency);
-      const profitMin=range?Number(range.margin_min):suggested-supplierPrice;
-      const profitMax=range?Number(range.margin_max):suggested-supplierPrice;
+      const profitMin=range?Number(range.margin_min)-Number(range.supplier_max)*0.04:suggested-supplierPrice*1.04;
+      const profitMax=range?Number(range.margin_max)-Number(range.supplier_min)*0.04:suggested-supplierPrice*1.04;
       const profitDisplay=range?rangeMoney(profitMin,profitMax,p.currency):IZZY.money(profitMin,p.currency);
       const delivery=Number(SHIPPING?.delivery_fee);
       const shippingReady=SHIPPING?.available===true&&Number.isFinite(delivery);
@@ -140,7 +140,7 @@
           <div class="simple-product-prices">
             <div><small>${local('Supplier price','سعر المورّد')}</small><b>${supplierDisplay}</b></div>
             <div><small>${local('Suggested sell','سعر البيع المقترح')}</small><b>${suggestedDisplay}</b></div>
-            <div><small>${local('Product margin','هامش المنتج')}</small><b class="${profitMin>=0?'positive':'negative'}">${profitDisplay}</b><span class="price-note">${local('before IzzyDrop fee','قبل رسوم IzzyDrop')}</span></div>
+            <div><small>${local('Your total product cost','إجمالي تكلفة المنتج')}</small><b>${range?rangeMoney(Number(range.supplier_min)*1.04,Number(range.supplier_max)*1.04,p.currency):IZZY.money(supplierPrice*1.04,p.currency)}</b><span class="price-note">${local('supplier price + your 4% IzzyDrop fee','سعر المورد + رسوم IzzyDrop الخاصة بك 4٪')}</span></div><div><small>${local('Estimated net profit','الربح الصافي المتوقع')}</small><b class="${profitMin>=0?'positive':'negative'}">${profitDisplay}</b><span class="price-note">${local('after your fee, excluding delivery','بعد الرسوم، دون التوصيل')}</span></div>
             <div><small>${local('Cairo delivery','توصيل القاهرة')}</small><b>${shippingReady?IZZY.money(delivery,SHIPPING.currency||p.currency):local('Setup pending','قيد الإعداد')}</b><span class="price-note">${local('paid separately by customer','يدفعه العميل بشكل منفصل')}</span></div>
           </div>
 
@@ -232,7 +232,7 @@
             <label><small>${local('General selling price','سعر البيع العام')}</small><div class="price-editor"><input class="linked-price-input" data-link-id="${l.id}" type="number" min="0" step="0.01" value="${hasCustomSelling?selling:''}" placeholder="${local('Follow supplier suggestions','اتبع اقتراحات المورد')}" ${available?'':'disabled'}><span>${IZZY.esc(p.currency||'EGP')}</span></div><span class="price-note">${hasCustomSelling?local('Custom price','سعر مخصص'):local('Follow variant suggestions','اتبع اقتراح كل خيار')}</span></label>
             <div><small>${differenceLabel}</small><b class="${differenceClassValue>0?'positive':differenceClassValue<0?'negative':''}">${differenceDisplay}</b></div>
             <div><small>${local('Cairo delivery','توصيل القاهرة')}</small><b>${shippingReady?IZZY.money(delivery,SHIPPING.currency||p.currency):local('Setup pending','قيد الإعداد')}</b></div>
-          </div>
+          </div><p class="muted">${local('Your total cost includes a 4% IzzyDrop fee on the supplier price.','إجمالي تكلفتك يشمل رسوم IzzyDrop بنسبة 4٪ على سعر المورد.')}</p>
         </div>
       </div>
       <div class="linked-actions">
@@ -461,12 +461,15 @@
     const selling=orderSellingPrice(productId,v);
     const subtotal=selling*qty;
     const supplierTotal=supplier*qty;
-    const margin=subtotal-supplierTotal;
+    const dropshipperFee=Math.round(supplierTotal*4)/100;
+    const margin=subtotal-supplierTotal-dropshipperFee;
     box.innerHTML=`
       <div><small>${local('Supplier price','سعر المورّد')}</small><b>${IZZY.money(supplierTotal,'EGP')}</b><span>${qty>1?qty+' × '+IZZY.money(supplier,'EGP'):local('for this variant','لهذا الخيار')}</span></div>
+      <div><small>${local('Your IzzyDrop fee (4%)','رسوم IzzyDrop الخاصة بك (4٪)')}</small><b>${IZZY.money(dropshipperFee,'EGP')}</b></div>
+      <div><small>${local('Your total product cost','إجمالي تكلفة المنتج')}</small><b>${IZZY.money(supplierTotal+dropshipperFee,'EGP')}</b></div>
       <div><small>${local('Product price','سعر المنتج')}</small><b>${IZZY.money(subtotal,'EGP')}</b><span>${qty>1?qty+' × '+IZZY.money(selling,'EGP'):local('customer product price','سعر المنتج للعميل')}</span></div>
       <div><small>${local('Cairo delivery','توصيل القاهرة')}</small><b>${IZZY.money(delivery,SHIPPING.currency||'EGP')}</b><span>${local('separate from product price','منفصل عن سعر المنتج')}</span></div>
-      <div><small>${local('Customer COD total','إجمالي الدفع عند الاستلام')}</small><b>${IZZY.money(subtotal+delivery,'EGP')}</b><span class="${margin>=0?'positive':'negative'}">${local('Product margin','هامش المنتج')}: ${IZZY.money(margin,'EGP')} · ${local('before IzzyDrop fee','قبل رسوم IzzyDrop')}</span></div>
+      <div><small>${local('Customer COD total','إجمالي الدفع عند الاستلام')}</small><b>${IZZY.money(subtotal+delivery,'EGP')}</b><span class="${margin>=0?'positive':'negative'}">${local('Your estimated net profit','الربح الصافي المتوقع')}: ${IZZY.money(margin,'EGP')} · ${local('after your IzzyDrop fee','بعد رسوم IzzyDrop الخاصة بك')}</span></div>
     `;
   }
 
@@ -656,6 +659,7 @@
         <div class="order-summary-grid">
           <div><small>${local('Actual selling amount','قيمة البيع الفعلية')}</small><b>${IZZY.money(x.retail_amount||0,x.currency||'EGP')}</b></div>
           <div><small>${local('Supplier price','سعر المورّد')}</small><b>${IZZY.money(x.supplier_gross_amount||0,x.currency||'EGP')}</b></div>
+          <div><small>${local('Your IzzyDrop fee','رسوم IzzyDrop الخاصة بك')}</small><b>${IZZY.money(x.dropshipper_fee_amount||0,x.currency||'EGP')}</b><span>${Number(x.dropshipper_fee_rate||0).toFixed(2)}%</span></div>
           <div><small>${local('Your profit','ربحك')}</small><b>${IZZY.money(x.dropshipper_profit_amount||0,x.currency||'EGP')}</b></div>
           <div><small>${local('Order status','حالة الطلب')}</small><b>${IZZY.esc(window.IZZY_I18N?.status?.(x.order_status)||x.order_status||'')}</b><span>${IZZY.esc(window.IZZY_I18N?.status?.(x.payment_status)||x.payment_status||'')}</span></div>
         </div>
@@ -830,7 +834,7 @@
         IZZY.rpc('dropshipper_cod_metrics'),
         IZZY.rpc('marketplace_shipping_quote',{},false),
         IZZY.rpc('marketplace_variant_price_ranges'),
-        IZZY.rpc('dropshipper_settlements')
+        IZZY.rpc('dropshipper_settlements_v2')
       ]);
 
       const [
