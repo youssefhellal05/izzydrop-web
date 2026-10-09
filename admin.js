@@ -375,13 +375,13 @@
     const awaiting=groups.filter(g=>g[0]?.settlement_status==='ready'&&!['remitted','reversed'].includes(g[0]?.cod_remittance_status));
     const supplierPending=rows.filter(x=>x.supplier_payout_status==='pending').reduce((n,x)=>n+Number(x.supplier_net_amount||0),0);
     const dropshipperPending=rows.filter(x=>x.dropshipper_payout_status==='pending').reduce((n,x)=>n+Number(x.dropshipper_profit_amount||0),0);
-    const commissionReady=rows.filter(x=>x.cod_remittance_status==='remitted'&&x.settlement_status==='ready').reduce((n,x)=>n+Number(x.platform_commission_amount||0),0);
+    const commissionReady=rows.filter(x=>x.cod_remittance_status==='remitted'&&x.settlement_status==='ready').reduce((n,x)=>n+Number(x.total_izzydrop_fee_amount||0),0);
 
     summary.innerHTML=[
       ['Awaiting courier remittance',awaiting.length],
       ['Supplier payouts pending',IZZY.money(supplierPending,'EGP')],
       ['Dropshipper payouts pending',IZZY.money(dropshipperPending,'EGP')],
-      ['IzzyDrop commission ready',IZZY.money(commissionReady,'EGP')]
+      ['IzzyDrop fees ready (both sides)',IZZY.money(commissionReady,'EGP')]
     ].map(([k,v])=>`<div class="card cod-stat"><small>${k}</small><strong>${v}</strong></div>`).join('');
 
     el.innerHTML=groups.map(group=>{
@@ -423,7 +423,7 @@
         return `<div class="admin-order-item">
           <div>
             <b>${IZZY.esc(i.supplier_name||'Supplier')}</b>
-            <small>Supplier gross ${IZZY.money(i.supplier_gross_amount||0,'EGP')} · IzzyDrop ${IZZY.money(i.platform_commission_amount||0,'EGP')}</small>
+            <small>Supplier gross ${IZZY.money(i.supplier_gross_amount||0,'EGP')} · supplier fee ${IZZY.money(i.platform_commission_amount||0,'EGP')}</small>
           </div>
           <div>
             <b>Supplier payout ${IZZY.money(i.supplier_net_amount||0,'EGP')}</b>
@@ -432,7 +432,7 @@
           </div>
           <div>
             <b>${IZZY.esc(i.dropshipper_name||'Dropshipper')}</b>
-            <small>Profit ${IZZY.money(i.dropshipper_profit_amount||0,'EGP')}</small>
+            <small>IzzyDrop fee ${IZZY.money(i.dropshipper_fee_amount||0,'EGP')} · net profit ${IZZY.money(i.dropshipper_profit_amount||0,'EGP')}</small>
           </div>
           <div>
             <span class="tag ${i.dropshipper_payout_status==='paid'?'ok':i.dropshipper_payout_status==='pending'?'warn':i.dropshipper_payout_status==='reversal_required'?'bad':''}">${IZZY.esc(i.dropshipper_payout_status||'')}</span>
@@ -698,7 +698,7 @@
       IZZY.rpc('admin_list_accounts'),
       IZZY.rpc('admin_shipping_settings'),
       IZZY.rpc('admin_order_shipping_costs'),
-      IZZY.rpc('admin_settlements'),
+      IZZY.rpc('admin_settlements_v2'),
       IZZY.rpc('admin_dashboard_metrics')
     ]);
 
