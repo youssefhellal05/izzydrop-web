@@ -27,6 +27,7 @@ create trigger trg_calculate_dropshipper_fee
 before insert or update of retail_amount,supplier_gross_amount,dropshipper_profit_amount
 on public.order_item_settlements for each row
 execute function public.calculate_dropshipper_fee_for_settlement();
+revoke all on function public.calculate_dropshipper_fee_for_settlement() from public,anon,authenticated;
 
 -- Fee snapshots are immutable after an order is recorded.
 create or replace function public.protect_order_item_dropshipper_fee()
@@ -42,5 +43,6 @@ drop trigger if exists trg_protect_order_item_dropshipper_fee on public.order_it
 create trigger trg_protect_order_item_dropshipper_fee
 before update on public.order_items for each row
 execute function public.protect_order_item_dropshipper_fee();
+revoke all on function public.protect_order_item_dropshipper_fee() from public,anon,authenticated;
 
 commit;
