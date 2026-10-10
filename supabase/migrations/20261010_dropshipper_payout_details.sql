@@ -11,14 +11,15 @@ CREATE TABLE IF NOT EXISTS public.dropshipper_payout_details (
   payout_method text NOT NULL CHECK (payout_method IN ('instapay','bank_transfer','mobile_wallet')),
   payout_details jsonb NOT NULL CHECK (
     jsonb_typeof(payout_details) = 'object'
-    AND jsonb_typeof(payout_details -> 'beneficiary_name') = 'string'
-    AND length(btrim(payout_details ->> 'beneficiary_name')) BETWEEN 1 AND 120
-    AND jsonb_typeof(payout_details -> 'destination') = 'string'
-    AND length(btrim(payout_details ->> 'destination')) BETWEEN 1 AND 120
+    AND octet_length(payout_details::text) <= 2048
+    AND coalesce(jsonb_typeof(payout_details -> 'beneficiary_name'), '') = 'string'
+    AND length(btrim(coalesce(payout_details ->> 'beneficiary_name', ''))) BETWEEN 1 AND 120
+    AND coalesce(jsonb_typeof(payout_details -> 'destination'), '') = 'string'
+    AND length(btrim(coalesce(payout_details ->> 'destination', ''))) BETWEEN 1 AND 120
     AND (
       payout_method <> 'bank_transfer'
-      OR (jsonb_typeof(payout_details -> 'bank_name') = 'string'
-          AND length(btrim(payout_details ->> 'bank_name')) BETWEEN 1 AND 120)
+      OR (coalesce(jsonb_typeof(payout_details -> 'bank_name'), '') = 'string'
+          AND length(btrim(coalesce(payout_details ->> 'bank_name', ''))) BETWEEN 1 AND 120)
     )
   ),
   updated_at timestamptz NOT NULL DEFAULT now()
