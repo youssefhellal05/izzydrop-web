@@ -1,6 +1,6 @@
 (()=>{
   const $=s=>document.querySelector(s);
-  let PRODUCTS=[],LINKED_PRODUCTS=[],LINKS=[],INTEGRATIONS=[],INTEGRATION_VARIANTS=[],ORDERS=[],ITEMS=[],SOURCING_BOARD={},SAMPLES=[],ALERTS=[],SETTLEMENTS=[],COD={},SHIPPING={},PRICE_RANGES=[],ORDER_VARIANTS=[],SESSION=null,DROPSHIPPER=null,ORDER_FILTER='all',CURRENT_WEB_TOKEN=null,ORDER_HAS_MORE=false,ALERT_HAS_MORE=false,ALERT_METRICS={};
+  let PRODUCTS=[],LINKED_PRODUCTS=[],LINKS=[],INTEGRATIONS=[],INTEGRATION_VARIANTS=[],ORDERS=[],ITEMS=[],SOURCING_BOARD={},ALERTS=[],SETTLEMENTS=[],COD={},SHIPPING={},PRICE_RANGES=[],ORDER_VARIANTS=[],SESSION=null,DROPSHIPPER=null,ORDER_FILTER='all',CURRENT_WEB_TOKEN=null,ORDER_HAS_MORE=false,ALERT_HAS_MORE=false,ALERT_METRICS={};
   const ORDER_PAGE_SIZE=50;
   const ALERT_PAGE_SIZE=25;
 
@@ -11,7 +11,6 @@
     money:['Money','Track actual COD profit and payout status.'],
     requests:['Sourcing requests','Products the community wants suppliers to find.'],
     sourced:['Sourced products','Real published products linked to community sourcing requests.'],
-    samples:['Samples','Track product samples.'],
     settings:['Settings','Account and preferences.']
   };
 
@@ -76,8 +75,8 @@
     $('#page-subtitle').textContent=copy[1];
     const more=document.querySelector('.dropshipper-more');
     if(more){
-      more.classList.toggle('has-active',['samples','settings'].includes(v));
-      if(!['samples','settings'].includes(v))more.open=false;
+      more.classList.toggle('has-active',['settings'].includes(v));
+      if(!['settings'].includes(v))more.open=false;
     }
     status('');
     closeMobileNav();
@@ -91,7 +90,6 @@
     $('#products').innerHTML=skeletonCards(6);
     $('#linked').innerHTML=skeletonCards(3);
     $('#orders').innerHTML=skeletonCards(3);
-    if($('#dropshipper-samples'))$('#dropshipper-samples').innerHTML=skeletonCards(2);
   }
 
   function productDetailsUrl(p){
@@ -606,55 +604,6 @@
     }catch(e){status(e.message,true);b.disabled=false;b.textContent='Add to My Products'}
   }
 
-  async function openSampleRequest(productId){
-    const p=PRODUCTS.find(x=>x.product_id===productId);
-    if(!p)return;
-    const st=$('#sample-status');
-    st.textContent='';st.className='status';
-    $('#sample-product-id').value=productId;
-    $('#sample-variant').innerHTML='<option value="">'+local('Loading variants…','جارٍ تحميل الخيارات…')+'</option>';
-    $('#sample-modal').hidden=false;
-    try{
-      const variants=await IZZY.rpc('marketplace_variants_v3',{_product_id:productId});
-      const available=(variants||[]).filter(v=>Number(v.stock_quantity)>0);
-      $('#sample-variant').innerHTML='<option value="">'+local('Choose variant','اختر الخيار')+'</option>'+
-        available.map(v=>`<option value="${v.id}">${IZZY.esc(variantLabel(v))} · ${v.stock_quantity} ${local('in stock','متوفر')}</option>`).join('');
-      if(available.length===1)$('#sample-variant').value=available[0].id;
-      if(!available.length){
-        st.textContent=local('No in-stock variant is available for a sample.','لا يوجد خيار متوفر لطلب عينة.');
-        st.className='status bad';
-      }
-    }catch(e){st.textContent=e.message;st.className='status bad'}
-  }
-
-  function renderSamples(){
-    const el=$('#dropshipper-samples');if(!el)return;
-    el.innerHTML=(SAMPLES||[]).map(x=>{
-      const addr=x.shipping_address||{};
-      const name=productName({name:x.product_name,name_en:x.product_name_en,name_ar:x.product_name_ar})||local('Product','المنتج');
-      const options=Object.entries(x.variant_options||{}).map(([k,v])=>`${k}: ${v}`).join(' · ');
-      const tracking=[x.shipping_carrier,x.tracking_number].filter(Boolean).join(' · ');
-      return `<article class="card sample-card">
-        <div class="order-card-head"><div><span class="order-id">${IZZY.esc(name)}</span><small>${IZZY.esc(options||x.variant_name||'')} · ${new Date(x.created_at).toLocaleString()}</small></div><span class="tag ${x.status==='delivered'?'ok':x.status==='rejected'?'bad':x.status==='requested'?'warn':''}">${IZZY.esc(window.IZZY_I18N?.status?.(x.status)||x.status)}</span></div>
-        <div class="order-summary-grid">
-          <div><small>${local('Supplier','المورّد')}</small><b>${IZZY.esc(publicSupplierName(x.supplier_name))}</b></div>
-          <div><small>${local('Delivery address','عنوان التوصيل')}</small><b>${IZZY.esc([addr.address1,addr.city,addr.governorate].filter(Boolean).join(', ')||'—')}</b></div>
-          <div><small>${local('Tracking','التتبع')}</small><span>${IZZY.esc(tracking||'—')}</span></div>
-        </div>
-        ${x.status==='shipped'?`<div class="sample-actions"><button class="btn sample-received" data-id="${x.id}">${local('I received it','استلمت العينة')}</button></div>`:''}
-      </article>`;
-    }).join('')||`<div class="empty-state"><div class="empty-icon">□</div><h3>${local('No sample requests yet','لا توجد طلبات عينات بعد')}</h3><p>${local('Request a sample from any marketplace product to test it first.','اطلب عينة من أي منتج في السوق لتجربته أولًا.')}</p></div>`;
-
-    document.querySelectorAll('.sample-received').forEach(btn=>btn.onclick=async()=>{
-      btn.disabled=true;
-      try{
-        await IZZY.rpc('dropshipper_mark_sample_delivered',{_sample_id:btn.dataset.id});
-        status(local('Sample marked delivered.','تم تحديد العينة كمُسلّمة.'));
-        await load(false);
-      }catch(e){status(e.message,true);btn.disabled=false}
-    });
-  }
-
   function renderCod(){
     const el=$('#cod-summary');if(!el)return;
     el.innerHTML=[
@@ -867,7 +816,6 @@
         IZZY.request('/rest/v1/storefront_integration_variants?select=*&order=created_at.asc'),
         IZZY.request(`/rest/v1/orders?select=*&order=created_at.desc&limit=${ORDER_PAGE_SIZE}`),
         IZZY.rpc('sourcing_board'),
-        IZZY.rpc('dropshipper_samples'),
         IZZY.request(`/rest/v1/dropshipper_alerts?select=*&order=created_at.desc&limit=${ALERT_PAGE_SIZE}`),
         IZZY.rpc('dropshipper_alert_metrics'),
         IZZY.rpc('dropshipper_cod_metrics'),
@@ -878,7 +826,7 @@
 
       const [
         rProducts,rLinkedProducts,rLinks,rIntegrations,rIntegrationVariants,rOrders,
-        rSourcing,rSamples,rAlerts,rAlertMetrics,rCod,rShipping,rPriceRanges,rSettlements
+        rSourcing,rAlerts,rAlertMetrics,rCod,rShipping,rPriceRanges,rSettlements
       ]=results;
       const failures=[];
       const take=(r,current,label)=>{
@@ -893,7 +841,6 @@
       INTEGRATIONS=take(rIntegrations,INTEGRATIONS,'web connections')||[];
       INTEGRATION_VARIANTS=take(rIntegrationVariants,INTEGRATION_VARIANTS,'web variants')||[];
       SOURCING_BOARD=take(rSourcing,SOURCING_BOARD,'Sourcing')||{};
-      SAMPLES=take(rSamples,SAMPLES,'Samples')||[];
       ALERTS=take(rAlerts,ALERTS,'Alerts')||[];
       ALERT_METRICS=take(rAlertMetrics,ALERT_METRICS,'notification count')||{};
       ALERT_HAS_MORE=Number(ALERT_METRICS.total_count||0)>ALERTS.length || (!ALERT_METRICS.total_count&&ALERTS.length===ALERT_PAGE_SIZE);
@@ -922,7 +869,6 @@
         sectionError('#product-requests',local('Sourcing requests','طلبات التوريد'));
         sectionError('#sourced-products',local('Sourced products','المنتجات التي تم توريدها'));
       }
-      if(rSamples.status==='rejected'&&!SAMPLES.length)sectionError('#dropshipper-samples',local('Samples','العينات'));
       if(rSettlements.status==='rejected'&&!SETTLEMENTS.length)sectionError('#money-list',local('Money','الأموال'));
 
       populateCategories();
@@ -934,7 +880,6 @@
       renderCod();
       if(!(rSettlements.status==='rejected'&&!SETTLEMENTS.length))renderMoney();
       if(!(rSourcing.status==='rejected'&&!Object.keys(SOURCING_BOARD||{}).length))renderRequests();
-      if(!(rSamples.status==='rejected'&&!SAMPLES.length))renderSamples();
       renderAlerts();
 
       if(failures.length){
@@ -975,7 +920,6 @@
     const sourcedOffer=params.get('sourced');
     if(sourcedOffer){go('sourced');const card=document.getElementById('sourced-'+sourcedOffer);if(card){card.classList.add('is-highlighted');card.scrollIntoView({block:'center'});}else status('This sourced offer is no longer available.',true);}
     const addProduct=params.get('add');
-    const sampleProduct=params.get('sample');
     if(addProduct){
       history.replaceState({},document.title,location.pathname);
       const existing=LINKS.find(l=>l.supplier_product_id===addProduct);
@@ -1006,11 +950,6 @@
         status(p.availability_reason||local('This product is not available.','هذا المنتج غير متاح.'),true);
       }
     }
-    if(sampleProduct){
-      history.replaceState({},document.title,location.pathname);
-      const p=PRODUCTS.find(x=>x.product_id===sampleProduct);
-      if(p)await openSampleRequest(sampleProduct);
-    }
   }
 
   $('#product-search').oninput=renderProducts;
@@ -1039,8 +978,6 @@
   mobileNavQuery.addEventListener('change',()=>closeMobileNav());
   $('#close-modal').onclick=()=>$('#link-modal').hidden=true;
   $('#link-modal').onclick=e=>{if(e.target===$('#link-modal'))$('#link-modal').hidden=true};
-  $('#close-sample-modal').onclick=()=>$('#sample-modal').hidden=true;
-  $('#sample-modal').onclick=e=>{if(e.target===$('#sample-modal'))$('#sample-modal').hidden=true};
 
   $('#web-setup-form').onsubmit=async e=>{
     e.preventDefault();
@@ -1134,31 +1071,6 @@
       st.textContent='Embed code copied.';
       st.className='status ok';
     }
-  };
-
-  $('#sample-form').onsubmit=async e=>{
-    e.preventDefault();
-    const btn=$('#sample-submit'),st=$('#sample-status');
-    const productId=$('#sample-product-id').value,variantId=$('#sample-variant').value;
-    if(!variantId){st.textContent=local('Choose a variant.','اختر أحد الخيارات.');st.className='status bad';return}
-    btn.disabled=true;btn.textContent=local('Sending…','جارٍ الإرسال…');st.textContent='';
-    try{
-      const id=await IZZY.rpc('order_product_sample',{
-        _product_id:productId,
-        _variant_id:variantId,
-        _shipping_address:{
-          address1:$('#sample-address').value.trim(),
-          city:$('#sample-city').value.trim(),
-          governorate:$('#sample-governorate').value.trim()
-        }
-      });
-      st.textContent=local('Sample request sent ✓ ','تم إرسال طلب العينة ✓ ')+String(id).slice(0,8);
-      st.className='status ok';
-      e.target.reset();
-      setTimeout(()=>{$('#sample-modal').hidden=true;go('samples')},500);
-      await load(false);
-    }catch(err){st.textContent=err.message;st.className='status bad'}
-    finally{btn.disabled=false;btn.textContent=local('Send sample request','إرسال طلب العينة')}
   };
 
   $('#toggle-order-form').onclick=()=>{$('#order-create-card').hidden=false;$('#toggle-order-form').hidden=true};

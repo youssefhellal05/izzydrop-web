@@ -1,6 +1,6 @@
 (()=>{
   const $=s=>document.querySelector(s);
-  let SUP=null,PRODUCTS=[],VARIANTS=[],IMAGES=[],ORDERS=[],ITEMS=[],SOURCING_BOARD={},CATEGORIES=[],SAMPLES=[],SETTLEMENTS=[],SELECTED_IMAGES=[],ORDER_FILTER='all',NEW_CONTENT_LANG='en',NEW_SOURCE_LANGUAGE='en',EDIT_CONTENT_LANG='en',VARIANT_MODE='single',PRODUCT_STEP=3,VARIANT_ADVANCED=false,SIMPLE_PRODUCT_FLOW=true,VARIANT_PRICES_VARY=false;
+  let SUP=null,PRODUCTS=[],VARIANTS=[],IMAGES=[],ORDERS=[],ITEMS=[],SOURCING_BOARD={},CATEGORIES=[],SETTLEMENTS=[],SELECTED_IMAGES=[],ORDER_FILTER='all',NEW_CONTENT_LANG='en',NEW_SOURCE_LANGUAGE='en',EDIT_CONTENT_LANG='en',VARIANT_MODE='single',PRODUCT_STEP=3,VARIANT_ADVANCED=false,SIMPLE_PRODUCT_FLOW=true,VARIANT_PRICES_VARY=false;
   const SELECTED_PRODUCT_IDS=new Set();
   const VARIANT_COMBO_STATE=new Map();
   const VARIANT_IMAGE_STATE=new Map();
@@ -21,7 +21,6 @@
     money:['Payouts','Track supplier earnings and IzzyDrop commission.'],
     requests:['Requests','Products dropshippers want sourced.'],
     add:['Add product','Build a clean marketplace listing.'],
-    samples:['Samples','Sample requests from dropshippers.'],
     settings:['Settings','Account and preferences.']
   };
 
@@ -44,8 +43,8 @@
     $('#supplier-page-subtitle').textContent=copy[1];
     const more=document.querySelector('.supplier-more');
     if(more){
-      more.classList.toggle('has-active',['samples','settings'].includes(v));
-      if(!['samples','settings'].includes(v))more.open=false;
+      more.classList.toggle('has-active',['settings'].includes(v));
+      if(!['settings'].includes(v))more.open=false;
     }
     if(v==='add')setProductStep(1,false);
     msg('');
@@ -518,7 +517,6 @@
     $('#today-summary').innerHTML='<div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line"></div>';
     $('#products').innerHTML=Array.from({length:4},()=>'<div class="supplier-product-table supplier-product-table-row"><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-button"></div></div>').join('');
     $('#orders').innerHTML=Array.from({length:3},()=>'<div class="card supplier-order-card"><div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line" style="margin-top:12px"></div><div class="skeleton skeleton-line medium" style="margin-top:10px"></div></div>').join('');
-    if($('#supplier-samples'))$('#supplier-samples').innerHTML=Array.from({length:2},()=>'<div class="card supplier-order-card"><div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line medium" style="margin-top:10px"></div></div>').join('');
   }
 
   async function verify(){
@@ -697,13 +695,6 @@
         view:'products'
       }));
     }
-
-    SAMPLES.filter(x=>x.status==='requested').slice(0,4).forEach(x=>notes.push({
-      kind:'sample',
-      title:local('New sample request','طلب عينة جديد'),
-      text:productName({name:x.product_name,name_en:x.product_name_en,name_ar:x.product_name_ar})||local('Product sample','عينة منتج'),
-      view:'samples'
-    }));
 
     $('#notification-count').textContent=notes.length;
     $('#notification-count').hidden=notes.length===0;
@@ -936,41 +927,6 @@
     window.IZZY_SOURCING.renderSupplier(SOURCING_BOARD,PRODUCTS,()=>load(false),context=>beginSourcingProduct(context));
   }
 
-  function renderSamples(){
-    const el=$('#supplier-samples');if(!el)return;
-    el.innerHTML=(SAMPLES||[]).map(x=>{
-      const addr=x.shipping_address||{};
-      const name=productName({name:x.product_name,name_en:x.product_name_en,name_ar:x.product_name_ar})||local('Product','المنتج');
-      const options=Object.entries(x.variant_options||{}).map(([k,v])=>`${k}: ${v}`).join(' · ');
-      const tracking=[x.shipping_carrier,x.tracking_number].filter(Boolean).join(' · ');
-      let actions='';
-      if(x.status==='requested')actions=`<div class="sample-actions"><button class="btn sample-action" data-id="${x.id}" data-next="approved">${local('Approve','موافقة')}</button><button class="btn secondary sample-action" data-id="${x.id}" data-next="rejected">${local('Reject','رفض')}</button></div>`;
-      else if(x.status==='approved')actions=`<div class="sample-ship-form"><input data-sample-carrier="${x.id}" placeholder="${local('Shipping carrier','شركة الشحن')}"><input data-sample-tracking="${x.id}" placeholder="${local('Tracking number','رقم التتبع')}"><button class="btn sample-action" data-id="${x.id}" data-next="shipped">${local('Mark shipped','تحديد كمشحون')}</button></div>`;
-      else if(x.status==='shipped')actions=`<div class="sample-actions"><button class="btn secondary sample-action" data-id="${x.id}" data-next="delivered">${local('Mark delivered','تحديد كمُسلّم')}</button></div>`;
-      return `<article class="card sample-card">
-        <div class="order-card-head"><div><span class="order-id">${IZZY.esc(name)}</span><small>${IZZY.esc(options||x.variant_name||'')} · ${new Date(x.created_at).toLocaleString()}</small></div><span class="tag ${x.status==='delivered'?'ok':x.status==='rejected'?'bad':x.status==='requested'?'warn':''}">${IZZY.esc(window.IZZY_I18N?.status?.(x.status)||x.status)}</span></div>
-        <div class="order-summary-grid">
-          <div><small>${local('Dropshipper','الدروبشيبر')}</small><b>${IZZY.esc(x.dropshipper_name||'—')}</b></div>
-          <div><small>${local('Delivery address','عنوان التوصيل')}</small><b>${IZZY.esc([addr.address1,addr.city,addr.governorate].filter(Boolean).join(', ')||'—')}</b></div>
-          <div><small>${local('Tracking','التتبع')}</small><span>${IZZY.esc(tracking||'—')}</span></div>
-        </div>
-        ${actions}
-      </article>`;
-    }).join('')||`<div class="empty-state"><div class="empty-icon">□</div><h3>${local('No sample requests','لا توجد طلبات عينات')}</h3><p>${local('Dropshipper sample requests will appear here.','ستظهر طلبات عينات الدروبشيبرز هنا.')}</p></div>`;
-
-    document.querySelectorAll('.sample-action').forEach(btn=>btn.onclick=async()=>{
-      const id=btn.dataset.id,next=btn.dataset.next;
-      const carrier=document.querySelector(`[data-sample-carrier="${id}"]`)?.value?.trim()||null;
-      const tracking=document.querySelector(`[data-sample-tracking="${id}"]`)?.value?.trim()||null;
-      btn.disabled=true;
-      try{
-        await IZZY.rpc('supplier_update_sample_order',{_sample_id:id,_status:next,_tracking_number:tracking,_shipping_carrier:carrier});
-        msg(local('Sample request updated.','تم تحديث طلب العينة.'));
-        await load(false);
-      }catch(e){msg(e.message,true);btn.disabled=false}
-    });
-  }
-
   async function load(showMessage=false){
     const sectionError=(selector,label)=>{
       const el=$(selector);
@@ -987,12 +943,11 @@
       IZZY.request(`/rest/v1/orders?select=*&order=created_at.desc&limit=${ORDER_PAGE_SIZE}`),
       IZZY.rpc('sourcing_board'),
       IZZY.request('/rest/v1/categories?select=id,name,name_ar&order=name.asc'),
-      IZZY.rpc('supplier_samples'),
       IZZY.rpc('supplier_settlements'),
       IZZY.rpc('supplier_dashboard_metrics')
     ]);
 
-    const [rSupplier,rProducts,rVariants,rOrders,rBoard,rCategories,rSamples,rSettlements,rMetrics]=results;
+    const [rSupplier,rProducts,rVariants,rOrders,rBoard,rCategories,rSettlements,rMetrics]=results;
     const failures=[];
     const take=(r,current,label)=>{
       if(r.status==='fulfilled')return r.value;
@@ -1010,7 +965,6 @@
     VARIANTS=take(rVariants,VARIANTS,'variants')||[];
     SOURCING_BOARD=take(rBoard,SOURCING_BOARD,'Sourcing')||{};
     CATEGORIES=take(rCategories,CATEGORIES,'categories')||[];
-    SAMPLES=take(rSamples,SAMPLES,'Samples')||[];
     SETTLEMENTS=take(rSettlements,SETTLEMENTS,'Payouts')||[];
     SUPPLIER_METRICS=take(rMetrics,SUPPLIER_METRICS,'overview metrics')||{};
 
@@ -1042,7 +996,6 @@
 
     if(rProducts.status==='rejected'&&!PRODUCTS.length)sectionError('#products',local('Products','المنتجات'));
     if(rBoard.status==='rejected'&&!Object.keys(SOURCING_BOARD||{}).length)sectionError('#supplier-requests',local('Sourcing requests','طلبات التوريد'));
-    if(rSamples.status==='rejected'&&!SAMPLES.length)sectionError('#supplier-samples',local('Samples','العينات'));
     if(rSettlements.status==='rejected'&&!SETTLEMENTS.length)sectionError('#supplier-money-list',local('Payouts','المدفوعات'));
 
     refreshCategorySelects();
@@ -1050,7 +1003,6 @@
     renderNotifications();
     if(!(rProducts.status==='rejected'&&!PRODUCTS.length))renderProducts();
     if(!(rBoard.status==='rejected'&&!Object.keys(SOURCING_BOARD||{}).length))renderSourcingRequests();
-    if(!(rSamples.status==='rejected'&&!SAMPLES.length))renderSamples();
     if(!(rOrders.status==='rejected'&&!ORDERS.length))renderOrders();
     if(!(rSettlements.status==='rejected'&&!SETTLEMENTS.length))renderMoney();
 
