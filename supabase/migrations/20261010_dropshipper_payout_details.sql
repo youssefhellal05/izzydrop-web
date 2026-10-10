@@ -1,5 +1,11 @@
 -- IzzyDrop policy implementation stage 1:
 -- Dropshipper payout destination storage. This does NOT send money or alter settlements.
+-- Restrict the existing supplier destination table to least-privilege access.
+-- RLS already limits access to the supplier owner and IzzyDrop administrators.
+REVOKE ALL ON TABLE public.supplier_payout_details FROM anon, PUBLIC;
+REVOKE DELETE, TRUNCATE, REFERENCES, TRIGGER ON TABLE public.supplier_payout_details FROM authenticated;
+GRANT SELECT, INSERT, UPDATE ON TABLE public.supplier_payout_details TO authenticated;
+
 CREATE TABLE IF NOT EXISTS public.dropshipper_payout_details (
   dropshipper_id uuid PRIMARY KEY REFERENCES public.dropshippers(id) ON DELETE CASCADE,
   payout_method text NOT NULL CHECK (payout_method IN ('instapay','bank_transfer','mobile_wallet')),
