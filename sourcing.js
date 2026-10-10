@@ -71,7 +71,7 @@
   function renderDropshipper(board,refresh){
     const root=document.querySelector('#product-requests');if(!root)return;
     const requests=board?.requests||[],responses=board?.responses||[],comments=board?.comments||[];
-    const visible=requests.filter(r=>(boardFilter!=='mine'||r.is_mine)&&(boardFilter!=='open'||!['closed','archived'].includes(r.status))&&String(r.title+' '+(r.description||'')).toLowerCase().includes(boardSearch.toLowerCase()));
+    const visible=requests.filter(r=>(r.status!=='archived'||(boardFilter==='mine'&&r.is_mine))&&(boardFilter!=='mine'||r.is_mine)&&(boardFilter!=='open'||!['closed','archived'].includes(r.status))&&String(r.title+' '+(r.description||'')).toLowerCase().includes(boardSearch.toLowerCase()));
     root.innerHTML=visible.map(r=>{
       const closed=['closed','archived'].includes(r.status);
       const discussion=comments.filter(c=>c.request_id===r.id);
@@ -93,7 +93,7 @@
     if(search)search.oninput=()=>{boardSearch=search.value;renderDropshipper(board,refresh)};
     const sourced=document.querySelector('#sourced-products');
     if(sourced){
-      sourced.innerHTML=responses.filter(o=>o.status==='sourced'&&o.catalog_product).map(o=>{
+      sourced.innerHTML=responses.filter(o=>o.status==='sourced'&&o.catalog_product&&requests.some(r=>r.id===o.request_id&&r.status!=='archived')).map(o=>{
         const r=requests.find(r=>r.id===o.request_id)||{};
         const closed=['closed','archived'].includes(r.status);
         return `<article class="card order-card sourcing-post" id="sourced-${o.id}">
@@ -125,7 +125,7 @@
         '<small>This changes only this sourcing link. It does not alter the product, stock, orders or My Products.</small></form></details>';
     };
 
-    root.innerHTML=(board?.requests||[]).filter(r=>!['closed','archived'].includes(r.status)||(board.responses||[]).some(o=>o.request_id===r.id&&o.is_mine)).map(r=>{
+    root.innerHTML=(board?.requests||[]).filter(r=>r.status!=='archived'&&(r.status!=='closed'||(board.responses||[]).some(o=>o.request_id===r.id&&o.is_mine))).map(r=>{
       const o=(board.responses||[]).find(o=>o.request_id===r.id&&o.is_mine),closed=['closed','archived'].includes(r.status);
       return '<article class="card order-card sourcing-post" id="supplier-request-'+r.id+'"><div class="order-card-head"><h3 translate="no">'+esc(r.title)+'</h3>'+tag(r.status)+'</div>'+
         image(r.image_url)+details(r)+
