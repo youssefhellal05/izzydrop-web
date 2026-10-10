@@ -124,6 +124,51 @@
     },
     async updatePassword(password){const s=this.session();if(!s?.access_token)throw Error('Your session has expired. Please log in again.');const r=await fetch(C.supabaseUrl+'/auth/v1/user',{method:'PUT',headers:jsonHeaders(s.access_token),body:JSON.stringify({password})});const d=await readJson(r);if(!r.ok)throw Error(d?.message||d?.error_description||'Could not set password');s.user=d;this.saveSession(s);return d},
     async updateEmail(email){const s=this.session();if(!s?.access_token)throw Error('Your session has expired. Please log in again.');const redirectTo=new URL('login.html',location.href).href;const r=await fetch(C.supabaseUrl+'/auth/v1/user?redirect_to='+encodeURIComponent(redirectTo),{method:'PUT',headers:jsonHeaders(s.access_token),body:JSON.stringify({email})});const d=await readJson(r);if(!r.ok)throw Error(d?.message||d?.error_description||'Could not update email');if(d?.email===email){s.user=d;this.saveSession(s)}return d},
+    async authUser(){
+      const before=this.session();
+      if(!before?.user?.id)throw Error('Please sign in.');
+      const user=await request('/auth/v1/user');
+      const latest=this.session();
+      if(!latest?.user?.id||latest.user.id!==before.user.id||user?.id!==before.user.id)throw Error('Your session changed. Please sign in again.');
+      this.saveSession({...latest,user});
+      return user;
+    },
+    async sendPhoneVerification(phone){
+      const normalized=String(phone||'').replace(/[\s()\-]/g,'');
+      if(!/^\+201[0125]\d{8}$/.test(normalized))throw Error('Enter an Egyptian mobile number in the format +201XXXXXXXXX.');
+      const previous=this.session();
+      if(!previous?.user?.id)throw Error('Please sign in.');
+      await request('/auth/v1/user',{method:'PUT',body:JSON.stringify({phone:normalized})});
+      if(this.session()?.user?.id!==previous.user.id)throw Error('Your session changed. Please sign in again.');
+      return normalized;
+    },
+    async verifyPhoneCode(phone,code){
+      const normalized=String(phone||'').replace(/[\s()\-]/g,'');
+      const token=String(code||'').trim();
+      if(!/^\+201[0125]\d{8}$/.test(normalized)||!/^\d{6}$/.test(token))throw Error('Enter the six-digit SMS code and a valid Egyptian mobile number.');
+      const before=this.session();
+      if(!before?.user?.id)throw Error('Please sign in.');
+      const data=await request('/auth/v1/verify',{method:'POST',body:JSON.stringify({type:'phone_change',phone:normalized,token})});
+      const current=this.session();
+      if(!current?.user?.id||current.user.id!==before.user.id||data?.user?.id&&data.user.id!==before.user.id)throw Error('Your session changed. Please sign in again.');
+      if(data?.access_token&&data?.refresh_token){
+        this.saveSession({...current,...data,user:data.user||current.user});
+      }
+      const user=await this.authUser();
+      if(!user.phone_confirmed_at||user.phone!==normalized)throw Error('Phone confirmation is still pending. Please try refreshing Settings.');
+      return user;
+    },
+    async resendSignupVerification(email){
+      const address=String(email||'').trim();
+      if(!address)throw Error('Enter your email address.');
+      const redirectTo=new URL('login.html',location.href).href;
+      const r=await fetch(C.supabaseUrl+'/auth/v1/resend?redirect_to='+encodeURIComponent(redirectTo),{
+        method:'POST',headers:jsonHeaders(),body:JSON.stringify({type:'signup',email:address})
+      });
+      const d=await readJson(r);
+      if(!r.ok)throw Error(d?.message||d?.error_description||'Could not resend verification email');
+      return d;
+    },
     async logoutEverywhere(){
       // Serialize with refresh across tabs so logout cannot race token rotation.
       return withSessionLock(async()=>{
