@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS public.dropshipper_payout_details (
 );
 ALTER TABLE public.dropshipper_payout_details ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON public.dropshipper_payout_details FROM anon, PUBLIC;
+REVOKE ALL ON public.dropshipper_payout_details FROM authenticated;
 GRANT SELECT, INSERT, UPDATE ON public.dropshipper_payout_details TO authenticated;
 CREATE POLICY "dropshipper_payout_owner_read"
   ON public.dropshipper_payout_details FOR SELECT TO authenticated
