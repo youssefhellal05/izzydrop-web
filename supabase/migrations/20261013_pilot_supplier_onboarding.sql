@@ -236,10 +236,17 @@ CREATE OR REPLACE FUNCTION public.admin_review_supplier_verification(
   _supplier_id uuid,_decision text,_reason text DEFAULT NULL
 ) RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,private AS $fn$
 DECLARE a public.supplier_verification_applications%ROWTYPE;
-        next_status text;
+        next_status text; current_supplier_status public.supplier_status;
 BEGIN
   IF auth.uid() IS NULL OR NOT private.has_role(auth.uid(),'admin'::public.app_role)
     THEN RAISE EXCEPTION 'Admin access required'; END IF;
+  -- Lock suppliers before applications, matching supplier submissions, to avoid deadlocks.
+  SELECT status INTO current_supplier_status FROM public.suppliers
+    WHERE id=_supplier_id FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Supplier not found'; END IF;
+  IF current_supplier_status<>'pending' THEN
+    RAISE EXCEPTION 'Only pending suppliers may be reviewed in pilot onboarding';
+  END IF;
   SELECT * INTO a FROM public.supplier_verification_applications
     WHERE supplier_id=_supplier_id FOR UPDATE;
   IF NOT FOUND THEN RAISE EXCEPTION 'No verification submitted'; END IF;
