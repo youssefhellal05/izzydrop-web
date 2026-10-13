@@ -49,7 +49,28 @@ Updated: 2026-10-13. **Development branch only; not deployed.**
 - Confirm production schema compatibility and no changes to real/settled orders, payouts, financials or accepted existing supplier access.
 - Test staging or test accounts first; deploy only after the complete coordinated DB + frontend implementation is verified. Maintain a rollback plan.
 
-## Checkpoint 2026-10-13
-- Completed: read-only production code and Supabase inspection; isolated GitHub feature branch; unchecked signup agreement markup; immutable snapshot of present policy text.
-- Not completed: signup JS/backend audit, supplier verification UI, request-changes workflow, preapproval draft editor, tests, deployment.
-- Blocking note: automated update of existing signup JS was blocked; do not deploy the partially implemented branch until this is resolved.
+## Implementation checkpoint — 2026-10-13
+
+**Code implemented on the feature branch:**
+- Required, unchecked signup assent for both account types; versioned pilot policies.
+- Pilot signup writes version and acceptance indicator in the original Auth signup event; an `auth.users` insert trigger stores the immutable server-timestamped evidence.
+- Existing `common.js` auth/session logic is **unchanged**. Pilot-specific Auth signup is isolated in `login.js`.
+- New supplier verification form collects address, phone, commercial registration status/number, tax number, optional notes, and private commercial registration/tax card uploads (PDF/JPG/PNG, maximum 5 MB each).
+- Server-side verification submission validates ownership of the supplier and uploaded private-storage paths; storage bucket remains nonpublic.
+- Admin can inspect verification details and short-lived signed document links, approve, request changes with reason, or reject. Reviewed decisions are audited.
+- New supplier approval is enforced in the existing server RPC: reviewed verification **and** a recorded accepted version are required. Existing suppliers are grandfathered with `verification_required=false`.
+- Pending suppliers can save/edit/delete drafts in an isolated, RLS-protected `supplier_onboarding_drafts` table. These drafts **cannot** enter the actual marketplace/order system. Approved suppliers can import the draft's basic text/prices into the existing product wizard before adding required category, photos, and variants.
+- Added `qa/pilot-onboarding.test.cjs` and isolated GitHub Actions checks for source/security invariants.
+
+**Staging and release gate (NOT yet complete):**
+1. The new SQL file `supabase/migrations/20261013_pilot_supplier_onboarding.sql` is **staged in GitHub only**; it has not been applied to the live Supabase project.
+2. There are no existing Supabase development branches. Create/use a disposable staging database (subject to Supabase branch cost confirmation) and apply the migration **there** before deployment.
+3. Run authenticated supplier/dropshipper signup, email-confirmation and exact acceptance-version tests on staging.
+4. Test approved and pending accounts side by side; verify existing accounts, protected roles, login, logout, cross-tab sessions and IDOR attempts.
+5. Test valid/invalid MIME, oversized document, owner-only storage access, admins reviewing valid documents, and signed URL expiration.
+6. Attempt to write another supplier's application, forge approval, forge a draft's supplier owner, or directly insert an approved marketplace product. All must be denied.
+7. Test draft create/edit/delete, new supplier manual approval, resubmission after request changes, rejects, imports, actual product creation after approval and marketplace invisibility before approval.
+8. Validate mobile UX, server role grants and regression tests, then obtain legal review of pilot policies and data retention before commercial go-live.
+9. Deploy coordinated database + frontend changes only after the staging gate. If rollback is needed, revert frontend first and preserve immutable agreement/audit records; do not drop them as a quick rollback.
+
+**Production untouched:** No production schema migration, frontend deployment, supplier status update, real order, payout, commission, or financial record was performed in this implementation.
