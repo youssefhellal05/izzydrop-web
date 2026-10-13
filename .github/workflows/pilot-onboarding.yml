@@ -1,0 +1,33 @@
+name: Pilot onboarding checks
+on:
+  pull_request:
+    paths:
+      - 'login.js'
+      - 'login.html'
+      - 'supplier.js'
+      - 'supplier-onboarding.js'
+      - 'admin.js'
+      - 'pilot-onboarding.css'
+      - 'supabase/migrations/20261013_pilot_supplier_onboarding.sql'
+      - 'qa/pilot-onboarding.test.cjs'
+      - '.github/workflows/pilot-onboarding.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pilot-static-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify pilot source and security invariants
+        run: node --test qa/pilot-onboarding.test.cjs
+      - name: Check syntax without running production
+        run: |
+          node --check login.js
+          node --check supplier.js
+          node --check supplier-onboarding.js
+          node --check admin.js
