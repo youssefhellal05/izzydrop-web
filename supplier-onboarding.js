@@ -6,6 +6,29 @@
   let supplierId=null,editingDraftId=null;
   const byId=id=>document.getElementById(id);
   const banner=(id,message,bad=false)=>{const node=byId(id);if(node){node.textContent=message;node.className='status'+(bad?' bad':'')}};
+  async function uploadPilotDocument(file,kind,id){
+    const mime={ 'application/pdf':'pdf','image/jpeg':'jpg','image/png':'png' };
+    const extension=mime[file.type];
+    if(!extension||file.size>5*1024*1024||file.size===0){
+      throw Error('Documents must be PDF, JPG or PNG, and no larger than 5 MB each.');
+    }
+    const uuid=crypto.randomUUID();
+    const path=id+'/'+kind+'-'+uuid+'.'+extension;
+    const session=IZZY.session();
+    if(!session?.access_token)throw Error('Please log in to upload a document.');
+    const response=await fetch(IZZY.config.supabaseUrl+'/storage/v1/object/supplier-documents/'+
+      path.split('/').map(encodeURIComponent).join('/'),{
+      method:'POST',headers:{
+        apikey:IZZY.config.supabaseKey,Authorization:'Bearer '+session.access_token,
+        'Content-Type':file.type,'x-upsert':'false'
+      },body:file
+    });
+    if(!response.ok){
+      let data;try{data=await response.json()}catch{}
+      throw Error(data?.message||data?.error||'Document upload failed');
+    }
+    return path;
+  }
   async function fetchApplication(id){
     const data=await IZZY.request('/rest/v1/supplier_verification_applications?select=*&supplier_id=eq.'+encodeURIComponent(id)+'&limit=1');
     return data?.[0]||null;
@@ -51,6 +74,16 @@
         <label>Commercial registration number<input name="registration_number" maxlength="100"></label>
         <label>Tax registration number<input name="tax_registration_number" maxlength="100"></label>
       </div>
+      <div class="pilot-form-grid">
+        <label>Commercial registration (PDF/JPG/PNG, up to 5 MB)
+          <input name="registration_file" type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png">
+          <small id="pilot-registration-uploaded" class="muted"></small></label>
+        <label>Tax card (PDF/JPG/PNG, up to 5 MB)
+          <input name="tax_file" type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png">
+          <small id="pilot-tax-uploaded" class="muted"></small></label>
+      </div>
+      <input name="registration_document_path" type="hidden">
+      <input name="tax_document_path" type="hidden">
       <label>Notes for IzzyDrop (optional)<textarea name="supplier_notes" maxlength="1500" rows="2"></textarea></label>
       <button type="submit" class="btn">Submit verification</button>
       <p class="muted">Registered suppliers must provide complete commercial and tax details before approval. Request changes will keep your account pending.</p>
@@ -70,6 +103,10 @@
     for(const name of ['business_address','business_phone','registration_status','registration_number','tax_registration_number','supplier_notes']){
       if(f.elements.namedItem(name))f.elements.namedItem(name).value=app[name]||'';
     }
+    f.elements.registration_document_path.value=app.registration_document_path||'';
+    f.elements.tax_document_path.value=app.tax_document_path||'';
+    byId('pilot-registration-uploaded').textContent=app.registration_document_path?'Existing registration document saved privately.':'';
+    byId('pilot-tax-uploaded').textContent=app.tax_document_path?'Existing tax document saved privately.':'';
     const locked=status==='approved';
     f.querySelectorAll('input,select,textarea,button[type="submit"]').forEach(el=>el.disabled=locked);
   }
@@ -134,12 +171,29 @@
       const f=ev.currentTarget,button=f.querySelector('button[type="submit"]');
       button.disabled=true;
       try{
+        const regFile=f.elements.registration_file.files?.[0];
+        const taxFile=f.elements.tax_file.files?.[0];
+        let regPath=f.elements.registration_document_path.value||null;
+        let taxPath=f.elements.tax_document_path.value||null;
+        if(regFile){
+          banner('pilot-verification-status','Uploading commercial registration securely…');
+          regPath=await uploadPilotDocument(regFile,'registration',supplierId);
+          f.elements.registration_document_path.value=regPath;
+        }
+        if(taxFile){
+          banner('pilot-verification-status','Uploading tax card securely…');
+          taxPath=await uploadPilotDocument(taxFile,'tax',supplierId);
+          f.elements.tax_document_path.value=taxPath;
+        }
+        banner('pilot-verification-status','Submitting verification…');
         await IZZY.rpc('supplier_submit_verification',{
           _business_address:f.elements.business_address.value.trim(),
           _business_phone:f.elements.business_phone.value.trim(),
           _registration_status:f.elements.registration_status.value,
           _registration_number:f.elements.registration_number.value.trim()||null,
           _tax_registration_number:f.elements.tax_registration_number.value.trim()||null,
+          _registration_document_path:regPath,
+          _tax_document_path:taxPath,
           _supplier_notes:f.elements.supplier_notes.value.trim()||null
         });
         banner('pilot-verification-status','Verification submitted. IzzyDrop will review your details.');
