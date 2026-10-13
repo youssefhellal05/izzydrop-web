@@ -1,0 +1,22 @@
+/* Pilot onboarding only: isolated from the existing marketplace layout. */
+.pilot-gate{align-items:flex-start}
+.pilot-gate .auth-card.pilot-onboarding-card{width:min(1100px,96vw);max-width:1100px;padding:clamp(16px,3vw,32px)}
+.pilot-onboarding-heading{margin:24px 0 18px}
+.pilot-onboarding-heading h2{margin:0 0 8px}
+.pilot-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+.pilot-panel{padding:22px}
+.pilot-panel h3{margin:0 0 12px}
+.pilot-form{display:grid;gap:12px}
+.pilot-form>label,.pilot-form-grid>label{display:flex;flex-direction:column;gap:6px;font-weight:600}
+.pilot-form input,.pilot-form select,.pilot-form textarea{width:100%;box-sizing:border-box;padding:10px;border-radius:9px;border:1px solid var(--line,#ccc);background:var(--surface,#fff);color:inherit}
+.pilot-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pilot-draft-list{display:grid;gap:10px;margin:14px 0 20px}
+.pilot-draft-row{display:flex;gap:10px;align-items:center;border-bottom:1px solid var(--line,#ddd);padding:10px 0;flex-wrap:wrap}
+.pilot-draft-row div{flex:1;min-width:145px}
+.pilot-draft-row small{display:block;color:var(--muted,#777);margin-top:4px}
+.pilot-import-card{margin-bottom:18px;padding:18px}
+.pilot-import-card .btn{margin:0 8px 8px 0}
+.pilot-review-summary{font-size:.92rem;color:var(--muted,#666);line-height:1.45;margin:8px 0}
+.pilot-review-summary b{color:inherit}
+.pilot-review-state{font-weight:600}
+@media(max-width:760px){.pilot-grid,.pilot-form-grid{grid-template-columns:1fr}.pilot-panel{padding:16px}.pilot-draft-row{align-items:flex-start}}
