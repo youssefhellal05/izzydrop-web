@@ -38,6 +38,28 @@
     $('#auth-status').className='status auth-status bad';
   }
 
+  // Pilot-specific signup path; preserves the established login and session implementation.
+  async function signupWithPilotTerms({email,password,fullName,businessName,type,termsAccepted,termsVersion}){
+    if(termsAccepted!==true||termsVersion!==PILOT_TERMS_VERSION)throw Error('Please accept the current IzzyDrop policies.');
+    if(!['supplier','dropshipper'].includes(type))throw Error('Choose an account type.');
+    const C=IZZY.config;
+    const redirectTo=new URL('login.html',location.href).href;
+    const response=await fetch(C.supabaseUrl+'/auth/v1/signup?redirect_to='+encodeURIComponent(redirectTo),{
+      method:'POST',
+      headers:{apikey:C.supabaseKey,'Content-Type':'application/json'},
+      body:JSON.stringify({email,password,data:{
+        full_name:fullName,business_name:businessName,requested_account_type:type,
+        pilot_terms_accepted:true,pilot_terms_version:termsVersion
+      }})
+    });
+    const raw=await response.text();
+    let data;
+    try{data=raw?JSON.parse(raw):null}catch{data={message:raw}}
+    if(!response.ok)throw Error(data?.msg||data?.message||data?.error_description||'Sign up failed');
+    if(data?.access_token)IZZY.saveSession(data);
+    return data;
+  }
+
   function updateSignupRole(role){
     signupRole=role||'';
     $('#signup-type').value=signupRole;
@@ -245,7 +267,7 @@
     st.textContent='Creating your IzzyDrop account…';
 
     try{
-      const d=await IZZY.signup({
+      const d=await signupWithPilotTerms({
         email:$('#signup-email').value.trim(),
         password,
         fullName:$('#signup-name').value.trim(),
