@@ -255,6 +255,8 @@
           <div><b>Phone:</b> ${IZZY.esc(v.business_phone)}</div>
           <div><b>Registration:</b> ${IZZY.esc(v.registration_status)} — ${IZZY.esc(v.registration_number||'not provided')}</div>
           <div><b>Tax number:</b> ${IZZY.esc(v.tax_registration_number||'not provided')}</div>
+          ${v.registration_document_path?`<button class="btn secondary pilot-doc-btn" type="button" data-path="${IZZY.esc(v.registration_document_path)}">View registration document</button>`:''}
+          ${v.tax_document_path?`<button class="btn secondary pilot-doc-btn" type="button" data-path="${IZZY.esc(v.tax_document_path)}">View tax card</button>`:''}
           ${v.supplier_notes?`<div><b>Notes:</b> ${IZZY.esc(v.supplier_notes)}</div>`:''}
           ${v.review_reason?`<div><b>Review reason:</b> ${IZZY.esc(v.review_reason)}</div>`:''}
         </details>`:s.verification_required?'<small class="muted">Verification not submitted</small>':'<small class="muted">Legacy approval rules</small>';
@@ -268,6 +270,23 @@
       </div>`;
     }).join('')||'<div class="empty-state admin-table-empty"><div class="empty-icon">S</div><h3>No suppliers found</h3><p>Try changing the current search or status filter.</p></div>';
     document.querySelectorAll('.review-btn').forEach(b=>b.onclick=()=>reviewSupplier(b));
+    document.querySelectorAll('.pilot-doc-btn').forEach(b=>b.onclick=async()=>{
+      b.disabled=true;
+      try{
+        const path=String(b.dataset.path||'').split('/').map(encodeURIComponent).join('/');
+        const result=await IZZY.request('/storage/v1/object/sign/supplier-documents/'+path,{
+          method:'POST',body:JSON.stringify({expiresIn:60})
+        });
+        const signed=String(result?.signedURL||result?.signedUrl||'');
+        if(!signed.startsWith('/object/sign/supplier-documents/'))throw Error('Private document link unavailable');
+        const link=document.createElement('a');
+        link.href=IZZY.config.supabaseUrl+'/storage/v1'+signed;
+        link.target='_blank';link.rel='noopener noreferrer';
+        link.textContent='Open secure document (link expires in 60 seconds)';
+        b.insertAdjacentElement('afterend',link);
+      }catch(e){msg(e.message,true)}
+      finally{b.disabled=false}
+    });
   }
 
   async function reviewSupplier(btn){
