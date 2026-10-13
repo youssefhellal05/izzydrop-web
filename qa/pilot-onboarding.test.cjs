@@ -56,6 +56,16 @@ test('pending supplier drafts never touch public marketplace product permissions
   assert.match(onboarding,/supplier_onboarding_drafts/);
   assert.match(onboarding,/Nothing has been published/);
 });
+test('supplier evidence is confined to the private storage bucket',()=>{
+  assert.match(sql,/file_size_limit=5242880/);
+  assert.match(sql,/allowed_mime_types=ARRAY\[/);
+  assert.match(sql,/FROM storage\.objects o/);
+  assert.match(sql,/registration_document_path/);
+  assert.match(sql,/tax_document_path/);
+  assert.match(onboarding,/uploadPilotDocument/);
+  assert.match(onboarding,/supplier-documents/);
+  assert.match(admin,/object\/sign\/supplier-documents/);
+});
 test('admins review submissions and can request changes without approving seller',()=>{
   assert.match(admin,/supplier_verification_applications\?select/);
   assert.match(admin,/data-decision="request_changes"/);
