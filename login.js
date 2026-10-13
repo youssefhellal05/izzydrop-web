@@ -1,6 +1,8 @@
 (()=>{
   const $=s=>document.querySelector(s);
   let signupRole='';
+  let signupPending=false;
+  const PILOT_TERMS_VERSION='2026-10-13-pilot-v1';
 
   async function route(){
     const s=IZZY.session();
@@ -216,6 +218,14 @@
       return;
     }
 
+    if(signupPending)return;
+    if(!$('#signup-terms')?.checked){
+      st.textContent='Read and accept the Marketplace Terms, COD and payout policies before creating an account.';
+      st.className='status auth-status bad';
+      $('#signup-terms')?.focus();
+      return;
+    }
+
     const business=$('#signup-business').value.trim();
     if(signupRole==='supplier'&&!business){
       st.textContent='Business name is required for supplier accounts.';
@@ -230,6 +240,7 @@
       return;
     }
 
+    signupPending=true;
     btn.disabled=true;btn.textContent='Creating account…';
     st.textContent='Creating your IzzyDrop account…';
 
@@ -239,7 +250,9 @@
         password,
         fullName:$('#signup-name').value.trim(),
         businessName:business,
-        type:signupRole
+        type:signupRole,
+        termsAccepted:true,
+        termsVersion:PILOT_TERMS_VERSION
       });
 
       if(d?.access_token){
@@ -255,6 +268,7 @@
         :raw;
       st.className='status auth-status bad';
     }finally{
+      signupPending=false;
       btn.disabled=false;
       btn.textContent=signupRole==='supplier'?'Create supplier account':'Create dropshipper account';
     }
