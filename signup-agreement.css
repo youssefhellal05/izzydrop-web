@@ -1,0 +1,6 @@
+/* Isolated styling for the required signup agreement. */
+.auth-form .auth-agreement-label{display:flex;align-items:flex-start;gap:10px;cursor:pointer}
+.auth-form .auth-agreement-label input[type="checkbox"]{width:18px;height:18px;min-width:18px;flex:none;margin:2px 0 0;padding:0;border:1px solid var(--line);border-radius:4px;accent-color:#111318}
+.auth-agreement-label span{font-size:12px;line-height:1.55;color:var(--text)}
+.auth-agreement-label a{text-decoration:underline;text-underline-offset:2px;font-weight:700}
+.auth-agreement-label a:focus-visible{outline:2px solid currentColor;outline-offset:3px}
