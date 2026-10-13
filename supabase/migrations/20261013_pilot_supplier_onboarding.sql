@@ -2,6 +2,12 @@
 -- Preserve legacy supplier access and existing commercial tables/flows.
 BEGIN;
 
+-- Existing private bucket: restrict new uploads without changing owner/admin RLS.
+UPDATE storage.buckets
+  SET file_size_limit=5242880,
+      allowed_mime_types=ARRAY['application/pdf','image/jpeg','image/png']::text[]
+  WHERE id='supplier-documents';
+
 CREATE TABLE public.account_agreement_acceptances (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -71,6 +77,8 @@ CREATE TABLE public.supplier_verification_applications (
   registration_status text NOT NULL CHECK (registration_status IN ('registered','in_progress','not_registered')),
   registration_number text,
   tax_registration_number text,
+  registration_document_path text,
+  tax_document_path text,
   supplier_notes text,
   review_status text NOT NULL DEFAULT 'submitted'
     CHECK (review_status IN ('submitted','needs_changes','approved','rejected')),
@@ -94,6 +102,7 @@ FOR SELECT TO authenticated USING (
 CREATE OR REPLACE FUNCTION public.supplier_submit_verification(
   _business_address text, _business_phone text, _registration_status text,
   _registration_number text DEFAULT NULL, _tax_registration_number text DEFAULT NULL,
+  _registration_document_path text DEFAULT NULL, _tax_document_path text DEFAULT NULL,
   _supplier_notes text DEFAULT NULL
 ) RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,private AS $fn$
 DECLARE sid uuid; changed public.supplier_verification_applications%ROWTYPE;
@@ -109,14 +118,33 @@ BEGIN
   IF _registration_status NOT IN ('registered','in_progress','not_registered')
      OR _registration_status IS NULL THEN RAISE EXCEPTION 'Select a registration status'; END IF;
   IF length(coalesce(_registration_number,''))>100 OR length(coalesce(_tax_registration_number,''))>100
+     OR length(coalesce(_registration_document_path,''))>300 OR length(coalesce(_tax_document_path,''))>300
      OR length(coalesce(_supplier_notes,''))>1500 THEN
     RAISE EXCEPTION 'One or more fields are too long';
   END IF;
+  -- Uploaded paths must be owned by this supplier and physically exist in private storage.
+  IF _registration_status='registered' AND
+     (coalesce(btrim(_registration_document_path),'')='' OR coalesce(btrim(_tax_document_path),'')='') THEN
+    RAISE EXCEPTION 'Upload commercial registration and tax documents before submitting';
+  END IF;
+  IF _registration_document_path IS NOT NULL AND
+     (left(_registration_document_path,length(sid::text)+1)<>sid::text||'/'
+      OR NOT EXISTS(SELECT 1 FROM storage.objects o
+         WHERE o.bucket_id='supplier-documents' AND o.name=_registration_document_path)) THEN
+    RAISE EXCEPTION 'Commercial registration document was not found in your private folder';
+  END IF;
+  IF _tax_document_path IS NOT NULL AND
+     (left(_tax_document_path,length(sid::text)+1)<>sid::text||'/'
+      OR NOT EXISTS(SELECT 1 FROM storage.objects o
+         WHERE o.bucket_id='supplier-documents' AND o.name=_tax_document_path)) THEN
+    RAISE EXCEPTION 'Tax document was not found in your private folder';
+  END IF;
   INSERT INTO public.supplier_verification_applications
     (supplier_id,business_address,business_phone,registration_status,
-     registration_number,tax_registration_number,supplier_notes)
+     registration_number,tax_registration_number,registration_document_path,tax_document_path,supplier_notes)
   VALUES (sid,btrim(_business_address),btrim(_business_phone),_registration_status,
     nullif(btrim(_registration_number),''),nullif(btrim(_tax_registration_number),''),
+    nullif(btrim(_registration_document_path),''),nullif(btrim(_tax_document_path),''),
     nullif(btrim(_supplier_notes),''))
   ON CONFLICT (supplier_id) DO UPDATE SET
     business_address=EXCLUDED.business_address,
@@ -124,6 +152,8 @@ BEGIN
     registration_status=EXCLUDED.registration_status,
     registration_number=EXCLUDED.registration_number,
     tax_registration_number=EXCLUDED.tax_registration_number,
+    registration_document_path=EXCLUDED.registration_document_path,
+    tax_document_path=EXCLUDED.tax_document_path,
     supplier_notes=EXCLUDED.supplier_notes,
     review_status='submitted',review_reason=NULL,reviewed_by=NULL,reviewed_at=NULL,
     submitted_at=now(),updated_at=now(),
@@ -134,8 +164,8 @@ BEGIN
          jsonb_build_object('submission_count',changed.submission_count));
   RETURN jsonb_build_object('supplier_id',sid,'review_status',changed.review_status);
 END $fn$;
-REVOKE ALL ON FUNCTION public.supplier_submit_verification(text,text,text,text,text,text) FROM PUBLIC,anon;
-GRANT EXECUTE ON FUNCTION public.supplier_submit_verification(text,text,text,text,text,text) TO authenticated;
+REVOKE ALL ON FUNCTION public.supplier_submit_verification(text,text,text,text,text,text,text,text) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.supplier_submit_verification(text,text,text,text,text,text,text,text) TO authenticated;
 
 -- Staging-only draft store: intentionally NOT public.supplier_products.
 -- No products, variants, image storage, orders, or payouts can reference these rows.
@@ -258,8 +288,10 @@ BEGIN
     IF a.review_status<>'submitted' THEN RAISE EXCEPTION 'Only submitted applications may be approved'; END IF;
     IF a.registration_status<>'registered'
        OR coalesce(btrim(a.registration_number),'')=''
-       OR coalesce(btrim(a.tax_registration_number),'')='' THEN
-       RAISE EXCEPTION 'Commercial registration and tax details must be complete for approval';
+       OR coalesce(btrim(a.tax_registration_number),'')=''
+       OR coalesce(btrim(a.registration_document_path),'')=''
+       OR coalesce(btrim(a.tax_document_path),'')='' THEN
+       RAISE EXCEPTION 'Commercial registration and tax details and uploaded documents must be complete for approval';
     END IF;
     next_status:='approved';
   ELSE RAISE EXCEPTION 'Unknown verification decision'; END IF;
