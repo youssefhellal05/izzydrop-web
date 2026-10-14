@@ -42,7 +42,8 @@ BEGIN
   END IF;
   RETURN NEW;
 END $fn$;
-DROP TRIGGER IF EXISTS trg_capture_pilot_signup_acceptance ON auth.users;
+-- First install only: the Auth-owned table grants TRIGGER but not trigger DROP to postgres.
+-- Do not attempt DROP TRIGGER against auth.users during the pilot rollout.
 CREATE TRIGGER trg_capture_pilot_signup_acceptance AFTER INSERT ON auth.users
 FOR EACH ROW EXECUTE FUNCTION private.capture_pilot_signup_acceptance();
 REVOKE ALL ON FUNCTION private.capture_pilot_signup_acceptance() FROM PUBLIC,anon,authenticated;
