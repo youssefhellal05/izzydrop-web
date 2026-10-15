@@ -1,0 +1,32 @@
+name: IzzyDrop session simulation
+on:
+  pull_request:
+    paths:
+      - 'common.js'
+      - 'tests/e2e/**'
+      - '.github/workflows/session-simulation.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  simulated-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated pinned browser tools
+        run: npm install --prefix "$RUNNER_TEMP/izzydrop-qa" --no-audit --no-fund playwright@1.56.1
+      - name: Install Chromium
+        run: node "$RUNNER_TEMP/izzydrop-qa/node_modules/playwright/cli.js" install --with-deps chromium
+      - name: Run real auth-client simulations with fake backend
+        run: NODE_PATH="$RUNNER_TEMP/izzydrop-qa/node_modules" node tests/e2e/session-simulation.cjs
+      - name: Save results even when a test fails
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: session-simulation-results
+          path: qa-results/
+          if-no-files-found: warn
