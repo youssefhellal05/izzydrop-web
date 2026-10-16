@@ -1,6 +1,6 @@
 (()=>{
   const $=s=>document.querySelector(s);
-  let SUPPLIERS=[],PROFILES=[],PRODUCTS=[],VARIANTS=[],IMAGES=[],ORDERS=[],ITEMS=[],DROPSHIPPERS=[],AUDIT=[],ADMINS=[],SETTLEMENTS=[],SHIPPING_SETTINGS={},ORDER_SHIPPING=[],ADMIN_METRICS={},DEFAULT_COMMISSION=0,SELECTED_SUPPLIER=null,SESSION=null,ORDER_OPEN_ONLY=false,ORDER_HAS_MORE=false;
+  let VERIFICATIONS=[],SUPPLIERS=[],PROFILES=[],PRODUCTS=[],VARIANTS=[],IMAGES=[],ORDERS=[],ITEMS=[],DROPSHIPPERS=[],AUDIT=[],ADMINS=[],SETTLEMENTS=[],SHIPPING_SETTINGS={},ORDER_SHIPPING=[],ADMIN_METRICS={},DEFAULT_COMMISSION=0,SELECTED_SUPPLIER=null,SESSION=null,ORDER_OPEN_ONLY=false,ORDER_HAS_MORE=false;
   const ORDER_PAGE_SIZE=50;
 
   const VIEW_COPY={
@@ -227,14 +227,41 @@
     $('#supplier-results-meta').textContent=`${rows.length} supplier${rows.length===1?'':'s'} shown`;
     $('#suppliers').innerHTML=rows.map(s=>{
       const p=profileFor(s.profile_id);
+      const v=VERIFICATIONS.find(a=>a.supplier_id===s.id);
       const commission=s.commission_rate_override==null?`Inherit ${DEFAULT_COMMISSION}%`:`${s.commission_rate_override}%`;
-      const actions=s.status==='pending'
-        ?`<button class="btn review-btn" data-id="${s.id}" data-decision="approve">Approve</button><button class="btn secondary review-btn" data-id="${s.id}" data-decision="reject">Reject</button>`
-        :s.status==='approved'
-          ?`<button class="btn secondary review-btn" data-id="${s.id}" data-decision="suspend">Suspend</button>`
-          :`<button class="btn secondary review-btn" data-id="${s.id}" data-decision="approve">Approve</button>`;
+      let actions;
+      if(s.status==='pending'&&s.verification_required){
+        if(v?.review_status==='submitted'){
+          actions=`<button class="btn review-btn" data-id="${s.id}" data-decision="verify_approve">Approve</button>
+            <button class="btn secondary review-btn" data-id="${s.id}" data-decision="request_changes">Request changes</button>
+            <button class="btn secondary review-btn" data-id="${s.id}" data-decision="verify_reject">Reject</button>`;
+        }else if(v?.review_status==='approved'){
+          actions=`<button class="btn review-btn" data-id="${s.id}" data-decision="approve">Approve supplier</button>`;
+        }else{
+          actions='<span class="muted">Waiting for supplier submission</span>';
+        }
+      }else if(s.status==='pending'){
+        actions=`<button class="btn review-btn" data-id="${s.id}" data-decision="approve">Approve</button><button class="btn secondary review-btn" data-id="${s.id}" data-decision="reject">Reject</button>`;
+      }else if(s.status==='approved'){
+        actions=`<button class="btn secondary review-btn" data-id="${s.id}" data-decision="suspend">Suspend</button>`;
+      }else if(s.verification_required){
+        actions='<span class="muted">Supplier is not approved</span>';
+      }else{
+        actions=`<button class="btn secondary review-btn" data-id="${s.id}" data-decision="approve">Approve</button>`;
+      }
+      const detail=v?`<details class="pilot-review-summary">
+          <summary>Verification: ${IZZY.esc(v.review_status.replaceAll('_',' '))}</summary>
+          <div><b>Address:</b> ${IZZY.esc(v.business_address)}</div>
+          <div><b>Phone:</b> ${IZZY.esc(v.business_phone)}</div>
+          <div><b>Registration:</b> ${IZZY.esc(v.registration_status)} — ${IZZY.esc(v.registration_number||'not provided')}</div>
+          <div><b>Tax number:</b> ${IZZY.esc(v.tax_registration_number||'not provided')}</div>
+          ${v.registration_document_path?`<button class="btn secondary pilot-doc-btn" type="button" data-path="${IZZY.esc(v.registration_document_path)}">View registration document</button>`:''}
+          ${v.tax_document_path?`<button class="btn secondary pilot-doc-btn" type="button" data-path="${IZZY.esc(v.tax_document_path)}">View tax card</button>`:''}
+          ${v.supplier_notes?`<div><b>Notes:</b> ${IZZY.esc(v.supplier_notes)}</div>`:''}
+          ${v.review_reason?`<div><b>Review reason:</b> ${IZZY.esc(v.review_reason)}</div>`:''}
+        </details>`:s.verification_required?'<small class="muted">Verification not submitted</small>':'<small class="muted">Legacy approval rules</small>';
       return `<div class="admin-supplier-table admin-table-row ${s.status==='pending'?'needs-review':''}">
-        <div class="admin-entity-cell"><span class="entity-avatar">${IZZY.esc((s.business_name||'S')[0].toUpperCase())}</span><div><b>${IZZY.esc(s.business_name||'Supplier')}</b><small>${IZZY.esc(p.full_name||'')} ${p.phone?'· '+IZZY.esc(p.phone):''}</small></div></div>
+        <div class="admin-entity-cell"><span class="entity-avatar">${IZZY.esc((s.business_name||'S')[0].toUpperCase())}</span><div><b>${IZZY.esc(s.business_name||'Supplier')}</b><small>${IZZY.esc(p.full_name||'')} ${p.phone?'· '+IZZY.esc(p.phone):''}</small>${detail}</div></div>
         <span data-label="Joined">${fmtDate(s.created_at)}</span>
         <span data-label="Products">${productCountForSupplier(s.id)} <small>${supplierLowStockCount(s.id)?'· '+supplierLowStockCount(s.id)+' low':''}</small></span>
         <span data-label="Commission">${IZZY.esc(commission)}</span>
@@ -242,18 +269,48 @@
         <div class="admin-row-actions">${actions}</div>
       </div>`;
     }).join('')||'<div class="empty-state admin-table-empty"><div class="empty-icon">S</div><h3>No suppliers found</h3><p>Try changing the current search or status filter.</p></div>';
-
     document.querySelectorAll('.review-btn').forEach(b=>b.onclick=()=>reviewSupplier(b));
+    document.querySelectorAll('.pilot-doc-btn').forEach(b=>b.onclick=async()=>{
+      b.disabled=true;
+      try{
+        const path=String(b.dataset.path||'').split('/').map(encodeURIComponent).join('/');
+        const result=await IZZY.request('/storage/v1/object/sign/supplier-documents/'+path,{
+          method:'POST',body:JSON.stringify({expiresIn:60})
+        });
+        const signed=String(result?.signedURL||result?.signedUrl||'');
+        if(!signed.startsWith('/object/sign/supplier-documents/'))throw Error('Private document link unavailable');
+        const link=document.createElement('a');
+        link.href=IZZY.config.supabaseUrl+'/storage/v1'+signed;
+        link.target='_blank';link.rel='noopener noreferrer';
+        link.textContent='Open secure document (link expires in 60 seconds)';
+        b.insertAdjacentElement('afterend',link);
+      }catch(e){msg(e.message,true)}
+      finally{b.disabled=false}
+    });
   }
 
   async function reviewSupplier(btn){
     const decision=btn.dataset.decision;
-    const label=decision==='approve'?'approve':decision==='reject'?'reject':'suspend';
-    if((decision==='reject'||decision==='suspend')&&!confirm(`Are you sure you want to ${label} this supplier?`))return;
+    const pilot=['verify_approve','verify_reject','request_changes'].includes(decision);
+    const actual=decision==='verify_approve'?'approve':decision==='verify_reject'?'reject':decision;
+    let reason=null;
+    if(actual==='request_changes'||(pilot&&actual==='reject')){
+      reason=prompt(actual==='request_changes'?'What must the supplier change before approval?':'Explain why this supplier is rejected:');
+      if(reason===null)return;
+      if(reason.trim().length<8){msg('Enter a clear reason of at least eight characters.',true);return}
+    }else if((actual==='reject'||actual==='suspend'||actual==='approve')&&!confirm('Confirm '+actual+' for this supplier?')){
+      return;
+    }
     btn.disabled=true;
     try{
-      await IZZY.rpc('admin_review_supplier',{_supplier_id:btn.dataset.id,_decision:decision});
-      msg('Supplier updated.');
+      if(pilot){
+        await IZZY.rpc('admin_review_supplier_verification',{
+          _supplier_id:btn.dataset.id,_decision:actual,_reason:reason?.trim()||null
+        });
+      }else{
+        await IZZY.rpc('admin_review_supplier',{_supplier_id:btn.dataset.id,_decision:actual});
+      }
+      msg('Supplier review saved.');
       await load(false);
     }catch(e){msg(e.message,true);btn.disabled=false}
   }
@@ -699,12 +756,13 @@
       IZZY.rpc('admin_shipping_settings'),
       IZZY.rpc('admin_order_shipping_costs'),
       IZZY.rpc('admin_settlements_v2'),
-      IZZY.rpc('admin_dashboard_metrics')
+      IZZY.rpc('admin_dashboard_metrics'),
+      IZZY.request('/rest/v1/supplier_verification_applications?select=*&order=submitted_at.desc')
     ]);
 
     const [
       rSuppliers,rProfiles,rProducts,rVariants,rOrders,rDropshippers,rSettings,
-      rAudit,rAdmins,rShippingSettings,rOrderShipping,rSettlements,rMetrics
+      rAudit,rAdmins,rShippingSettings,rOrderShipping,rSettlements,rMetrics,rVerifications
     ]=results;
     const failures=[];
     const take=(r,current,label)=>{
@@ -714,6 +772,7 @@
     };
 
     SUPPLIERS=take(rSuppliers,SUPPLIERS,'Suppliers')||[];
+    VERIFICATIONS=take(rVerifications,VERIFICATIONS,'Verification applications')||[];
     PROFILES=take(rProfiles,PROFILES,'profiles')||[];
     PRODUCTS=take(rProducts,PRODUCTS,'Products')||[];
     VARIANTS=take(rVariants,VARIANTS,'variants')||[];

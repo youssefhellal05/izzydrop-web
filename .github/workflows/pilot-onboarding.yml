@@ -1,0 +1,65 @@
+name: Pilot onboarding checks
+on:
+  pull_request:
+    paths:
+      - 'login.js'
+      - 'login.html'
+      - 'supplier.js'
+      - 'supplier-onboarding.js'
+      - 'admin.js'
+      - 'pilot-onboarding.css'
+      - 'supabase/migrations/20261013_pilot_supplier_onboarding.sql'
+      - 'qa/pilot-onboarding.test.cjs'
+      - 'qa/pilot-db-fixture.sql'
+      - 'qa/pilot-db-smoke.sql'
+      - '.github/workflows/pilot-onboarding.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pilot-static-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify pilot source and security invariants
+        run: node --test qa/pilot-onboarding.test.cjs
+      - name: Check syntax without running production
+        run: |
+          node --check login.js
+          node --check supplier.js
+          node --check supplier-onboarding.js
+          node --check admin.js
+  pilot-db-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: izzydrop_pilot
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci_only_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d izzydrop_pilot"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: ci_only_password
+      PGDATABASE: izzydrop_pilot
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify isolated PostgreSQL migration and authorization smoke tests
+        run: |
+          psql -v ON_ERROR_STOP=1 -f qa/pilot-db-fixture.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261013_pilot_supplier_onboarding.sql
+          psql -v ON_ERROR_STOP=1 -f qa/pilot-db-smoke.sql

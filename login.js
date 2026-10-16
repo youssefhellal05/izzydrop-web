@@ -1,6 +1,8 @@
 (()=>{
   const $=s=>document.querySelector(s);
   let signupRole='';
+  let signupPending=false;
+  const PILOT_TERMS_VERSION='2026-10-13-pilot-v1';
 
   async function route(){
     const s=IZZY.session();
@@ -34,6 +36,28 @@
 
     $('#auth-status').textContent='Your account is signed in, but no IzzyDrop workspace is attached yet.';
     $('#auth-status').className='status auth-status bad';
+  }
+
+  // Pilot-specific signup path; preserves the established login and session implementation.
+  async function signupWithPilotTerms({email,password,fullName,businessName,type,termsAccepted,termsVersion}){
+    if(termsAccepted!==true||termsVersion!==PILOT_TERMS_VERSION)throw Error('Please accept the current IzzyDrop policies.');
+    if(!['supplier','dropshipper'].includes(type))throw Error('Choose an account type.');
+    const C=IZZY.config;
+    const redirectTo=new URL('login.html',location.href).href;
+    const response=await fetch(C.supabaseUrl+'/auth/v1/signup?redirect_to='+encodeURIComponent(redirectTo),{
+      method:'POST',
+      headers:{apikey:C.supabaseKey,'Content-Type':'application/json'},
+      body:JSON.stringify({email,password,data:{
+        full_name:fullName,business_name:businessName,requested_account_type:type,
+        pilot_terms_accepted:true,pilot_terms_version:termsVersion
+      }})
+    });
+    const raw=await response.text();
+    let data;
+    try{data=raw?JSON.parse(raw):null}catch{data={message:raw}}
+    if(!response.ok)throw Error(data?.msg||data?.message||data?.error_description||'Sign up failed');
+    if(data?.access_token)IZZY.saveSession(data);
+    return data;
   }
 
   function updateSignupRole(role){
@@ -216,6 +240,14 @@
       return;
     }
 
+    if(signupPending)return;
+    if(!$('#signup-terms')?.checked){
+      st.textContent='Read and accept the Marketplace Terms, COD and payout policies before creating an account.';
+      st.className='status auth-status bad';
+      $('#signup-terms')?.focus();
+      return;
+    }
+
     const business=$('#signup-business').value.trim();
     if(signupRole==='supplier'&&!business){
       st.textContent='Business name is required for supplier accounts.';
@@ -230,16 +262,19 @@
       return;
     }
 
+    signupPending=true;
     btn.disabled=true;btn.textContent='Creating account…';
     st.textContent='Creating your IzzyDrop account…';
 
     try{
-      const d=await IZZY.signup({
+      const d=await signupWithPilotTerms({
         email:$('#signup-email').value.trim(),
         password,
         fullName:$('#signup-name').value.trim(),
         businessName:business,
-        type:signupRole
+        type:signupRole,
+        termsAccepted:true,
+        termsVersion:PILOT_TERMS_VERSION
       });
 
       if(d?.access_token){
@@ -255,6 +290,7 @@
         :raw;
       st.className='status auth-status bad';
     }finally{
+      signupPending=false;
       btn.disabled=false;
       btn.textContent=signupRole==='supplier'?'Create supplier account':'Create dropshipper account';
     }
