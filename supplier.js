@@ -753,7 +753,7 @@
       all.indeterminate=selectedShown.length>0&&selectedShown.length<shown.length;
     }
     const label=$('#bulk-selection-count');
-    if(label)label.textContent=`${count} selected`;
+    if(label)label.textContent=local(`${count} selected`,`${count} محدد`);
     ['#bulk-activate-products','#bulk-pause-products','#bulk-clear-products'].forEach(sel=>{
       const el=$(sel);if(el)el.disabled=count===0;
     });
@@ -780,18 +780,22 @@
 
   function renderProducts(){
     const products=filteredProducts();
-    $('#supplier-products-meta').textContent=`${products.length} product${products.length===1?'':'s'} shown`;
+    $('#supplier-products-meta').textContent=local(`${products.length} product${products.length===1?'':'s'} shown`,`${products.length} منتج معروض`);
     $('#products').innerHTML=products.map(p=>{
       const img=imagesFor(p.id)[0];
       const stock=totalStock(p.id);
       const low=lowStockProduct(p);
+      const enabledCount=enabledVariantsFor(p.id).length;
+      const inactiveCount=variantsFor(p.id).length-enabledCount;
+      const photoCount=imagesFor(p.id).length;
+      const details=local(`${enabledCount} active variant${enabledCount===1?'':'s'}${inactiveCount?` · ${inactiveCount} off`:''} · ${photoCount} photo${photoCount===1?'':'s'}`,`${enabledCount} خيار نشط${inactiveCount?` · ${inactiveCount} متوقف`:''} · ${photoCount} صورة`);
       return `<div class="supplier-product-table supplier-product-table-row ${SELECTED_PRODUCT_IDS.has(p.id)?'is-selected':''}">
         <label class="supplier-product-select" aria-label="Select ${IZZY.esc(productName(p))}">
           <input class="product-select-checkbox" type="checkbox" data-id="${p.id}" ${SELECTED_PRODUCT_IDS.has(p.id)?'checked':''}>
         </label>
         <div class="supplier-table-product">
           <div class="supplier-product-thumb">${img?.url?`<img src="${IZZY.esc(img.url)}" alt="">`:'IZ'}</div>
-          <div><b>${IZZY.esc(productName(p))}</b><small>${enabledVariantsFor(p.id).length} active variant${enabledVariantsFor(p.id).length===1?'':'s'}${variantsFor(p.id).length!==enabledVariantsFor(p.id).length?` · ${variantsFor(p.id).length-enabledVariantsFor(p.id).length} off`:''} · ${imagesFor(p.id).length} photo${imagesFor(p.id).length===1?'':'s'}</small></div>
+          <div><b>${IZZY.esc(productName(p))}</b><small>${details}</small></div>
         </div>
         <span class="supplier-table-cell" data-label="SKU">${IZZY.esc(p.sku||'—')}</span>
         <span class="supplier-table-cell ${low?'stock-low':''}" data-label="Stock">${stock}${low?' · Low':''}</span>
