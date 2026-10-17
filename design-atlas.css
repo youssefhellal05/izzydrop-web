@@ -1,0 +1,538 @@
+/*
+ * IzzyDrop / ATLAS
+ * A structurally different editorial + command-center layout, not a palette swap.
+ * Completely isolated behind html[data-izzy-design="atlas"].
+ * Retains the exact real DOM control IDs, forms, scripts, permissions and actions.
+ */
+html[data-izzy-design="atlas"]{
+  --bg:#f6f3ea;--card:#fffdfa;--text:#202c2b;--muted:#65716d;
+  --line:#d9ded5;--soft:#e9eee7;--brand:#164a49;--brand-soft:#d9efeb;
+  --accent:#ee7951;--accent-soft:#fbe9df;--atlas-ink:#193a39;
+  --atlas-orange:#ee7951;--atlas-paper:#fffdfa;--atlas-rule:#bfcac1;
+  --atlas-green:#c4e6a5;--atlas-shadow:0 11px 33px rgba(35,60,51,.055);
+}
+html[data-izzy-design="atlas"][data-theme="dark"]{
+  --bg:#101917;--card:#182421;--text:#edf3e8;--muted:#a7bab0;
+  --line:#364940;--soft:#24362f;--brand:#b2ebd0;--brand-soft:#254a43;
+  --accent:#ff956f;--accent-soft:#573b2e;--atlas-ink:#d5eadc;
+  --atlas-paper:#182421;--atlas-rule:#3e5649;--atlas-green:#d0eda9;
+  --atlas-shadow:0 16px 38px rgba(0,0,0,.22);
+}
+html[data-izzy-design="atlas"] body{
+  font-family:"Trebuchet MS",Arial,ui-sans-serif,system-ui,sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(circle at 96% -10%,rgba(238,121,81,.09),transparent 37%),
+    repeating-linear-gradient(90deg,transparent 0,transparent calc(100% - 1px),rgba(25,58,57,.018) 100%),
+    var(--bg);
+}
+html[data-izzy-design="atlas"] body .wrap{max-width:1540px;padding-inline:clamp(15px,3.2vw,46px)}
+html[data-izzy-design="atlas"] .nav{
+  height:auto;min-height:74px;margin-block:15px 29px;gap:18px;padding:12px clamp(15px,2.1vw,26px);
+  background:var(--atlas-ink);border-radius:4px 27px 4px 27px;
+  color:#f3f7e9;box-shadow:0 14px 30px rgba(12,50,42,.12);
+}
+html[data-izzy-design="atlas"] .brand{align-items:center;gap:10px}
+html[data-izzy-design="atlas"] .brand-mark{
+  width:45px;height:45px;border-radius:50%;background:var(--atlas-orange);color:#202722;
+  font-size:15px;font-weight:950;letter-spacing:-1.1px;box-shadow:none;
+}
+html[data-izzy-design="atlas"] .brand-word{font-size:27px;letter-spacing:-1.4px;color:inherit}
+html[data-izzy-design="atlas"] .nav .brand-role{color:#cce5d8!important;font-weight:900}
+html[data-izzy-design="atlas"] .nav .navlinks .btn{color:#f5f7ed}
+html[data-izzy-design="atlas"] .nav .navlinks .btn.ghost{border-color:#7d9b8b}
+html[data-izzy-design="atlas"] .nav .navlinks .btn:not(.ghost){
+  background:var(--atlas-orange);color:#192822;
+}
+html[data-izzy-design="atlas"] .btn{
+  min-height:44px;border-radius:4px 16px 4px 16px;
+  background:var(--atlas-ink);color:var(--bg);
+  box-shadow:none;font-weight:850;
+}
+html[data-izzy-design="atlas"] .btn:hover:not(:disabled){transform:translateY(-2px);filter:brightness(1.08)}
+html[data-izzy-design="atlas"] .btn.secondary{
+  background:var(--soft);color:var(--text);border:1px solid var(--line);box-shadow:none;
+}
+html[data-izzy-design="atlas"] .btn.ghost{
+  background:transparent;color:var(--text);border:1px solid var(--line);
+}
+html[data-izzy-design="atlas"] .premium-chip,
+html[data-izzy-design="atlas"] .workspace-brand{
+  border:0;border-radius:2px;padding:7px 11px;letter-spacing:.16em;font-size:10px;
+  background:var(--accent-soft);color:#ac5939;box-shadow:none;
+}
+html[data-izzy-design="atlas"][data-theme="dark"] .premium-chip,
+html[data-izzy-design="atlas"][data-theme="dark"] .workspace-brand{color:#ffc49f}
+html[data-izzy-design="atlas"] :is(.panel,.card,.choice,.side,.list-row,.settings-menu,.settings-card,.auth-card,.modal-card){
+  background:var(--card);border-color:var(--line);box-shadow:var(--atlas-shadow);
+}
+html[data-izzy-design="atlas"] :is(.panel,.card,.choice,.list-row,.auth-card,.modal-card){
+  border-radius:5px 28px 5px 28px;
+}
+html[data-izzy-design="atlas"] .tag{border-radius:4px;font-weight:900}
+html[data-izzy-design="atlas"] :is(.search,.control,.form input,.form textarea,.form select){
+  background:var(--card);border:1px solid var(--line);color:var(--text);
+  min-height:47px;border-radius:4px 14px 4px 14px;
+}
+html[data-izzy-design="atlas"] :is(a,button,input,textarea,select,summary):focus-visible{
+  outline:3px solid var(--atlas-orange);outline-offset:3px;
+}
+
+/* Public: large editorial opening with a story on the left and process on the right.
+   Role paths become a stacked selection board, rather than three cards. */
+html[data-izzy-design="atlas"] .hero{
+  position:relative;isolation:isolate;overflow:hidden;
+  display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr);
+  gap:clamp(25px,3vw,54px);padding:clamp(34px,5.8vw,92px);
+  align-items:center;margin:0 0 25px;
+  border-radius:10px 92px 12px 92px;
+  background:var(--atlas-ink);color:#f6f2df;
+}
+html[data-izzy-design="atlas"] .hero:before{
+  content:"IZ";font-weight:950;font-size:clamp(250px,36vw,630px);line-height:1;
+  position:absolute;right:-.09em;bottom:-.40em;color:rgba(192,239,190,.055);
+  letter-spacing:-.2em;transform:rotate(-15deg);pointer-events:none;z-index:-1;
+}
+html[data-izzy-design="atlas"] .hero .premium-chip{
+  background:#f6f2df;color:#143d35;
+}
+html[data-izzy-design="atlas"] .hero .eyebrow{
+  color:var(--atlas-green);letter-spacing:.24em;font-size:11px;margin-top:18px;
+}
+html[data-izzy-design="atlas"] .hero h1{
+  font-size:clamp(54px,6.5vw,113px);font-weight:950;letter-spacing:-.07em;
+  line-height:.92;margin:21px 0 28px;max-width:1040px;text-wrap:balance;color:#fff8e5;
+}
+html[data-izzy-design="atlas"] .hero p{
+  font-size:clamp(16px,1.6vw,20px);max-width:650px;color:#c3d7c8;line-height:1.85;
+}
+html[data-izzy-design="atlas"] .hero-actions{margin-top:34px;gap:12px}
+html[data-izzy-design="atlas"] .hero-actions .btn{
+  min-height:54px;border-radius:4px 17px 4px 17px;
+  padding:14px 23px;background:var(--atlas-orange);color:#183229;
+}
+html[data-izzy-design="atlas"] .hero-actions .btn.secondary{
+  background:transparent;color:#f8f5e9;border-color:#8fa99d;
+}
+html[data-izzy-design="atlas"] .hero .flow.panel{
+  display:grid;gap:0;align-self:stretch;align-content:center;
+  padding:clamp(16px,2vw,28px);border-radius:4px 44px 4px 44px;
+  color:#edf3e8;border:1px solid rgba(214,237,215,.38);
+  background:rgba(255,255,255,.035);box-shadow:none;
+  backdrop-filter:blur(8px);
+}
+html[data-izzy-design="atlas"] .hero .flow-step{
+  counter-increment:atlas-phase;
+  display:grid;grid-template-columns:53px minmax(0,1fr);gap:4px 14px;
+  align-items:center;background:transparent;border-radius:0;padding:20px 3px;
+  border-bottom:1px solid rgba(238,245,221,.3);
+}
+html[data-izzy-design="atlas"] .hero .flow{counter-reset:atlas-phase}
+html[data-izzy-design="atlas"] .hero .flow-step:last-child{border-bottom:0}
+html[data-izzy-design="atlas"] .flow-step:before{
+  content:counter(atlas-phase,decimal-leading-zero);
+  grid-row:1/span 2;font-size:25px;font-weight:950;letter-spacing:-.08em;
+  color:var(--atlas-green);
+}
+html[data-izzy-design="atlas"] .hero .flow-step b{margin:0;font-size:16px;line-height:1.3}
+html[data-izzy-design="atlas"] .hero .flow-step span{font-size:13px;line-height:1.55;color:#c8dad1}
+html[data-izzy-design="atlas"] .section{padding-block:clamp(40px,5vw,82px)}
+html[data-izzy-design="atlas"] .section h2{
+  font-size:clamp(38px,4.5vw,69px);font-weight:950;letter-spacing:-.065em;
+  line-height:1.03;text-wrap:balance;
+}
+html[data-izzy-design="atlas"] .section .eyebrow{color:#b55d3f}
+html[data-izzy-design="atlas"] #choose{
+  display:grid;grid-template-columns:minmax(210px,.75fr) minmax(0,1.25fr);
+  grid-template-rows:repeat(3,auto) 1fr;gap:8px clamp(26px,4vw,80px);
+  border-bottom:2px solid var(--atlas-ink);
+}
+html[data-izzy-design="atlas"] #choose>.eyebrow{grid-column:1}
+html[data-izzy-design="atlas"] #choose>h2{grid-column:1;font-size:clamp(40px,4.1vw,65px)}
+html[data-izzy-design="atlas"] #choose>p{grid-column:1;max-width:320px;line-height:1.7}
+html[data-izzy-design="atlas"] #choose>.choice-grid{
+  grid-column:2;grid-row:1/5;display:grid;grid-template-columns:1fr;
+  gap:0;align-self:stretch;border-top:2px solid var(--atlas-ink);
+}
+html[data-izzy-design="atlas"] .choice{
+  position:relative;display:grid;grid-template-columns:134px minmax(0,1fr);
+  grid-template-rows:auto auto;gap:8px 18px;align-content:center;
+  min-height:158px;padding:23px clamp(15px,2.7vw,38px);
+  border:0;border-bottom:1px solid var(--atlas-rule);border-radius:0;
+  box-shadow:none;background:transparent;
+}
+html[data-izzy-design="atlas"] .choice:hover{
+  background:var(--soft);transform:translateX(4px);
+}
+html[data-izzy-design="atlas"] .choice>.tag{
+  grid-row:1/3;justify-self:start;align-self:center;padding:8px 12px;
+  background:var(--atlas-ink);color:#f6f2df;white-space:nowrap;
+}
+html[data-izzy-design="atlas"] .choice h3{
+  font-size:clamp(25px,2.2vw,36px);letter-spacing:-.055em;margin:0;
+}
+html[data-izzy-design="atlas"] .choice p{grid-column:2;margin:0;font-size:14px;line-height:1.55}
+html[data-izzy-design="atlas"] .choice:after{
+  content:"↗";position:absolute;right:20px;top:21px;
+  color:var(--accent);font-size:30px;
+}
+html[data-izzy-design="atlas"] .catalog-head{
+  align-items:end;padding-bottom:19px;border-bottom:2px solid var(--atlas-ink);
+  margin-bottom:25px;
+}
+html[data-izzy-design="atlas"] .product-grid{gap:20px}
+@media(min-width:1081px){
+  html[data-izzy-design="atlas"] #catalog .product-grid{
+    grid-template-columns:repeat(4,minmax(0,1fr));align-items:stretch;
+  }
+  html[data-izzy-design="atlas"] #catalog .product-card:first-child{
+    grid-column:span 2;grid-row:span 2;
+  }
+  html[data-izzy-design="atlas"] #catalog .product-card:first-child .product-image{height:380px}
+}
+html[data-izzy-design="atlas"] .product-card{padding:0;overflow:hidden;border-radius:4px 30px 4px 30px}
+html[data-izzy-design="atlas"] .product-card .product-body{padding:22px}
+html[data-izzy-design="atlas"] .product-card:after{
+  border-radius:3px;background:var(--atlas-ink);color:#f6f2df;
+}
+html[data-izzy-design="atlas"] .product-image{
+  height:220px;background:linear-gradient(140deg,#dbeee0,#f6eadc);
+}
+html[data-izzy-design="atlas"] .price{color:#bb5a38;font-weight:950;font-size:21px}
+html[data-izzy-design="atlas"] .footer{margin-block:14px 0;border-top:2px solid var(--atlas-ink)}
+
+/* App shell: navigation is a full-width horizontal operating ribbon.
+   Workspace context is a vertical left "chapter" panel; active content is right.
+   This is an actual two-stage layout instead of V1's left sidebar + top header. */
+@media(min-width:851px){
+  html[data-izzy-design="atlas"] :is(.supplier-dash,.dropshipper-dash){
+    grid-template-columns:minmax(0,1fr);gap:22px;padding-top:0;
+  }
+  html[data-izzy-design="atlas"] :is(.supplier-side,.dropshipper-side){
+    grid-column:1;position:relative;top:auto;
+    display:flex;align-items:center;gap:23px;
+    width:100%;min-width:0;padding:16px 22px;
+    border-radius:5px 26px 5px 26px;background:var(--card);
+    overflow:visible;
+  }
+  html[data-izzy-design="atlas"] .side-brand{
+    flex:none;display:flex;align-items:center;gap:8px;
+    margin:0;padding:0 22px 0 0;border-right:1px solid var(--line);
+  }
+  html[data-izzy-design="atlas"] :is(.supplier-side,.dropshipper-side) nav{
+    display:flex;align-items:center;flex-wrap:wrap;gap:5px 7px;
+    min-width:0;flex:1;
+  }
+  html[data-izzy-design="atlas"] :is(.supplier-side,.dropshipper-side) nav>button{
+    flex:0 0 auto;width:auto;display:flex;gap:8px;align-items:center;
+    padding:10px 12px;border-radius:3px 12px 3px 12px;
+    font-size:13px;font-weight:850;white-space:nowrap;color:var(--text);
+    min-height:45px;
+  }
+  html[data-izzy-design="atlas"] :is(.supplier-side,.dropshipper-side) nav button.on{
+    background:var(--atlas-ink);color:#f6f2df;
+  }
+  html[data-izzy-design="atlas"] :is(.supplier-side,.dropshipper-side) .supplier-more,
+  html[data-izzy-design="atlas"] :is(.supplier-side,.dropshipper-side) .dropshipper-more{
+    flex:none;margin-inline-start:auto;
+  }
+  html[data-izzy-design="atlas"] :is(.supplier-side,.dropshipper-side) nav>details>summary{
+    border-radius:4px 13px 4px 13px;min-height:43px;padding:11px 12px;
+  }
+  html[data-izzy-design="atlas"] :is(.supplier-dash,.dropshipper-dash)>.main{
+    display:grid;grid-template-columns:minmax(228px,280px) minmax(0,1fr);
+    gap:0 25px;align-items:start;min-width:0;
+  }
+  html[data-izzy-design="atlas"] :is(.supplier-dash,.dropshipper-dash) .workspace-topbar{
+    grid-column:1;grid-row:1/200;
+    position:sticky;top:15px;z-index:3;
+    display:flex;flex-direction:column;align-items:stretch;justify-content:space-between;
+    gap:35px;margin:0;padding:34px 23px 25px;min-height:425px;
+    border:0;border-radius:4px 40px 4px 40px;
+    background:var(--atlas-ink);color:#f8f6e7;
+    box-shadow:0 19px 40px rgba(19,59,52,.15);
+  }
+  html[data-izzy-design="atlas"] :is(.supplier-dash,.dropshipper-dash) .workspace-topbar h1{
+    font-size:clamp(39px,3.8vw,57px);line-height:1.04;
+    letter-spacing:-.065em;color:#fff8e9;
+    overflow-wrap:anywhere;margin:12px 0 15px;
+  }
+  html[data-izzy-design="atlas"] :is(.supplier-dash,.dropshipper-dash) .workspace-topbar p{
+    color:#c8dcd0;font-size:14px;line-height:1.65;
+  }
+  html[data-izzy-design="atlas"] :is(.supplier-dash,.dropshipper-dash) .workspace-brand{
+    background:var(--atlas-orange);color:#2f3026;line-height:1.45;
+  }
+  html[data-izzy-design="atlas"] :is(.supplier-dash,.dropshipper-dash) .workspace-topbar :is(.supplier-top-actions,.dropshipper-top-actions){
+    flex-wrap:wrap;justify-content:flex-start;width:100%;gap:10px;
+  }
+  html[data-izzy-design="atlas"] :is(.supplier-dash,.dropshipper-dash) .workspace-topbar .account-chip,
+  html[data-izzy-design="atlas"] :is(.supplier-dash,.dropshipper-dash) .workspace-topbar .notification-bell{
+    background:rgba(255,255,255,.1);border-color:rgba(229,244,223,.34);color:white;
+  }
+  html[data-izzy-design="atlas"] :is(.supplier-dash,.dropshipper-dash) .workspace-topbar .account-chip{
+    min-width:0;flex:1;
+  }
+  html[data-izzy-design="atlas"] :is(.supplier-dash,.dropshipper-dash) .workspace-topbar .account-chip :is(b,small){
+    color:#f2f7e8;
+  }
+  html[data-izzy-design="atlas"] :is(.supplier-dash,.dropshipper-dash) .workspace-topbar .account-avatar{
+    background:var(--atlas-green);color:#214436;
+  }
+  html[data-izzy-design="atlas"] :is(.supplier-dash,.dropshipper-dash)>.main>.status,
+  html[data-izzy-design="atlas"] :is(.supplier-dash,.dropshipper-dash)>.main>.view{
+    grid-column:2;min-width:0;
+  }
+  html[data-izzy-design="atlas"] :is(.supplier-dash,.dropshipper-dash)>.main>.status{margin-top:0}
+  html[data-izzy-design="atlas"] .workspace-topbar .notification-panel{
+    z-index:85;background:var(--card);color:var(--text);box-shadow:0 20px 50px rgba(0,0,0,.2);
+  }
+  html[data-izzy-design="atlas"] .workspace-topbar .notification-panel b{color:var(--text)}
+}
+/* Card hierarchy: supplier dashboard becomes a magazine-style bento. */
+@media(min-width:1081px){
+  html[data-izzy-design="atlas"] .supplier-stat-grid{
+    grid-template-columns:1.12fr .9fr .9fr;grid-template-rows:repeat(2,minmax(145px,1fr));
+    gap:15px;
+  }
+  html[data-izzy-design="atlas"] .supplier-stat-grid>.supplier-stat-card:nth-child(1){grid-column:1;grid-row:1/3}
+  html[data-izzy-design="atlas"] .supplier-stat-grid>.supplier-stat-card:nth-child(2){grid-column:2/4;grid-row:1}
+  html[data-izzy-design="atlas"] .supplier-stat-grid>.supplier-stat-card:nth-child(3){grid-column:2;grid-row:2}
+  html[data-izzy-design="atlas"] .supplier-stat-grid>.supplier-stat-card:nth-child(4){grid-column:3;grid-row:2}
+  html[data-izzy-design="atlas"] .supplier-stat-grid>.supplier-stat-card:nth-child(1) strong{font-size:clamp(68px,7vw,110px);margin-top:23px}
+}
+html[data-izzy-design="atlas"] .supplier-stat-card{
+  text-align:start;border-radius:3px 25px 3px 25px;min-height:145px;
+  padding:clamp(16px,2vw,25px);display:flex;flex-direction:column;align-items:flex-start;
+  justify-content:space-between;gap:8px;transition:transform .15s ease;
+}
+html[data-izzy-design="atlas"] .supplier-stat-card:hover{transform:translateY(-3px)}
+html[data-izzy-design="atlas"] .supplier-stat-card:nth-child(1){
+  color:#f9f2db;background:var(--atlas-ink);
+}
+html[data-izzy-design="atlas"] .supplier-stat-card:nth-child(1) :is(strong,span,small){color:#f9f2db}
+html[data-izzy-design="atlas"] .supplier-stat-card:nth-child(2){
+  background:#f3d9c9;color:#482820;border-color:#ebc5b0;
+}
+html[data-izzy-design="atlas"] .supplier-stat-card:nth-child(2) :is(strong,span,small){color:#482820}
+html[data-izzy-design="atlas"] .supplier-stat-card strong{
+  font-size:clamp(37px,4vw,59px);letter-spacing:-.07em;line-height:1;
+}
+html[data-izzy-design="atlas"] .supplier-overview-grid{
+  grid-template-columns:minmax(0,1.25fr) minmax(0,.75fr);gap:15px;
+}
+html[data-izzy-design="atlas"] .attention-card,
+html[data-izzy-design="atlas"] .today-card{border-radius:3px 28px 3px 28px}
+html[data-izzy-design="atlas"] .today-card{background:var(--soft)}
+html[data-izzy-design="atlas"] .section-heading h2{font-size:clamp(28px,2.8vw,45px);letter-spacing:-.065em}
+html[data-izzy-design="atlas"] .supplier-product-table-head{background:var(--atlas-ink);color:#fff3de}
+html[data-izzy-design="atlas"] .supplier-table-wrap{border-radius:3px 22px 3px 22px}
+html[data-izzy-design="atlas"] .supplier-table-product .supplier-product-thumb{border-radius:4px 15px 4px 15px}
+html[data-izzy-design="atlas"] .supplier-order-card{border-radius:4px 26px 4px 26px}
+html[data-izzy-design="atlas"] .filter-chip{
+  border-radius:3px 13px 3px 13px;padding:10px 14px;
+}
+html[data-izzy-design="atlas"] .filter-chip.on{
+  background:var(--atlas-ink);color:#f9f2db;border-color:var(--atlas-ink);
+}
+html[data-izzy-design="atlas"] .dropshipper-product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+html[data-izzy-design="atlas"] .dropshipper-product-card{
+  border-radius:4px 26px 4px 26px;overflow:hidden;padding:0;
+}
+html[data-izzy-design="atlas"] .dropshipper-product-card .product-image{height:235px}
+html[data-izzy-design="atlas"] .dropshipper-product-card .product-body{padding:24px}
+html[data-izzy-design="atlas"] .dropshipper-product-card:first-child{
+  grid-column:span 2;
+  display:grid;grid-template-columns:1.15fr 1fr;align-items:stretch;
+}
+html[data-izzy-design="atlas"] .dropshipper-product-card:first-child .product-image{height:100%;min-height:290px}
+html[data-izzy-design="atlas"] .dropshipper-product-card:first-child .product-body{
+  justify-content:center;padding:clamp(24px,3vw,40px);
+}
+html[data-izzy-design="atlas"] .dropshipper-toolbar{grid-template-columns:minmax(180px,1fr) auto auto;gap:10px}
+html[data-izzy-design="atlas"] .dropshipper-toolbar.simple-toolbar{grid-template-columns:minmax(200px,1fr) minmax(125px,auto) auto}
+html[data-izzy-design="atlas"] .dropshipper-toolbar .search-wrap{border-radius:4px 13px 4px 13px}
+html[data-izzy-design="atlas"] .product-card-actions .btn{border-radius:3px 12px 3px 12px}
+
+/* Change the Settings relationship: nav becomes a chapter strip with one prominent content canvas. */
+html[data-izzy-design="atlas"] .settings-layout{display:grid;grid-template-columns:1fr;gap:16px}
+html[data-izzy-design="atlas"] .settings-menu{
+  position:static;display:flex;flex-wrap:wrap;align-items:center;gap:5px;
+  border-radius:3px 22px 3px 22px;padding:11px;background:var(--soft);
+}
+html[data-izzy-design="atlas"] .settings-menu button{
+  flex:1 1 auto;min-height:47px;border-radius:3px 13px 3px 13px;
+  font-size:13px;color:var(--text);text-align:center;
+}
+html[data-izzy-design="atlas"] .settings-menu button.on{
+  background:var(--atlas-ink);color:#f9f2db;
+}
+html[data-izzy-design="atlas"] .settings-head h2{
+  font-size:clamp(36px,4vw,58px);letter-spacing:-.065em;
+}
+html[data-izzy-design="atlas"] .settings-card{border-radius:3px 30px 3px 30px;padding:clamp(18px,3vw,37px)}
+html[data-izzy-design="atlas"] .settings-card h3{font-size:clamp(27px,2.6vw,38px);letter-spacing:-.05em}
+html[data-izzy-design="atlas"] .form-section{
+  border-radius:3px 28px 3px 28px;
+}
+html[data-izzy-design="atlas"] .form-section-title{border-bottom:1px solid var(--line);padding-bottom:14px}
+html[data-izzy-design="atlas"] .form-section-number{
+  border-radius:50%;background:var(--atlas-orange);color:#192c26;
+}
+html[data-izzy-design="atlas"] .product-wizard-step,
+html[data-izzy-design="atlas"] .variant-section,
+html[data-izzy-design="atlas"] .variant-choice-card{border-radius:3px 25px 3px 25px}
+html[data-izzy-design="atlas"] .variant-page-head h1{font-size:clamp(37px,4vw,65px);letter-spacing:-.065em}
+html[data-izzy-design="atlas"] .variant-publish{border-radius:4px 22px 4px 22px;background:var(--card)}
+html[data-izzy-design="atlas"] .photo-upload{border:2px dashed #94b2a4;border-radius:4px 22px 4px 22px;background:var(--soft)}
+html[data-izzy-design="atlas"] .product-main-gallery{border-radius:4px 32px 4px 32px}
+
+/* Authentication has an editorial masthead + form treatment */
+html[data-izzy-design="atlas"] .auth-nav{background:var(--atlas-ink);color:#fff9e8;border-radius:3px 28px 3px 28px;padding:15px 22px}
+html[data-izzy-design="atlas"] .auth-story h1{font-size:clamp(50px,5.8vw,89px);line-height:.97;letter-spacing:-.07em}
+html[data-izzy-design="atlas"] .auth-card{border-radius:4px 38px 4px 38px}
+html[data-izzy-design="atlas"] .auth-story-point{border-radius:2px 20px 2px 20px}
+html[data-izzy-design="atlas"] .tabs .tab{border-radius:3px 12px 3px 12px}
+html[data-izzy-design="atlas"] .tabs .tab.on{background:var(--atlas-ink);color:#f9f2db}
+
+/* Dark mode safety: the old theme has high-specificity black/white rules. */
+html[data-izzy-design="atlas"][data-theme="dark"] :is(.panel,.card,.choice,.side,.auth-card,.modal-card,.list-row,.settings-menu){
+  background:var(--card);color:var(--text);border-color:var(--line);box-shadow:var(--atlas-shadow);
+}
+html[data-izzy-design="atlas"][data-theme="dark"] .btn{
+  background:var(--brand);color:#172921;box-shadow:none;
+}
+html[data-izzy-design="atlas"][data-theme="dark"] .btn.secondary{
+  background:var(--soft);color:var(--text);
+}
+html[data-izzy-design="atlas"][data-theme="dark"] .btn.ghost{
+  background:transparent;color:var(--text);
+}
+html[data-izzy-design="atlas"][data-theme="dark"] .nav .navlinks .btn:not(.ghost){background:var(--atlas-orange);color:#192822}
+html[data-izzy-design="atlas"][data-theme="dark"] .hero-actions .btn{
+  background:var(--atlas-orange);color:#183229;
+}
+html[data-izzy-design="atlas"][data-theme="dark"] .hero-actions .btn.secondary{
+  background:transparent;color:#f8f5e9;
+}
+html[data-izzy-design="atlas"][data-theme="dark"] .brand-mark{
+  background:var(--atlas-orange);color:#20382d;
+}
+html[data-izzy-design="atlas"][data-theme="dark"] .supplier-stat-card:nth-child(1){
+  background:#214a42;color:#fff2dc;
+}
+html[data-izzy-design="atlas"][data-theme="dark"] .supplier-stat-card:nth-child(2){
+  background:#704937;color:#fff0da;
+}
+html[data-izzy-design="atlas"][data-theme="dark"] .supplier-stat-card:nth-child(2) :is(strong,span,small){color:#fff0da}
+html[data-izzy-design="atlas"][data-theme="dark"] .settings-menu button.on,
+html[data-izzy-design="atlas"][data-theme="dark"] .side nav button.on,
+html[data-izzy-design="atlas"][data-theme="dark"] .filter-chip.on{
+  background:#27675b;color:#fff9ea;
+}
+html[data-izzy-design="atlas"][data-theme="dark"] :is(.search,.control,.form input,.form select,.form textarea){
+  background:var(--card);color:var(--text);border-color:var(--line);
+}
+
+/* Phone: no desktop ribbon, preserve existing verified mobile drawer.
+   Introduce a high-impact full-width masthead and stacked content. */
+@media(max-width:850px){
+  html[data-izzy-design="atlas"] .nav{
+    min-height:67px;margin-block:9px 18px;border-radius:3px 23px 3px 23px;padding:9px 13px;
+  }
+  html[data-izzy-design="atlas"] .nav .brand-mark{width:34px;height:34px;font-size:12px}
+  html[data-izzy-design="atlas"] .nav .brand-word{font-size:20px;color:#fff9e8}
+  html[data-izzy-design="atlas"] .hero{
+    grid-template-columns:1fr;padding:clamp(27px,6vw,50px);
+    border-radius:5px 42px 5px 42px;gap:25px;
+  }
+  html[data-izzy-design="atlas"] .hero h1{font-size:clamp(53px,10.5vw,79px)}
+  html[data-izzy-design="atlas"] .hero .panel.flow{margin-top:9px;padding:13px 19px}
+  html[data-izzy-design="atlas"] #choose{
+    grid-template-columns:1fr;grid-template-rows:auto;gap:9px;
+  }
+  html[data-izzy-design="atlas"] #choose>.choice-grid{grid-column:1;grid-row:auto;margin-top:18px}
+  html[data-izzy-design="atlas"] #choose>p{max-width:none}
+  html[data-izzy-design="atlas"] .choice{grid-template-columns:115px minmax(0,1fr)}
+  html[data-izzy-design="atlas"] :is(.supplier-dash,.dropshipper-dash){
+    grid-template-columns:minmax(0,1fr);gap:0;padding-top:0;
+  }
+  html[data-izzy-design="atlas"] :is(.supplier-dash,.dropshipper-dash)>.main{
+    display:block;min-width:0;
+  }
+  html[data-izzy-design="atlas"] :is(.supplier-dash,.dropshipper-dash) .workspace-topbar{
+    display:flex;flex-direction:column;align-items:stretch;gap:23px;
+    margin:0 0 19px;padding:clamp(24px,5vw,35px);
+    background:var(--atlas-ink);border:none;
+    border-radius:3px 35px 3px 35px;
+  }
+  html[data-izzy-design="atlas"] .workspace-topbar h1{
+    color:#fff8e9;font-size:clamp(43px,8vw,66px);line-height:1.02;letter-spacing:-.065em;
+  }
+  html[data-izzy-design="atlas"] .workspace-topbar p{color:#c8dcd0;font-size:14px}
+  html[data-izzy-design="atlas"] .workspace-topbar .workspace-brand{
+    background:var(--atlas-orange);color:#253426;
+  }
+  html[data-izzy-design="atlas"] .workspace-topbar :is(.supplier-top-actions,.dropshipper-top-actions){
+    width:100%;gap:10px;justify-content:flex-start;
+  }
+  html[data-izzy-design="atlas"] .workspace-topbar .account-chip,
+  html[data-izzy-design="atlas"] .workspace-topbar .notification-bell{
+    background:rgba(255,255,255,.1);border:1px solid rgba(240,245,221,.3);color:#fff;
+  }
+  html[data-izzy-design="atlas"] .workspace-topbar .account-chip{
+    flex:1;min-width:0;
+  }
+  html[data-izzy-design="atlas"] .workspace-topbar .account-chip :is(b,small){color:#f5f6e9}
+  html[data-izzy-design="atlas"] .workspace-topbar .account-avatar{background:var(--atlas-green);color:#214436}
+  html[data-izzy-design="atlas"] .workspace-topbar .notification-panel{background:var(--card);color:var(--text)}
+  html[data-izzy-design="atlas"] :is(.supplier-mobile-nav-toggle,.dropshipper-mobile-nav-toggle):not([hidden]){
+    background:var(--atlas-orange);color:#22372b;border-radius:2px 12px 2px 12px;border:0;
+  }
+  html[data-izzy-design="atlas"] :is(.supplier-side,.dropshipper-side).is-mobile-open{background:var(--card);color:var(--text)}
+  html[data-izzy-design="atlas"] :is(.supplier-side,.dropshipper-side) .side-brand{color:var(--text)}
+  html[data-izzy-design="atlas"] :is(.supplier-side,.dropshipper-side) nav button.on{background:var(--atlas-ink);color:#fff6e8}
+  html[data-izzy-design="atlas"] .supplier-stat-grid{grid-template-columns:1fr 1fr;gap:11px}
+  html[data-izzy-design="atlas"] .supplier-stat-card{min-height:135px}
+  html[data-izzy-design="atlas"] .supplier-overview-grid{grid-template-columns:1fr}
+  html[data-izzy-design="atlas"] .dropshipper-product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  html[data-izzy-design="atlas"] .settings-layout{grid-template-columns:1fr}
+  html[data-izzy-design="atlas"] .settings-menu{display:flex;flex-wrap:wrap}
+}
+@media(max-width:570px){
+  html[data-izzy-design="atlas"] .wrap{padding-inline:14px}
+  html[data-izzy-design="atlas"] .navlinks .ghost{display:none}
+  html[data-izzy-design="atlas"] .hero{padding:32px 22px}
+  html[data-izzy-design="atlas"] .hero h1{font-size:clamp(45px,12vw,71px)}
+  html[data-izzy-design="atlas"] .hero p{font-size:15px;line-height:1.7}
+  html[data-izzy-design="atlas"] .hero .flow-step{
+    grid-template-columns:43px minmax(0,1fr);gap:5px 10px;
+  }
+  html[data-izzy-design="atlas"] .choice{
+    grid-template-columns:1fr;gap:8px;min-height:0;padding:25px 17px;
+  }
+  html[data-izzy-design="atlas"] .choice .tag{grid-row:auto}
+  html[data-izzy-design="atlas"] .choice p{grid-column:1}
+  html[data-izzy-design="atlas"] .choice h3{font-size:29px}
+  html[data-izzy-design="atlas"] .catalog-head{gap:15px}
+  html[data-izzy-design="atlas"] .section h2{font-size:clamp(37px,9vw,51px)}
+  html[data-izzy-design="atlas"] .workspace-topbar{padding:28px 22px}
+  html[data-izzy-design="atlas"] .workspace-topbar h1{font-size:clamp(41px,11vw,55px)}
+  html[data-izzy-design="atlas"] .supplier-stat-grid{grid-template-columns:1fr 1fr}
+  html[data-izzy-design="atlas"] .supplier-stat-card{min-height:133px;padding:15px}
+  html[data-izzy-design="atlas"] .supplier-stat-card strong{font-size:37px}
+  html[data-izzy-design="atlas"] .dropshipper-product-grid{grid-template-columns:1fr}
+  html[data-izzy-design="atlas"] .settings-menu button{flex:1 1 42%;font-size:12px}
+  html[data-izzy-design="atlas"] .settings-card{padding:19px}
+  html[data-izzy-design="atlas"] .form-section{padding:18px}
+  html[data-izzy-design="atlas"] .product-grid{grid-template-columns:1fr}
+}
+/* Existing AR localization remains responsible for content.
+   Atlas layout mirrors its reading direction, no text content changes. */
+html[dir="rtl"][data-izzy-design="atlas"] .choice:after{right:auto;left:20px;content:"↖"}
+html[dir="rtl"][data-izzy-design="atlas"] .side-brand{padding:0 0 0 22px;border-right:0;border-left:1px solid var(--line)}
+html[dir="rtl"][data-izzy-design="atlas"] .supplier-product-table-head{text-align:right}
+html[dir="rtl"][data-izzy-design="atlas"] .workspace-topbar{text-align:right}
+@media(prefers-reduced-motion:reduce){
+  html[data-izzy-design="atlas"] :is(.choice,.btn,.supplier-stat-card){transition:none}
+}
