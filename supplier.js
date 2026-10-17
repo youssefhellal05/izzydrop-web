@@ -40,7 +40,8 @@
     nav.classList.toggle('is-mobile-open',open);
     backdrop.hidden=!open;
     toggle.setAttribute('aria-expanded',String(open));
-    toggle.setAttribute('aria-label',open?'Close navigation menu':'Open navigation menu');
+    const arabic=window.IZZY_I18N?.isArabic?.()===true;
+    toggle.setAttribute('aria-label',open?(arabic?'إغلاق قائمة التنقل':'Close navigation menu'):(arabic?'فتح قائمة التنقل':'Open navigation menu'));
     if(!open&&focusedInside&&supplierMobileNavQuery.matches)toggle.focus({preventScroll:true});
     nav.inert=supplierMobileNavQuery.matches&&!open;
     document.body.classList.toggle('supplier-mobile-nav-open',open);
@@ -2076,6 +2077,10 @@
   $('#bulk-pause-products').onclick=()=>bulkSetProductStatus('inactive');
 
   document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>go(b.dataset.view));
+  if(window.IZZY_I18N?.isArabic?.()){
+    $('#supplier-mobile-nav-toggle span').textContent='القائمة';
+    $('#supplier-mobile-nav-close').setAttribute('aria-label','إغلاق قائمة التنقل');
+  }
   $('#supplier-mobile-nav-toggle').onclick=e=>{
     e.stopPropagation();
     setSupplierMobileNavOpen(!$('#supplier-mobile-navigation').classList.contains('is-mobile-open'));
