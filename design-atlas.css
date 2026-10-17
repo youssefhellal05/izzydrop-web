@@ -14,7 +14,7 @@ html[data-izzy-design="atlas"]{
 html[data-izzy-design="atlas"][data-theme="dark"]{
   --bg:#101917;--card:#182421;--text:#edf3e8;--muted:#a7bab0;
   --line:#364940;--soft:#24362f;--brand:#b2ebd0;--brand-soft:#254a43;
-  --accent:#ff956f;--accent-soft:#573b2e;--atlas-ink:#d5eadc;
+  --accent:#ff956f;--accent-soft:#573b2e;--atlas-ink:#22463e;
   --atlas-paper:#182421;--atlas-rule:#3e5649;--atlas-green:#d0eda9;
   --atlas-shadow:0 16px 38px rgba(0,0,0,.22);
 }
@@ -244,7 +244,7 @@ html[data-izzy-design="atlas"] .footer{margin-block:14px 0;border-top:2px solid 
     gap:0 25px;align-items:start;min-width:0;
   }
   html[data-izzy-design="atlas"] :is(.supplier-dash,.dropshipper-dash) .workspace-topbar{
-    grid-column:1;grid-row:1/200;
+    grid-column:1;grid-row:1/span 2;
     position:sticky;top:15px;z-index:3;
     display:flex;flex-direction:column;align-items:stretch;justify-content:space-between;
     gap:35px;margin:0;padding:34px 23px 25px;min-height:425px;
