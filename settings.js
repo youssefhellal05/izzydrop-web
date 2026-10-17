@@ -75,7 +75,7 @@
               <span class="switch"></span>
             </label>
             <div class="security-row settings-language-row">
-              <div><b>Language</b><small>Choose the IzzyDrop interface language on this device.</small></div>
+              <div><b>Language</b><small>Choose the IzzyDrop interface language for your account.</small></div>
               <div class="settings-language-choice">
                 <button type="button" class="settings-language-btn" data-settings-language="en">English</button>
                 <button type="button" class="settings-language-btn" data-settings-language="ar">العربية</button>
@@ -116,7 +116,34 @@
   const currentLanguage=window.IZZY_I18N?.lang?.()||'en';
   document.querySelectorAll('[data-settings-language]').forEach(btn=>{
     btn.classList.toggle('on',btn.dataset.settingsLanguage===currentLanguage);
-    btn.onclick=()=>window.IZZY_I18N?.set?.(btn.dataset.settingsLanguage);
+    btn.onclick=async()=>{
+      const next=btn.dataset.settingsLanguage;
+      if(next===window.IZZY_I18N?.lang?.())return;
+      const buttons=[...document.querySelectorAll('[data-settings-language]')];
+      buttons.forEach(b=>b.disabled=true);
+      try{
+        const updatedUser=await IZZY.request('/auth/v1/user',{
+          method:'PUT',
+          body:JSON.stringify({data:{preferred_language:next}})
+        });
+        const latest=IZZY.session();
+        if(latest?.user?.id===uid){
+          latest.user={
+            ...latest.user,...updatedUser,
+            user_metadata:{
+              ...(latest.user.user_metadata||{}),
+              ...(updatedUser?.user_metadata||{}),
+              preferred_language:next
+            }
+          };
+          IZZY.saveSession(latest);
+        }
+        window.IZZY_I18N?.set?.(next);
+      }catch(err){
+        status(err.message||'Could not update language.',true);
+        buttons.forEach(b=>b.disabled=false);
+      }
+    };
   });
 
   const status=(text,bad=false)=>{const e=document.getElementById('settings-status');e.textContent=text;e.className='status'+(bad?' bad':'')};

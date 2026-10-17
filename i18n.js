@@ -2,7 +2,13 @@
   const KEY='izzy_language';
   const saved=localStorage.getItem(KEY);
   const browser=(navigator.language||'').toLowerCase();
-  let lang=saved==='ar'||saved==='en'?saved:(browser.startsWith('ar')?'ar':'en');
+  // Prefer the signed-in user's account setting; retain the device preference
+  // for visitors and older accounts without an explicit language selection.
+  const accountLang=(()=>{
+    try{return JSON.parse(localStorage.getItem('izzy_session')||'null')?.user?.user_metadata?.preferred_language}
+    catch{return null}
+  })();
+  let lang=accountLang==='ar'||accountLang==='en'?accountLang:(saved==='ar'||saved==='en'?saved:(browser.startsWith('ar')?'ar':'en'));
 
   const exactAr={
     'Public site':'الموقع العام',
@@ -10,6 +16,9 @@
     'Log in / Sign up':'تسجيل الدخول / إنشاء حساب',
     'Log in':'تسجيل الدخول',
     'Create account':'إنشاء حساب',
+    'Choose your language':'اختر لغتك',
+    'Choose a language':'اختر اللغة',
+    'Choose the IzzyDrop interface language for your account.':'اختر لغة واجهة IzzyDrop لحسابك.',
     'Welcome back':'مرحبًا بعودتك',
     'Create your IzzyDrop account':'أنشئ حسابك على IzzyDrop',
     'Email':'البريد الإلكتروني',
@@ -935,23 +944,6 @@
     document.body?.classList.toggle('rtl',lang==='ar');
   }
 
-  function ensureToggle(){
-    if(document.querySelector('[data-language-toggle]'))return;
-    const host=document.querySelector('.auth-nav-actions')||document.querySelector('.navlinks')||document.querySelector('.supplier-top-actions');
-    if(!host)return;
-    const btn=document.createElement('button');
-    btn.type='button';
-    btn.className='language-toggle';
-    btn.dataset.languageToggle='1';
-    btn.textContent=lang==='ar'?'English':'العربية';
-    btn.setAttribute('aria-label',lang==='ar'?'Switch to English':'التبديل إلى العربية');
-    btn.onclick=()=>{
-      localStorage.setItem(KEY,lang==='ar'?'en':'ar');
-      location.reload();
-    };
-    host.appendChild(btn);
-  }
-
   applyDirection();
   window.IZZY_I18N={
     lang:()=>lang,
@@ -967,7 +959,6 @@
   const boot=()=>{
     applyDirection();
     scan(document.body);
-    ensureToggle();
     const observer=new MutationObserver(muts=>{
       for(const m of muts){
         m.addedNodes.forEach(n=>scan(n));
