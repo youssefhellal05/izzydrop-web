@@ -1,0 +1,25 @@
+name: IzzyDrop V2 visual preview safety
+on:
+  pull_request:
+    paths:
+      - 'design-preview.js'
+      - 'design-v2.css'
+      - 'qa/design-v2-preview.test.cjs'
+      - '.github/workflows/design-v2-preview.yml'
+      - '*.html'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  preview-static-safety:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check preview controller syntax
+        run: node --check design-preview.js
+      - name: Verify V1 isolation and V2 continuity
+        run: node --test qa/design-v2-preview.test.cjs
