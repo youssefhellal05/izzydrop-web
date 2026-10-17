@@ -39,9 +39,10 @@
   }
 
   // Pilot-specific signup path; preserves the established login and session implementation.
-  async function signupWithPilotTerms({email,password,fullName,businessName,type,termsAccepted,termsVersion}){
+  async function signupWithPilotTerms({email,password,fullName,businessName,type,preferredLanguage,termsAccepted,termsVersion}){
     if(termsAccepted!==true||termsVersion!==PILOT_TERMS_VERSION)throw Error('Please accept the current IzzyDrop policies.');
     if(!['supplier','dropshipper'].includes(type))throw Error('Choose an account type.');
+    if(!['en','ar'].includes(preferredLanguage))throw Error('Choose your language.');
     const C=IZZY.config;
     const redirectTo=new URL('login.html',location.href).href;
     const response=await fetch(C.supabaseUrl+'/auth/v1/signup?redirect_to='+encodeURIComponent(redirectTo),{
@@ -49,7 +50,8 @@
       headers:{apikey:C.supabaseKey,'Content-Type':'application/json'},
       body:JSON.stringify({email,password,data:{
         full_name:fullName,business_name:businessName,requested_account_type:type,
-        pilot_terms_accepted:true,pilot_terms_version:termsVersion
+        pilot_terms_accepted:true,pilot_terms_version:termsVersion,
+        preferred_language:preferredLanguage
       }})
     });
     const raw=await response.text();
@@ -255,6 +257,14 @@
       return;
     }
 
+    const signupLanguage=$('#signup-language').value;
+    if(!['en','ar'].includes(signupLanguage)){
+      st.textContent='Choose your language before creating an account.';
+      st.className='status auth-status bad';
+      $('#signup-language').focus();
+      return;
+    }
+
     const password=$('#signup-password').value;
     if(password.length<8){
       st.textContent='Use at least 8 characters for your password.';
@@ -273,10 +283,13 @@
         fullName:$('#signup-name').value.trim(),
         businessName:business,
         type:signupRole,
+        preferredLanguage:signupLanguage,
         termsAccepted:true,
         termsVersion:PILOT_TERMS_VERSION
       });
 
+      // Keep the signup choice on this device, including when email confirmation is required.
+      localStorage.setItem('izzy_language',signupLanguage);
       if(d?.access_token){
         await route();
       }else{
