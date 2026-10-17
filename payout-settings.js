@@ -60,6 +60,10 @@
     const showBank=m==='bank_transfer';
     bankFields.hidden=!showBank;
     bank.required=showBank;
+    // Payout method changes update placeholders in place; the global text-node
+    // observer does not watch attribute changes, so translate them explicitly.
+    window.IZZY_I18N?.scan?.(destinationLabel);
+    window.IZZY_I18N?.scan?.(destination);
   };
   method.addEventListener('change',updateFields);
   updateFields();
