@@ -796,6 +796,43 @@
     'Complete all required payout fields.':'أكمل جميع حقول استلام الأرباح المطلوبة.',
     'Could not save payout details.':'تعذّر حفظ بيانات استلام الأرباح.',
     'Sending reset email…':'جارٍ إرسال رسالة إعادة تعيين كلمة المرور…',
+    'Details IzzyDrop uses for your supplier account.':'البيانات التي يستخدمها IzzyDrop لإدارة حسابك كمورّد.',
+    'Keep your store identity simple and up to date.':'حافظ على بيانات متجرك واضحة ومحدّثة.',
+    '(optional)':'(اختياري)',
+    'Master switch for supplier emails.':'التحكّم الرئيسي في رسائل البريد الإلكتروني للمورّد.',
+    'When a dropshipper sends you a new fulfillment request.':'عندما يرسل إليك دروبشيبر طلب تنفيذ جديدًا.',
+    'When an order containing your product is cancelled.':'عند إلغاء طلب يحتوي على أحد منتجاتك.',
+    'Warn me when stock falls to my chosen level.':'نبّهني عندما يصل المخزون إلى الحد الذي حددته أو يقل عنه.',
+    'Important changes affecting your listed products.':'التغييرات المهمة التي تؤثر على منتجاتك المعروضة.',
+    'Marketplace and supplier updates that matter.':'أخبار وتحديثات مهمة للسوق والمورّدين.',
+    'These switches control your in-app supplier alerts now. Email delivery will use the same preferences when supplier email notifications are connected.':'تتحكّم هذه الخيارات حاليًا في تنبيهات المورّد داخل IzzyDrop. وعند تفعيل إشعارات البريد الإلكتروني للمورّدين، ستستخدم الإعدادات نفسها.',
+    'Use a darker IzzyDrop interface that is easier on the eyes at night.':'استخدم واجهة داكنة من IzzyDrop لتكون أكثر راحة للعين ليلًا.',
+    'Marketplace workspace':'مساحة عمل السوق',
+    'Sign out everywhere':'تسجيل الخروج من كل الأجهزة',
+    'Find products missing from IzzyDrop. Start sourcing, create the product normally when ready, then link your published product here.':'ابحث عن منتجات غير متوفرة على IzzyDrop. ابدأ التوريد، وأنشئ المنتج بالطريقة المعتادة عندما يصبح جاهزًا، ثم اربط المنتج المنشور بهذا الطلب.',
+    'See supplier earnings, IzzyDrop commission, and payout status for COD orders.':'اعرض أرباح المورّد وعمولة IzzyDrop وحالة صرف المستحقات لطلبات الدفع عند الاستلام.',
+    'Track supplier earnings and IzzyDrop commission.':'تابع أرباح المورّد وعمولة IzzyDrop.',
+    'Checking your IzzyDrop supplier account.':'جارٍ التحقق من حسابك كمورّد على IzzyDrop.',
+    'Load older orders':'تحميل طلبات أقدم',
+    'Enter both prices to preview the margin before delivery.':'أدخل السعرين لمعاينة هامش الربح قبل احتساب التوصيل.',
+    'Enter stock for the normal product. Only open the variant builder when this product genuinely has multiple versions.':'أدخل مخزون المنتج العادي. افتح أداة إنشاء الخيارات فقط إذا كان لهذا المنتج نسخ مختلفة بالفعل.',
+    'This product has multiple variants?':'هل يتوفر هذا المنتج بعدة خيارات؟',
+    'Use the separate variant builder for choices like color, size, model, storage, or material.':'استخدم أداة إنشاء الخيارات المنفصلة للألوان والمقاسات والموديلات والسعات والخامات.',
+    'Create multiple-variant product':'إنشاء منتج بخيارات متعددة',
+    '← Back to single product':'← العودة إلى منتج بخيار واحد',
+    'You are now building a multiple-variant product.':'أنت الآن تنشئ منتجًا بعدة خيارات.',
+    'SUPPLIER PRODUCT':'منتج المورّد',
+    'Marketplace status':'حالة المنتج في السوق',
+    'Delivery':'التوصيل',
+    'Managed by IzzyDrop':'يتولى IzzyDrop إدارته',
+    'Suppliers do not set customer delivery fees.':'لا يحدد المورّدون رسوم توصيل العملاء.',
+    'Update inventory, availability, and the photo shown for each variant.':'حدّث المخزون والتوفّر والصورة المعروضة لكل خيار.',
+    'Enter the stock available for this single-version product.':'أدخل المخزون المتاح لهذا المنتج ذي النسخة الواحدة.',
+    'Need colors, sizes, or other options?':'هل تحتاج إلى ألوان أو مقاسات أو خيارات أخرى؟',
+    'Variant products use their own dedicated creation page.':'تُنشأ المنتجات متعددة الخيارات من خلال صفحة مخصّصة لها.',
+    'Create variant product':'إنشاء منتج بخيارات',
+    'Track actual COD profit and payout status.':'تابع الأرباح الفعلية من الدفع عند الاستلام وحالة صرف المستحقات.',
+    'Open your workspace…':'جارٍ فتح مساحة عملك…',
     'English':'English',
     'Arabic':'العربية'
   };
@@ -813,6 +850,7 @@
     'InstaPay address or account number':'عنوان إنستاباي أو رقم الحساب',
     'Account number or IBAN':'رقم الحساب أو IBAN',
     'Bank name':'اسم البنك',
+    'Registration number':'رقم التسجيل',
     'Your name':'اسمك',
     'Your store or business':'اسم متجرك أو نشاطك',
     'Your supplier business name':'اسم نشاطك كمورّد',
@@ -921,6 +959,8 @@
     }
     const stock=trimmed.match(/^(\d+) in stock$/i);
     if(stock){node.nodeValue=raw.replace(trimmed,`${stock[1]} متوفر`);return}
+    const essentials=trimmed.match(/^(\d+) of (\d+) essentials ready$/i);
+    if(essentials){node.nodeValue=raw.replace(trimmed,`${essentials[1]} من ${essentials[2]} متطلبات أساسية جاهزة`);return}
     const shown=trimmed.match(/^(\d+) products? shown$/i);
     if(shown){node.nodeValue=raw.replace(trimmed,`${shown[1]} منتج معروض`);return}
     const available=trimmed.match(/^(\d+) products? available$/i);
