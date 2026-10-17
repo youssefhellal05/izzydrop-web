@@ -752,7 +752,7 @@
     'Select all shown':'تحديد كل المنتجات المعروضة',
     'Activate selected':'تفعيل المحدد',
     'Pause selected':'إيقاف المحدد',
-    'Clear':'مسح التحديد',
+    'Clear':'مسح',
     'No products found':'لا توجد منتجات',
     'Add your first product or change the current filters.':'أضف منتجك الأول أو غيّر عوامل التصفية الحالية.',
     'View':'عرض',
