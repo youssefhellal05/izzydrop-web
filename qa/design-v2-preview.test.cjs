@@ -51,7 +51,7 @@ test('blocked sessionStorage does not enable V2 by default',()=>{
 test('every primary page includes matching preview assets exactly once',()=>{
   for(const name of pages){
     const html=fs.readFileSync(name,'utf8');
-    assert.equal((html.match(/design-preview\.js\?v=20261017-pulse1/g)||[]).length,1,name);
+    assert.equal((html.match(/design-preview\.js\?v=20261017-(?:pulse1|atlas1)/g)||[]).length,1,name);
     assert.equal((html.match(/design-v2\.css\?v=20261017-pulse1/g)||[]).length,1,name);
     assert.ok(html.indexOf('design-preview.js')<html.indexOf('</head>'),name);
     assert.ok(html.indexOf('design-v2.css')<html.indexOf('</head>'),name);

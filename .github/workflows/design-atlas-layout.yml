@@ -1,0 +1,29 @@
+name: IzzyDrop Atlas layout isolation
+on:
+  pull_request:
+    paths:
+      - 'design-preview.js'
+      - 'design-atlas.css'
+      - 'qa/design-atlas-layout.test.cjs'
+      - '.github/workflows/design-atlas-layout.yml'
+      - '*.html'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  atlas-safety:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax verification
+        run: node --check design-preview.js
+      - name: Verify exact V1 markup parity and independent design switching
+        run: node --test qa/design-atlas-layout.test.cjs
+      - name: Verify existing V2 controller tests still pass
+        run: node --test qa/design-v2-preview.test.cjs
