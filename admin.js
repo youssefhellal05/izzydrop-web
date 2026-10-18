@@ -1,11 +1,12 @@
 (()=>{
   const $=s=>document.querySelector(s);
-  let VERIFICATIONS=[],SUPPLIERS=[],PROFILES=[],PRODUCTS=[],VARIANTS=[],IMAGES=[],ORDERS=[],ITEMS=[],DROPSHIPPERS=[],AUDIT=[],ADMINS=[],SETTLEMENTS=[],SHIPPING_SETTINGS={},ORDER_SHIPPING=[],ADMIN_METRICS={},DEFAULT_COMMISSION=0,SELECTED_SUPPLIER=null,SESSION=null,ORDER_OPEN_ONLY=false,ORDER_HAS_MORE=false;
+  let VERIFICATIONS=[],IDENTITY_VERIFICATIONS=[],SUPPLIERS=[],PROFILES=[],PRODUCTS=[],VARIANTS=[],IMAGES=[],ORDERS=[],ITEMS=[],DROPSHIPPERS=[],AUDIT=[],ADMINS=[],SETTLEMENTS=[],SHIPPING_SETTINGS={},ORDER_SHIPPING=[],ADMIN_METRICS={},DEFAULT_COMMISSION=0,SELECTED_SUPPLIER=null,SESSION=null,ORDER_OPEN_ONLY=false,ORDER_HAS_MORE=false;
   const ORDER_PAGE_SIZE=50;
 
   const VIEW_COPY={
     overview:['Overview','Monitor the marketplace and handle what needs attention.'],
     suppliers:['Suppliers','Review applications and manage supplier access.'],
+    identity:['Identity verification','Review dropshipper ID submissions before payouts.'],
     products:['Products','Inspect and moderate products across the marketplace.'],
     orders:['Orders','Inspect marketplace orders, fulfillment and tracking.'],
     settlements:['Settlements','Confirm courier remittance and release payouts.'],
@@ -36,6 +37,7 @@
     if(v==='commissions')renderCommissions();
     if(v==='shipping')renderShipping();
     if(v==='settlements')renderSettlements();
+    if(v==='identity')renderIdentity();
     msg('');
   }
 
@@ -230,12 +232,12 @@
       const v=VERIFICATIONS.find(a=>a.supplier_id===s.id);
       const commission=s.commission_rate_override==null?`Inherit ${DEFAULT_COMMISSION}%`:`${s.commission_rate_override}%`;
       let actions;
-      if(s.status==='pending'&&s.verification_required){
-        if(v?.review_status==='submitted'){
-          actions=`<button class="btn review-btn" data-id="${s.id}" data-decision="verify_approve">Approve</button>
-            <button class="btn secondary review-btn" data-id="${s.id}" data-decision="request_changes">Request changes</button>
-            <button class="btn secondary review-btn" data-id="${s.id}" data-decision="verify_reject">Reject</button>`;
-        }else if(v?.review_status==='approved'){
+      if(v?.review_status==='submitted'){
+        actions=`<button class="btn review-btn" data-id="${s.id}" data-decision="verify_approve">Approve verification</button>
+          <button class="btn secondary review-btn" data-id="${s.id}" data-decision="request_changes">Request changes</button>
+          <button class="btn secondary review-btn" data-id="${s.id}" data-decision="verify_reject">Reject verification</button>`;
+      }else if(s.status==='pending'&&s.verification_required){
+        if(v?.review_status==='approved'){
           actions=`<button class="btn review-btn" data-id="${s.id}" data-decision="approve">Approve supplier</button>`;
         }else{
           actions='<span class="muted">Waiting for supplier submission</span>';
@@ -287,6 +289,58 @@
       }catch(e){msg(e.message,true)}
       finally{b.disabled=false}
     });
+  }
+
+  function renderIdentity(){
+    const root=$('#identity-review-list');
+    if(!root)return;
+    root.innerHTML=IDENTITY_VERIFICATIONS.map(v=>{
+      const d=DROPSHIPPERS.find(x=>x.id===v.dropshipper_id)||{};
+      const p=profileFor(d.profile_id);
+      const submitted=v.submitted_at?fmtDateTime(v.submitted_at):'—';
+      const reviewStatus=String(v.review_status||'submitted').replaceAll('_',' ');
+      const actions=v.review_status==='submitted'
+        ? `<button class="btn identity-review-btn" data-id="${IZZY.esc(v.dropshipper_id)}" data-decision="approve">Approve ID</button>
+           <button class="btn secondary identity-review-btn" data-id="${IZZY.esc(v.dropshipper_id)}" data-decision="request_changes">Request changes</button>
+           <button class="btn secondary identity-review-btn" data-id="${IZZY.esc(v.dropshipper_id)}" data-decision="reject">Reject</button>`
+        : '<span class="muted">No action needed</span>';
+      return `<article class="card admin-order-card">
+        <div class="admin-order-head"><div><b>${IZZY.esc(p.full_name||d.business_name||'Dropshipper')}</b><small>${IZZY.esc(d.business_name||'')} · Submitted ${IZZY.esc(submitted)}</small></div>
+          <span class="tag ${v.review_status==='approved'?'ok':v.review_status==='submitted'?'warn':'bad'}">${IZZY.esc(reviewStatus)}</span></div>
+        ${v.review_reason?`<div class="notice">${IZZY.esc(v.review_reason)}</div>`:''}
+        <div class="admin-row-actions"><button class="btn secondary identity-doc-btn" type="button" data-path="${IZZY.esc(v.id_document_path)}">View private ID document</button>${actions}</div>
+      </article>`;
+    }).join('')||'<div class="empty-state"><div class="empty-icon">ID</div><h3>No ID submissions yet</h3><p>Dropshipper ID documents will appear here after submission.</p></div>';
+    root.querySelectorAll('.identity-doc-btn').forEach(b=>b.onclick=async()=>{
+      b.disabled=true;
+      try{
+        const path=String(b.dataset.path||'').split('/').map(encodeURIComponent).join('/');
+        const result=await IZZY.request('/storage/v1/object/sign/dropshipper-identity-documents/'+path,{method:'POST',body:JSON.stringify({expiresIn:60})});
+        const signed=String(result?.signedURL||result?.signedUrl||'');
+        if(!signed.startsWith('/object/sign/dropshipper-identity-documents/'))throw Error('Private document link unavailable');
+        const link=document.createElement('a');link.href=IZZY.config.supabaseUrl+'/storage/v1'+signed;
+        link.target='_blank';link.rel='noopener noreferrer';link.textContent='Open secure ID document (link expires in 60 seconds)';
+        b.insertAdjacentElement('afterend',link);
+      }catch(e){msg(e.message,true)}finally{b.disabled=false}
+    });
+    root.querySelectorAll('.identity-review-btn').forEach(b=>b.onclick=()=>reviewIdentity(b));
+  }
+
+  async function reviewIdentity(btn){
+    const decision=btn.dataset.decision;
+    let reason=null;
+    if(decision==='request_changes'||decision==='reject'){
+      reason=prompt(decision==='request_changes'?'What must the dropshipper change before approval?':'Why is this ID submission rejected?');
+      if(reason===null)return;
+      if(reason.trim().length<8){msg('Enter a clear reason of at least eight characters.',true);return}
+    }else if(!confirm('Approve this dropshipper ID? Payouts can be released after approval.'))return;
+    btn.disabled=true;
+    try{
+      await IZZY.rpc('admin_review_dropshipper_identity',{_dropshipper_id:btn.dataset.id,_decision:decision,_reason:reason?.trim()||null});
+      msg('Identity review saved.');
+      await load(false);
+      go('identity');
+    }catch(e){msg(e.message,true);btn.disabled=false}
   }
 
   async function reviewSupplier(btn){
@@ -757,12 +811,13 @@
       IZZY.rpc('admin_order_shipping_costs'),
       IZZY.rpc('admin_settlements_v2'),
       IZZY.rpc('admin_dashboard_metrics'),
-      IZZY.request('/rest/v1/supplier_verification_applications?select=*&order=submitted_at.desc')
+      IZZY.request('/rest/v1/supplier_verification_applications?select=*&order=submitted_at.desc'),
+      IZZY.request('/rest/v1/dropshipper_identity_verifications?select=*&order=submitted_at.desc')
     ]);
 
     const [
       rSuppliers,rProfiles,rProducts,rVariants,rOrders,rDropshippers,rSettings,
-      rAudit,rAdmins,rShippingSettings,rOrderShipping,rSettlements,rMetrics,rVerifications
+      rAudit,rAdmins,rShippingSettings,rOrderShipping,rSettlements,rMetrics,rVerifications,rIdentityVerifications
     ]=results;
     const failures=[];
     const take=(r,current,label)=>{
@@ -773,6 +828,7 @@
 
     SUPPLIERS=take(rSuppliers,SUPPLIERS,'Suppliers')||[];
     VERIFICATIONS=take(rVerifications,VERIFICATIONS,'Verification applications')||[];
+    IDENTITY_VERIFICATIONS=take(rIdentityVerifications,IDENTITY_VERIFICATIONS,'Dropshipper identity verification')||[];
     PROFILES=take(rProfiles,PROFILES,'profiles')||[];
     PRODUCTS=take(rProducts,PRODUCTS,'Products')||[];
     VARIANTS=take(rVariants,VARIANTS,'variants')||[];
