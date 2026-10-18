@@ -559,6 +559,10 @@
     }
 
     if(!SUP){location.href='login.html';return false}
+    if(SUP.status==='pending'){
+      // Keep the existing onboarding event for the private draft helper while allowing workspace access.
+      window.dispatchEvent(new CustomEvent('izzy:supplier-pending',{detail:{supplierId:SUP.id,status:SUP.status,businessName:SUP.business_name}}));
+    }
     if(!['approved','pending'].includes(SUP.status)){
       const g=$('#gate-message');
       g.textContent='Your IzzyDrop supplier account is '+SUP.status+'.';
