@@ -15,6 +15,7 @@ create table if not exists public.dropshipper_identity_verifications (
 );
 
 alter table public.dropshipper_identity_verifications enable row level security;
+grant select on public.dropshipper_identity_verifications to authenticated;
 drop policy if exists dropshipper_identity_owner_or_admin_read on public.dropshipper_identity_verifications;
 create policy dropshipper_identity_owner_or_admin_read
   on public.dropshipper_identity_verifications for select to authenticated
