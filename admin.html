@@ -36,6 +36,7 @@
         <nav>
           <button class="on" data-view="overview"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h6V4H4zM14 20h6V11h-6zM4 20h6v-4H4zM14 8h6V4h-6z"/></svg><span>Overview</span></button>
           <button data-view="suppliers"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20v-9l8-5 8 5v9M8 20v-6h8v6"/></svg><span>Suppliers</span></button>
+          <button data-view="identity"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 5 3 8 7 10 4-2 7-5 7-10V6zM9 12l2 2 4-4"/></svg><span>Identity verification</span></button>
           <button data-view="products"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h8M8 17h5"/></svg><span>Products</span></button>
           <button data-view="orders"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v14H4zM8 3v6M16 3v6M8 13h8M8 17h5"/></svg><span>Orders</span></button>
           <button data-view="settlements"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16v12H4zM4 10h16M8 15h4M16 15h.01"/></svg><span>Settlements</span></button>
@@ -214,6 +215,10 @@
           </div>
         </section>
 
+        <section id="view-identity" class="view" hidden>
+          <div class="section-heading"><div><h2>Dropshipper identity verification</h2><p class="muted">Review private ID submissions. A dropshipper cannot receive a payout until identity is approved.</p></div></div>
+          <div id="identity-review-list" class="orders-list"><div class="notice">Loading identity submissions…</div></div>
+        </section>
         <section id="view-settings" class="view" hidden><div id="settings-root"></div></section>
       </main>
     </div>
