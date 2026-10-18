@@ -215,7 +215,7 @@ create or replace function public.require_supplier_verification_for_publish()
 returns trigger language plpgsql security definer set search_path to 'public','private'
 as $function$
 begin
-  if auth.uid() is not null and private.has_role(auth.uid(),'admin'::public.app_role) then return new; end if;
+  if auth.uid() is null or private.has_role(auth.uid(),'admin'::public.app_role) then return new; end if;
   if not exists(select 1 from public.supplier_verification_applications a
     where a.supplier_id=new.supplier_id and a.review_status='approved') then
     raise exception 'Supplier verification is required before publishing new products. Open Settings → Verification to submit your documents.';
