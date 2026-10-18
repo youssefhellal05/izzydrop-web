@@ -559,10 +559,13 @@
     }
 
     if(!SUP){location.href='login.html';return false}
-    if(SUP.status!=='approved'){
-      const g=$('#gate-message');
-      g.textContent=SUP.status==='pending'?'Complete verification while preparing your product drafts. Your products cannot be published yet.':'Your IzzyDrop supplier account is '+SUP.status+'.';
+    if(SUP.status==='pending'){
+      // Keep the existing onboarding event for the private draft helper while allowing workspace access.
       window.dispatchEvent(new CustomEvent('izzy:supplier-pending',{detail:{supplierId:SUP.id,status:SUP.status,businessName:SUP.business_name}}));
+    }
+    if(!['approved','pending'].includes(SUP.status)){
+      const g=$('#gate-message');
+      g.textContent='Your IzzyDrop supplier account is '+SUP.status+'.';
       return false;
     }
 
@@ -585,7 +588,7 @@
       try{sessionStorage.removeItem(SOURCING_RETURN_KEY)}catch(e){}
       history.replaceState({},document.title,location.pathname);
     }
-    window.dispatchEvent(new CustomEvent('izzy:supplier-ready',{detail:{supplierId:SUP.id}}));
+    window.dispatchEvent(new CustomEvent('izzy:supplier-ready',{detail:{supplierId:SUP.id,status:SUP.status}}));
     return true;
   }
 

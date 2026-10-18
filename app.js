@@ -914,6 +914,7 @@
     setLoading();
     go('products');
     await load();
+    window.dispatchEvent(new CustomEvent('izzy:dropshipper-ready',{detail:{dropshipperId:DROPSHIPPER.id}}));
     const params=new URLSearchParams(location.search);
     const requestId=params.get('request');
     if(requestId){go('requests');const card=document.getElementById('request-'+requestId);if(card){card.classList.add('is-highlighted');card.scrollIntoView({block:'center'});}}
