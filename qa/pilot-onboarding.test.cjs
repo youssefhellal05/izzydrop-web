@@ -13,7 +13,7 @@ const admin=read('admin.js');
 const sql=read('supabase/migrations/20261013_pilot_supplier_onboarding.sql');
 
 test('frontend JavaScript parses',()=>{
-  for(const file of ['login.js','supplier.js','supplier-onboarding.js','admin.js','common.js']){
+  for(const file of ['login.js','supplier.js','supplier-onboarding.js','verification-center.js','admin.js','common.js']){
     assert.doesNotThrow(()=>new Function(read(file)),file);
   }
 });
@@ -55,6 +55,21 @@ test('pending supplier drafts never touch public marketplace product permissions
   assert.match(supplier,/izzy:supplier-ready/);
   assert.match(onboarding,/supplier_onboarding_drafts/);
   assert.match(onboarding,/Nothing has been published/);
+});
+test('verification center and payout/publishing guards are wired into production',()=>{
+  const workflow=read('supabase/migrations/202610190001_verification_workflows.sql');
+  const supplierHtml=read('supplier.html');
+  const appHtml=read('app.html');
+  const adminHtml=read('admin.html');
+  assert.match(supplierHtml,/verification-center\.js/);
+  assert.match(appHtml,/verification-center\.js/);
+  assert.match(adminHtml,/data-view="identity"/);
+  assert.match(workflow,/CREATE TABLE IF NOT EXISTS public\.dropshipper_identity_verifications/);
+  assert.match(workflow,/dropshipper-identity-documents/);
+  assert.match(workflow,/CREATE TRIGGER guard_dropshipper_payout_identity/);
+  assert.match(workflow,/CREATE TRIGGER require_supplier_verification_before_publish/);
+  assert.match(workflow,/admin_review_dropshipper_identity/);
+  assert.match(workflow,/status in \('pending','approved'\)/);
 });
 test('supplier evidence is confined to the private storage bucket',()=>{
   assert.match(sql,/file_size_limit=5242880/);
