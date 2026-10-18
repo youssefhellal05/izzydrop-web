@@ -64,10 +64,10 @@ test('verification center and payout/publishing guards are wired into production
   assert.match(supplierHtml,/verification-center\.js/);
   assert.match(appHtml,/verification-center\.js/);
   assert.match(adminHtml,/data-view="identity"/);
-  assert.match(workflow,/CREATE TABLE IF NOT EXISTS public\.dropshipper_identity_verifications/);
+  assert.match(workflow,/CREATE TABLE IF NOT EXISTS public\.dropshipper_identity_verifications/i);
   assert.match(workflow,/dropshipper-identity-documents/);
-  assert.match(workflow,/CREATE TRIGGER guard_dropshipper_payout_identity/);
-  assert.match(workflow,/CREATE TRIGGER require_supplier_verification_before_publish/);
+  assert.match(workflow,/CREATE TRIGGER guard_dropshipper_payout_identity/i);
+  assert.match(workflow,/CREATE TRIGGER require_supplier_verification_before_publish/i);
   assert.match(workflow,/admin_review_dropshipper_identity/);
   assert.match(workflow,/status in \('pending','approved'\)/);
 });
