@@ -559,10 +559,9 @@
     }
 
     if(!SUP){location.href='login.html';return false}
-    if(SUP.status!=='approved'){
+    if(!['approved','pending'].includes(SUP.status)){
       const g=$('#gate-message');
-      g.textContent=SUP.status==='pending'?'Complete verification while preparing your product drafts. Your products cannot be published yet.':'Your IzzyDrop supplier account is '+SUP.status+'.';
-      window.dispatchEvent(new CustomEvent('izzy:supplier-pending',{detail:{supplierId:SUP.id,status:SUP.status,businessName:SUP.business_name}}));
+      g.textContent='Your IzzyDrop supplier account is '+SUP.status+'.';
       return false;
     }
 
@@ -585,7 +584,7 @@
       try{sessionStorage.removeItem(SOURCING_RETURN_KEY)}catch(e){}
       history.replaceState({},document.title,location.pathname);
     }
-    window.dispatchEvent(new CustomEvent('izzy:supplier-ready',{detail:{supplierId:SUP.id}}));
+    window.dispatchEvent(new CustomEvent('izzy:supplier-ready',{detail:{supplierId:SUP.id,status:SUP.status}}));
     return true;
   }
 
