@@ -3,7 +3,7 @@
   const $=s=>document.querySelector(s);
   const esc=v=>window.IZZY?.esc?IZZY.esc(v??''):String(v??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   let role=window.IZZY_SETTINGS_ROLE;
-  let accountId=null, application=null, map=null, mapPin=null, mapLat=null, mapLng=null, mapInitialized=false, leafletLoading=null;
+  let accountId=null, application=null;
   const tr=value=>window.IZZY_I18N?.t(value)||value;
   const status=(node,message,bad=false)=>{if(node){node.textContent=tr(message||'');node.className='status'+(bad?' bad':'')}};
   const localReviewStatus=value=>({
@@ -41,14 +41,6 @@
           <form id="verify-supplier-form" class="form">
             <label class="field-label" for="verify-business-address">Business / warehouse address</label>
             <textarea id="verify-business-address" minlength="8" maxlength="400" rows="2" required></textarea>
-            <div class="verification-map-tools">
-              <label class="field-label" for="verify-map-search">Find a place on the map (optional)</label>
-              <div class="form-two-col"><input id="verify-map-search" type="search" placeholder="Search business, street or landmark"><button class="btn secondary" id="verify-map-search-btn" type="button">Search map</button></div>
-              <div class="form-two-col"><button class="btn secondary" id="verify-map-location-btn" type="button">Use my location</button><button class="btn secondary" id="verify-map-clear-btn" type="button">Clear map pin</button></div>
-              <div id="verify-location-map" role="application" aria-label="Choose business location on map" style="height:300px;min-height:260px;border-radius:12px;overflow:hidden;background:var(--surface-2,#f3f4f6);display:none"></div>
-              <small id="verify-map-hint" class="muted">Search for a place such as Buffalo Burger, or tap/drag the pin to your exact entrance. You can still type the address manually.</small>
-              <small id="verify-map-coordinates" class="muted"></small>
-            </div>
             <label class="field-label" for="verify-business-phone">Business contact number</label><input id="verify-business-phone" type="tel" minlength="7" maxlength="40" required>
             <label class="field-label" for="verify-registration-status">Business registration status</label><select id="verify-registration-status" required><option value="">Choose one</option><option value="registered">Registered</option><option value="in_progress">Registration in progress</option><option value="not_registered">Not yet registered</option></select>
             <div class="form-two-col"><div><label class="field-label" for="verify-registration-number">Commercial registration number</label><input id="verify-registration-number" maxlength="100"></div><div><label class="field-label" for="verify-tax-number">Tax registration number</label><input id="verify-tax-number" maxlength="100"></div></div>
@@ -79,15 +71,10 @@
       root.querySelectorAll('[data-settings-tab]').forEach(x=>x.classList.toggle('on',x===tab));
       root.querySelectorAll('[data-settings-panel]').forEach(x=>x.hidden=x.dataset.settingsPanel!=='verification');
       const shared=root.querySelector('#settings-status');if(shared)shared.textContent='';
-      if(role==='supplier')loadSupplier().then(()=>initLocationMap()).catch(e=>status($('#verify-supplier-status'),e.message,true));
+      if(role==='supplier')loadSupplier().catch(e=>status($('#verify-supplier-status'),e.message,true));
       else loadDropshipper().catch(e=>status($('#verify-dropshipper-status'),e.message,true));
     };
-    if(role==='supplier'){
-      $('#verify-supplier-form').onsubmit=submitSupplier;
-      $('#verify-map-search-btn').onclick=searchMapPlace;
-      $('#verify-map-location-btn').onclick=useCurrentLocation;
-      $('#verify-map-clear-btn').onclick=clearMapPin;
-    }
+    if(role==='supplier')$('#verify-supplier-form').onsubmit=submitSupplier;
     else $('#verify-dropshipper-form').onsubmit=submitDropshipper;
     return true;
   }
@@ -113,11 +100,6 @@
     for(const [id,value] of Object.entries(values))if($('#'+id))$('#'+id).value=value||'';
     $('#verify-registration-saved').textContent=application?.registration_document_path?'Existing registration document saved privately.':'';
     $('#verify-tax-saved').textContent=application?.tax_document_path?'Existing tax document saved privately.':'';
-    if(application?.business_latitude!=null&&application?.business_longitude!=null){
-      mapLat=Number(application.business_latitude);mapLng=Number(application.business_longitude);
-      updateMapCoordinateText();
-    }else{mapLat=null;mapLng=null;updateMapCoordinateText();}
-    if(mapInitialized&&mapLat!=null){setMapPin(mapLat,mapLng,false);map.setView([mapLat,mapLng],16);}
     const locked=application?.review_status==='approved';
     $('#verify-supplier-form').querySelectorAll('input,select,textarea,button[type="submit"]').forEach(el=>el.disabled=locked);
   }
@@ -136,95 +118,10 @@
         _tax_registration_number:$('#verify-tax-number').value.trim()||null,_registration_document_path:regPath,_tax_document_path:taxPath,
         _supplier_notes:$('#verify-supplier-notes').value.trim()||null
       });
-      if(mapLat!=null&&mapLng!=null){
-        await IZZY.rpc('supplier_set_verification_location',{_latitude:mapLat,_longitude:mapLng});
-      }else{
-        await IZZY.rpc('supplier_set_verification_location',{_latitude:null,_longitude:null});
-      }
       status($('#verify-supplier-status'),'Verification submitted. IzzyDrop will review it.');
       await loadSupplier();
     }catch(err){status($('#verify-supplier-status'),err.message||'Could not submit verification.',true)}
     finally{button.disabled=false}
-  }
-
-  async function loadLeaflet(){
-    if(window.L)return;
-    if(leafletLoading)return leafletLoading;
-    leafletLoading=new Promise((resolve,reject)=>{
-      if(!document.querySelector('link[data-izzy-leaflet]')){
-        const css=document.createElement('link');css.rel='stylesheet';css.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';css.dataset.izzyLeaflet='true';document.head.appendChild(css);
-      }
-      const script=document.createElement('script');script.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';script.onload=resolve;script.onerror=()=>reject(Error('The map could not load. You can still enter the address manually.'));document.head.appendChild(script);
-    });
-    return leafletLoading;
-  }
-  async function initLocationMap(){
-    const node=$('#verify-location-map');if(!node)return;
-    node.style.display='block';
-    try{
-      await loadLeaflet();
-      if(!map){
-        map=window.L.map(node).setView(mapLat!=null?[mapLat,mapLng]:[30.0444,31.2357],mapLat!=null?16:11);
-        window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map);
-        map.on('click',e=>{setMapPin(e.latlng.lat,e.latlng.lng,true);});
-      }
-      if(mapLat!=null)setMapPin(mapLat,mapLng,false);
-      map.invalidateSize();mapInitialized=true;
-    }catch(e){const hint=$('#verify-map-hint');if(hint)hint.textContent=e.message;}
-  }
-  function setMapPin(lat,lng,reverse=true){
-    mapLat=Number(lat);mapLng=Number(lng);
-    if(!Number.isFinite(mapLat)||!Number.isFinite(mapLng))return;
-    if(map){
-      if(!mapPin)mapPin=window.L.marker([mapLat,mapLng],{draggable:true}).addTo(map);
-      else mapPin.setLatLng([mapLat,mapLng]);
-      mapPin.off('dragend').on('dragend',e=>{const p=e.target.getLatLng();mapLat=p.lat;mapLng=p.lng;updateMapCoordinateText();reverseGeocode(mapLat,mapLng);});
-    }
-    updateMapCoordinateText();
-    if(reverse)reverseGeocode(mapLat,mapLng);
-  }
-  function updateMapCoordinateText(){
-    const out=$('#verify-map-coordinates');
-    if(out)out.textContent=mapLat==null?'No map pin selected.':('Selected coordinates: '+mapLat.toFixed(6)+', '+mapLng.toFixed(6));
-  }
-  async function searchMapPlace(){
-    const q=$('#verify-map-search').value.trim();if(q.length<3){$('#verify-map-hint').textContent='Enter at least 3 characters to search.';return;}
-    const btn=$('#verify-map-search-btn');btn.disabled=true;
-    try{
-      const url='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&addressdetails=1&q='+encodeURIComponent(q);
-      const res=await fetch(url,{headers:{'Accept-Language':window.IZZY_I18N?.isArabic()?'ar,en':'en'}});
-      if(!res.ok)throw Error('Place search is temporarily unavailable. Try a more specific query or type the address manually.');
-      const places=await res.json();if(!places.length)throw Error('No places found. Try adding the city or area.');
-      const place=places[0],lat=Number(place.lat),lng=Number(place.lon);
-      if(!map)await initLocationMap();
-      if(map){map.setView([lat,lng],17);setMapPin(lat,lng,false);}
-      const address=place.display_name||q;$('#verify-business-address').value=address.slice(0,400);
-      $('#verify-map-hint').textContent=places.length>1?('Showing best match: '+address+' (if incorrect, refine the search).'):('Selected: '+address);
-    }catch(e){$('#verify-map-hint').textContent=e.message||'Search failed.'}
-    finally{btn.disabled=false}
-  }
-  async function reverseGeocode(lat,lng){
-    const hint=$('#verify-map-hint');if(hint)hint.textContent='Looking up the address for the selected pin…';
-    try{
-      const url='https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=18&lat='+encodeURIComponent(lat)+'&lon='+encodeURIComponent(lng);
-      const res=await fetch(url,{headers:{'Accept-Language':window.IZZY_I18N?.isArabic()?'ar,en':'en'}});
-      if(!res.ok)throw Error('Address lookup unavailable');
-      const data=await res.json();if(data.display_name)$('#verify-business-address').value=data.display_name.slice(0,400);
-      if(hint)hint.textContent=data.display_name?('Address filled from the map: '+data.display_name):'Pin selected. Enter the full address above if needed.';
-    }catch{if(hint)hint.textContent='Pin selected. Enter or correct the address manually if needed.'}
-  }
-  function useCurrentLocation(){
-    if(!navigator.geolocation){$('#verify-map-hint').textContent='Location access is not available in this browser.';return;}
-    const btn=$('#verify-map-location-btn');btn.disabled=true;
-    navigator.geolocation.getCurrentPosition(async pos=>{
-      const lat=pos.coords.latitude,lng=pos.coords.longitude;
-      await initLocationMap();if(map){map.setView([lat,lng],17);setMapPin(lat,lng,true);}
-      btn.disabled=false;
-    },()=>{btn.disabled=false;$('#verify-map-hint').textContent='Could not access your location. Allow location permission or search for a place.'},{enableHighAccuracy:true,timeout:10000,maximumAge:60000});
-  }
-  function clearMapPin(){
-    mapLat=null;mapLng=null;if(map&&mapPin){map.removeLayer(mapPin);mapPin=null;}
-    updateMapCoordinateText();$('#verify-map-hint').textContent='Map pin cleared. The address can still be entered manually.';
   }
 
   async function loadDropshipper(){
