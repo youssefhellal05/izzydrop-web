@@ -4,7 +4,13 @@
   const esc=v=>window.IZZY?.esc?IZZY.esc(v??''):String(v??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   let role=window.IZZY_SETTINGS_ROLE;
   let accountId=null, application=null;
-  const status=(node,message,bad=false)=>{if(node){node.textContent=message||'';node.className='status'+(bad?' bad':'')}};
+  const tr=value=>window.IZZY_I18N?.t(value)||value;
+  const status=(node,message,bad=false)=>{if(node){node.textContent=tr(message||'');node.className='status'+(bad?' bad':'')}};
+  const localReviewStatus=value=>({
+    'not submitted':'لم يتم الإرسال',approved:'تمت الموافقة',pending:'قيد المراجعة',
+    pending_review:'قيد المراجعة',in_review:'قيد المراجعة',rejected:'مرفوض',
+    changes_requested:'مطلوب إجراء تعديلات',needs_changes:'مطلوب إجراء تعديلات'
+  }[String(value||'not submitted').toLowerCase()]||String(value||'not submitted').replaceAll('_',' '));
   const allowedMime={'application/pdf':'pdf','image/jpeg':'jpg','image/png':'png'};
   async function upload(file,bucket,folder,kind){
     const ext=allowedMime[file?.type];
@@ -84,7 +90,7 @@
     const apps=await IZZY.request('/rest/v1/supplier_verification_applications?select=*&supplier_id=eq.'+encodeURIComponent(accountId)+'&limit=1');
     application=apps?.[0]||null;
     const state=$('#verify-supplier-state');
-    state.textContent='Status: '+String(application?.review_status||'not submitted').replaceAll('_',' ')+(application?.review_reason?' — '+application.review_reason:'');
+    state.textContent=(window.IZZY_I18N?.isArabic()?'الحالة: ':'Status: ')+((window.IZZY_I18N?.isArabic())?localReviewStatus(application?.review_status):String(application?.review_status||'not submitted').replaceAll('_',' '))+(application?.review_reason?' — '+application.review_reason:'');
     const values={
       'verify-business-address':application?.business_address,'verify-business-phone':application?.business_phone,
       'verify-registration-status':application?.registration_status,'verify-registration-number':application?.registration_number,
@@ -123,7 +129,7 @@
     accountId=rows?.[0]?.id||null;if(!accountId)throw Error('Dropshipper account not found.');
     const apps=await IZZY.request('/rest/v1/dropshipper_identity_verifications?select=*&dropshipper_id=eq.'+encodeURIComponent(accountId)+'&limit=1');
     application=apps?.[0]||null;
-    $('#verify-dropshipper-state').textContent='Status: '+String(application?.review_status||'not submitted').replaceAll('_',' ')+(application?.review_reason?' — '+application.review_reason:'');
+    $('#verify-dropshipper-state').textContent=(window.IZZY_I18N?.isArabic()?'الحالة: ':'Status: ')+((window.IZZY_I18N?.isArabic())?localReviewStatus(application?.review_status):String(application?.review_status||'not submitted').replaceAll('_',' '))+(application?.review_reason?' — '+application.review_reason:'');
     $('#verify-id-saved').textContent=application?.id_document_path?'An ID document is saved privately. Choose a new file to resubmit if changes are requested.':'';
     $('#verify-dropshipper-form').querySelector('[type="submit"]').disabled=application?.review_status==='approved';
   }
