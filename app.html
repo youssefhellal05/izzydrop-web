@@ -62,6 +62,7 @@
             <span>Sourcing requests</span>
           </button>
           <button data-view="sourced"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16v14H4zM8 7V3h8v4M8 14l3 3 5-6"/></svg><span>Sourced products</span></button>
+          <button data-view="connections" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.1 0l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1M14 11a5 5 0 0 0-7.1 0l-2 2a5 5 0 0 0 7.1 7.1l1.1-1.1"/></svg><span>Store Connections</span></button>
           <details class="dropshipper-more">
             <summary>
               <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg>
@@ -74,6 +75,7 @@
               </button>
             </div>
           </details>
+          <button class="dropshipper-mobile-nav-item" data-view="connections" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.1 0l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1M14 11a5 5 0 0 0-7.1 0l-2 2a5 5 0 0 0 7.1 7.1l1.1-1.1"/></svg><span>Store Connections</span></button>
           <button class="dropshipper-mobile-nav-item" data-view="settings" type="button">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM19 12l2-1-2-4-2 1a8 8 0 0 0-2-1l-1-3h-4L9 7a8 8 0 0 0-2 1L5 7l-2 4 2 1v2l-2 1 2 4 2-1a8 8 0 0 0 2 1l1 3h4l1-3a8 8 0 0 0 2-1l2 1 2-4-2-1z"/></svg><span>Settings</span>
           </button>
@@ -229,7 +231,32 @@
           <div id="money-list" class="orders-list"></div>
         </section>
 
-        <section id="view-settings" class="view" hidden><div id="settings-root"></div></section>
+        <section id="view-connections" class="view" hidden>
+        <div class="connections-panel card">
+          <div class="premium-chip">STORE INTEGRATION</div>
+          <h2>Connect your store</h2>
+          <p class="muted">Link your store to start syncing orders. We’ll test the connection so you see a clear status.</p>
+          <form id="store-connection-form" class="form store-connection-form">
+            <div class="field">
+              <label class="field-label" for="store-platform">Platform</label>
+              <select id="store-platform" required>
+                <option value="shopify">Shopify</option>
+                <option value="woocommerce">WooCommerce</option>
+                <option value="custom">Custom website</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label" for="store-url">Store URL</label>
+              <input id="store-url" type="url" placeholder="https://yourstore.com" autocomplete="url" required>
+            </div>
+            <div id="store-platform-guidance" class="notice store-platform-guidance">Enter your Shopify store URL. Shopify authorization will be needed to verify and connect the store.</div>
+            <button id="test-store-connection" class="btn" type="submit">Test connection</button>
+            <p id="store-connection-status" class="status store-connection-status" role="status" aria-live="polite">Not connected — no test run.</p>
+            <p class="muted store-connection-note">A valid URL alone does not confirm a live connection. Platform authorization and secure server-side verification still need to be connected.</p>
+          </form>
+        </div>
+      </section>
+      <section id="view-settings" class="view" hidden><div id="settings-root"></div></section>
       </main>
     </div>
   </div>
