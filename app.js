@@ -11,6 +11,7 @@
     money:['Money','Track actual COD profit and payout status.'],
     requests:['Sourcing requests','Products the community wants suppliers to find.'],
     sourced:['Sourced products','Real published products linked to community sourcing requests.'],
+    connections:['Store Connections','Connect Shopify, WooCommerce, or a custom website.'],
     settings:['Settings','Account and preferences.']
   };
 
@@ -959,6 +960,37 @@
   $('#in-stock-only').onchange=renderProducts;
   $('#trending-only').onchange=renderProducts;
   document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>go(b.dataset.view));
+
+  const storePlatform=$('#store-platform');
+  const storeUrl=$('#store-url');
+  const storeGuidance=$('#store-platform-guidance');
+  const storeConnectionStatus=$('#store-connection-status');
+  const platformGuidance={
+    shopify:'Enter your Shopify store URL. Shopify authorization will be needed to verify and connect the store.',
+    woocommerce:'Enter your WooCommerce site URL. A secure WooCommerce REST API setup will be needed to verify and connect the store.',
+    custom:'Enter your website URL. A supported API or integration endpoint will be needed to verify and connect the store.'
+  };
+  if(storePlatform&&storeGuidance){
+    storePlatform.addEventListener('change',()=>{
+      storeGuidance.textContent=platformGuidance[storePlatform.value]||platformGuidance.shopify;
+      if(storeConnectionStatus)storeConnectionStatus.textContent='Not connected — run a new test after changing the platform.';
+    });
+  }
+  const storeConnectionForm=$('#store-connection-form');
+  if(storeConnectionForm){
+    storeConnectionForm.addEventListener('submit',event=>{
+      event.preventDefault();
+      const raw=storeUrl?.value.trim()||'';
+      let parsed;
+      try{parsed=new URL(raw)}catch{}
+      if(!parsed||!['https:','http:'].includes(parsed.protocol)||!parsed.hostname.includes('.')){
+        storeConnectionStatus.textContent='Test failed: enter a valid store URL, including https://.';
+        return;
+      }
+      storeConnectionStatus.textContent='URL format valid. Live connection not verified — platform authorization and server-side testing are not configured yet.';
+    });
+  }
+
   $('#dropshipper-mobile-nav-toggle').onclick=e=>{
     e.stopPropagation();
     setMobileNavOpen(!$('#dropshipper-mobile-navigation').classList.contains('is-mobile-open'));
