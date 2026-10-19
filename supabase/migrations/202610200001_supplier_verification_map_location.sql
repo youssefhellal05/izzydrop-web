@@ -10,7 +10,8 @@ alter table public.supplier_verification_applications
   check (
     (business_latitude is null and business_longitude is null)
     or
-    (business_latitude between -90 and 90 and business_longitude between -180 and 180)
+    (business_latitude is not null and business_longitude is not null
+      and business_latitude between -90 and 90 and business_longitude between -180 and 180)
   );
 
 create or replace function public.supplier_set_verification_location(_latitude double precision, _longitude double precision)
