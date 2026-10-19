@@ -41,14 +41,6 @@
           <form id="verify-supplier-form" class="form">
             <label class="field-label" for="verify-business-address">Business / warehouse address</label>
             <textarea id="verify-business-address" minlength="8" maxlength="400" rows="2" required></textarea>
-            <div class="verification-map-tools">
-              <label class="field-label" for="verify-map-search">Find a place on the map (optional)</label>
-              <div class="form-two-col"><input id="verify-map-search" type="search" placeholder="Search business, street or landmark"><button class="btn secondary" id="verify-map-search-btn" type="button">Search map</button></div>
-              <div class="form-two-col"><button class="btn secondary" id="verify-map-location-btn" type="button">Use my location</button><button class="btn secondary" id="verify-map-clear-btn" type="button">Clear map pin</button></div>
-              <div id="verify-location-map" role="application" aria-label="Choose business location on map" style="height:300px;min-height:260px;border-radius:12px;overflow:hidden;background:var(--surface-2,#f3f4f6);display:none"></div>
-              <small id="verify-map-hint" class="muted">Search for a place such as Buffalo Burger, or tap/drag the pin to your exact entrance. You can still type the address manually.</small>
-              <small id="verify-map-coordinates" class="muted"></small>
-            </div>
             <label class="field-label" for="verify-business-phone">Business contact number</label><input id="verify-business-phone" type="tel" minlength="7" maxlength="40" required>
             <label class="field-label" for="verify-registration-status">Business registration status</label><select id="verify-registration-status" required><option value="">Choose one</option><option value="registered">Registered</option><option value="in_progress">Registration in progress</option><option value="not_registered">Not yet registered</option></select>
             <div class="form-two-col"><div><label class="field-label" for="verify-registration-number">Commercial registration number</label><input id="verify-registration-number" maxlength="100"></div><div><label class="field-label" for="verify-tax-number">Tax registration number</label><input id="verify-tax-number" maxlength="100"></div></div>
