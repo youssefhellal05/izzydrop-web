@@ -260,7 +260,7 @@
           ${v.registration_document_path?`<button class="btn secondary pilot-doc-btn" type="button" data-path="${IZZY.esc(v.registration_document_path)}">View registration document</button>`:''}
           ${v.tax_document_path?`<button class="btn secondary pilot-doc-btn" type="button" data-path="${IZZY.esc(v.tax_document_path)}">View tax card</button>`:''}
           ${v.supplier_notes?`<div><b>Notes:</b> ${IZZY.esc(v.supplier_notes)}</div>`:''}
-          ${v.review_reason?`<div><b>Review reason:</b> ${IZZY.esc(v.review_reason)}</div>`:''}
+          ${v.business_latitude!=null&&v.business_longitude!=null?`<div><b>Map location:</b> ${IZZY.esc(Number(v.business_latitude).toFixed(6))}, ${IZZY.esc(Number(v.business_longitude).toFixed(6))} · <a href="https://www.openstreetmap.org/?mlat=${encodeURIComponent(v.business_latitude)}&mlon=${encodeURIComponent(v.business_longitude)}#map=17/${encodeURIComponent(v.business_latitude)}/${encodeURIComponent(v.business_longitude)}" target="_blank" rel="noopener noreferrer">Open map</a></div>`:''}${v.review_reason?`<div><b>Review reason:</b> ${IZZY.esc(v.review_reason)}</div>`:''}
         </details>`:s.verification_required?'<small class="muted">Verification not submitted</small>':'<small class="muted">Legacy approval rules</small>';
       return `<div class="admin-supplier-table admin-table-row ${s.status==='pending'?'needs-review':''}">
         <div class="admin-entity-cell"><span class="entity-avatar">${IZZY.esc((s.business_name||'S')[0].toUpperCase())}</span><div><b>${IZZY.esc(s.business_name||'Supplier')}</b><small>${IZZY.esc(p.full_name||'')} ${p.phone?'· '+IZZY.esc(p.phone):''}</small>${detail}</div></div>
