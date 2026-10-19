@@ -8,7 +8,9 @@
     try{return JSON.parse(localStorage.getItem('izzy_session')||'null')?.user?.user_metadata?.preferred_language}
     catch{return null}
   })();
-  let lang=accountLang==='ar'||accountLang==='en'?accountLang:(saved==='ar'||saved==='en'?saved:(browser.startsWith('ar')?'ar':'en'));
+  // An explicit choice made in the language switch must win over stale account metadata.
+  // Account metadata is a fallback for devices without a saved interface preference.
+  let lang=saved==='ar'||saved==='en'?saved:(accountLang==='ar'||accountLang==='en'?accountLang:(browser.startsWith('ar')?'ar':'en'));
 
   const exactAr={
     'Public site':'الموقع العام',
