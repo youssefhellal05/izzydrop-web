@@ -235,7 +235,7 @@
         <div class="connections-panel card">
           <div class="premium-chip">STORE INTEGRATION</div>
           <h2>Connect your store</h2>
-          <p class="muted">Link your store to start syncing orders. We’ll test the connection so you see a clear status.</p>
+          <p class="muted">Connect your Shopify store securely. You’ll be redirected to Shopify to approve IzzyDrop.</p>
           <form id="store-connection-form" class="form store-connection-form">
             <div class="field">
               <label class="field-label" for="store-platform">Platform</label>
@@ -247,12 +247,12 @@
             </div>
             <div class="field">
               <label class="field-label" for="store-url">Store URL</label>
-              <input id="store-url" type="url" placeholder="https://yourstore.com" autocomplete="url" required>
+              <input id="store-url" type="url" placeholder="https://your-store.myshopify.com" autocomplete="url" required>
             </div>
             <div id="store-platform-guidance" class="notice store-platform-guidance">Enter your Shopify store URL. Shopify authorization will be needed to verify and connect the store.</div>
-            <button id="test-store-connection" class="btn" type="submit">Test connection</button>
+            <button id="test-store-connection" class="btn" type="submit">Connect Shopify</button>
             <p id="store-connection-status" class="status store-connection-status" role="status" aria-live="polite">Not connected — no test run.</p>
-            <p class="muted store-connection-note">A valid URL alone does not confirm a live connection. Platform authorization and secure server-side verification still need to be connected.</p>
+            <p class="muted store-connection-note">After authorization, we’ll verify the connection and its permissions. WooCommerce and custom website connections are not available yet.</p>
           </form>
         </div>
       </section>
