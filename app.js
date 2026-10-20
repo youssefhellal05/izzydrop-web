@@ -917,6 +917,21 @@
     await load();
     window.dispatchEvent(new CustomEvent('izzy:dropshipper-ready',{detail:{dropshipperId:DROPSHIPPER.id}}));
     const params=new URLSearchParams(location.search);
+    if(params.get('shopify')==='connected'){
+      history.replaceState({},document.title,location.pathname);
+      if(storeConnectionStatus)storeConnectionStatus.textContent='Shopify authorization completed. Verifying your connection…';
+      try{
+        const connection=await IZZY.request('/functions/v1/shopify-connection-status',{method:'GET'});
+        if(storeConnectionStatus){
+          if(!connection.connected)storeConnectionStatus.textContent='Shopify authorization returned, but the store could not be verified. Please reconnect.';
+          else if(!connection.core_ready)storeConnectionStatus.textContent='Shopify is authorized, but some required permissions are missing. Reconnect to grant the required permissions.';
+          else if(!connection.webhooks_ready)storeConnectionStatus.textContent='Shopify is connected. Order webhooks still need to be configured before order syncing is ready.';
+          else storeConnectionStatus.textContent='Shopify connected and verified: '+(connection.shop_domain||'your store')+'.';
+        }
+      }catch(error){
+        if(storeConnectionStatus)storeConnectionStatus.textContent='Shopify authorization returned, but verification failed: '+(error?.message||'Please try again.');
+      }
+    }
     const requestId=params.get('request');
     if(requestId){go('requests');const card=document.getElementById('request-'+requestId);if(card){card.classList.add('is-highlighted');card.scrollIntoView({block:'center'});}}
     const sourcedOffer=params.get('sourced');
