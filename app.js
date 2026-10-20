@@ -978,16 +978,47 @@
   }
   const storeConnectionForm=$('#store-connection-form');
   if(storeConnectionForm){
-    storeConnectionForm.addEventListener('submit',event=>{
+    storeConnectionForm.addEventListener('submit',async event=>{
       event.preventDefault();
+      if(!storeConnectionStatus)return;
       const raw=storeUrl?.value.trim()||'';
-      let parsed;
-      try{parsed=new URL(raw)}catch{}
-      if(!parsed||!['https:','http:'].includes(parsed.protocol)||!parsed.hostname.includes('.')){
-        storeConnectionStatus.textContent='Test failed: enter a valid store URL, including https://.';
+      if(storePlatform?.value!=='shopify'){
+        storeConnectionStatus.textContent='This platform is not connected yet. Shopify authorization is currently the only supported store connection.';
         return;
       }
-      storeConnectionStatus.textContent='URL format valid. Live connection not verified — platform authorization and server-side testing are not configured yet.';
+      let parsed;
+      try{parsed=new URL(raw)}catch{}
+      if(!parsed||parsed.protocol!=='https:'||parsed.username||parsed.password||parsed.port||parsed.search||parsed.hash||!['','/'].includes(parsed.pathname)){
+        storeConnectionStatus.textContent='Enter the HTTPS URL of your Shopify store, with no extra path or query string.';
+        return;
+      }
+      const shop=parsed.hostname.toLowerCase();
+      if(!/^[a-z0-9][a-z0-9-]*\\.myshopify\\.com$/.test(shop)){
+        storeConnectionStatus.textContent='Use your Shopify admin domain ending in .myshopify.com, for example https://your-store.myshopify.com.';
+        return;
+      }
+      const session=IZZY.session();
+      if(!session?.access_token){
+        storeConnectionStatus.textContent='Your session has expired. Please sign in again.';
+        location.href='login.html';
+        return;
+      }
+      const button=storeConnectionForm.querySelector('button[type="submit"]');
+      const previousLabel=button?.textContent||'Connect Shopify';
+      if(button){button.disabled=true;button.textContent='Connecting to Shopify…';}
+      storeConnectionStatus.textContent='Starting secure Shopify authorization…';
+      try{
+        const result=await IZZY.request('/functions/v1/shopify-oauth-install?shop='+encodeURIComponent(shop),{method:'GET'});
+        const installUrl=new URL(result?.install_url||'');
+        if(installUrl.protocol!=='https:'||installUrl.hostname!==shop||installUrl.pathname!=='/admin/oauth/authorize'){
+          throw new Error('The server returned an unexpected Shopify authorization URL.');
+        }
+        storeConnectionStatus.textContent='Opening Shopify so you can authorize IzzyDrop…';
+        location.assign(installUrl.href);
+      }catch(error){
+        storeConnectionStatus.textContent='Could not start Shopify authorization: '+(error?.message||'Please try again.');
+        if(button){button.disabled=false;button.textContent=previousLabel;}
+      }
     });
   }
 
