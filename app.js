@@ -966,7 +966,7 @@
   const storeGuidance=$('#store-platform-guidance');
   const storeConnectionStatus=$('#store-connection-status');
   const platformGuidance={
-    shopify:'Enter your Shopify store URL. Shopify authorization will be needed to verify and connect the store.',
+    shopify:'Enter your Shopify admin domain. You will be redirected to Shopify to authorize IzzyDrop.',
     woocommerce:'Enter your WooCommerce site URL. A secure WooCommerce REST API setup will be needed to verify and connect the store.',
     custom:'Enter your website URL. A supported API or integration endpoint will be needed to verify and connect the store.'
   };
@@ -993,7 +993,7 @@
         return;
       }
       const shop=parsed.hostname.toLowerCase();
-      if(!/^[a-z0-9][a-z0-9-]*\\.myshopify\\.com$/.test(shop)){
+      if(!/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(shop)){
         storeConnectionStatus.textContent='Use your Shopify admin domain ending in .myshopify.com, for example https://your-store.myshopify.com.';
         return;
       }
