@@ -35,12 +35,14 @@ assert.match(productsFn, /Authorization: "Bearer " \+ SERVICE_KEY/);
 assert.match(productsFn, /redirect: "error"/);
 assert.match(productsFn, /assertPublicHostname\(store\.hostname\)/);
 assert.match(productsFn, /dropshipper_product_links/);
-assert.match(productsFn, /product_variants\\?select=id,variant_name/);
+assert.match(productsFn, /product_variants\?select=id,variant_name/);
 assert.match(productsFn, /woocommerce_product_mappings/);
 assert.match(productsFn, /woocommerce_variant_mappings/);
 assert.match(productsFn, /stock_quantity: stock/);
 assert.match(productsFn, /regular_price: price\.toFixed\(2\)/);
-assert.match(productsFn, /productCurrency/);\nassert.match(productsFn, /suppliers\\?select=id,status/);\nassert.match(productsFn, /status !== \\\"approved\\\"/);
+assert.match(productsFn, /productCurrency/);
+assert.match(productsFn, /suppliers\?select=id,status/);
+assert.match(productsFn, /status !== "approved"/);
 assert.match(productsFn, /only dropshipper accounts can publish products/i);
 
 assert.match(migration, /enable row level security/ig);
@@ -51,4 +53,4 @@ assert.match(migration, /unique \(dropshipper_id\)/i);
 assert.match(migration, /unique \(store_credential_id, store_url, supplier_product_id\)/i);
 assert.match(migration, /unique \(store_credential_id, store_url, supplier_variant_id\)/i);
 
-console.log('PASS: WooCommerce connection, server-only credentials/mappings, product publishing, live stock/price sync, origin/auth/redirect safeguards, and My Products UI wiring.');
+console.log('PASS: WooCommerce connection, server-only credentials/mappings, product publishing, stock/price sync, origin/auth/redirect safeguards, supplier eligibility, and My Products UI wiring.');
