@@ -13,7 +13,7 @@ assert.match(html, /id="woocommerce-credentials" hidden/);
 assert.match(html, /id="woocommerce-key"/);
 assert.match(html, /id="woocommerce-secret"/);
 assert.match(html, /id="disconnect-woocommerce"/);
-assert.match(html, /app\.js\?v=20261025-woocommercepublish1/);
+assert.match(html, /app\.js\?v=20261025-woocommerceconnectmanage1/);
 assert.match(js, /const storeConnectionForm=\$\('#store-connection-form'\);/);
 assert.ok(js.indexOf("const storeConnectionForm=$('#store-connection-form');") < js.indexOf('updatePlatformFields();'),
   'storeConnectionForm must be initialized before updatePlatformFields runs');
