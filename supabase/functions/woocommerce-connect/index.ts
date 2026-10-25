@@ -94,6 +94,13 @@ Deno.serve(async (req: Request) => {
     return json({ error: e instanceof Error ? e.message : "Could not verify WooCommerce credentials." }, 400, origin);
   }
 
+  const environment = system.environment && typeof system.environment === "object"
+    ? system.environment as Record<string, unknown> : {};
+  const settings = system.settings && typeof system.settings === "object"
+    ? system.settings as Record<string, unknown> : {};
+  const storeName = typeof environment.site_url === "string" ? environment.site_url : store.hostname;
+  const currency = typeof settings.woocommerce_currency === "string" ? settings.woocommerce_currency : null;
+
   const saved = await fetch(SUPABASE_URL + "/rest/v1/woocommerce_store_credentials?on_conflict=dropshipper_id,store_url", {
     method: "POST",
     headers: {
@@ -105,11 +112,11 @@ Deno.serve(async (req: Request) => {
       store_url: store.origin + store.pathname,
       consumer_key: key,
       consumer_secret: secret,
-      store_name: typeof system.environment?.site_url === "string" ? system.environment.site_url : store.hostname,
-      currency: typeof system.settings?.woocommerce_currency === "string" ? system.settings.woocommerce_currency : null,
+      store_name: storeName,
+      currency,
       updated_at: new Date().toISOString()
     })
   });
   if (!saved.ok) return json({ error: "The store was verified, but IzzyDrop could not save the connection. Please try again." }, 500, origin);
-  return json({ ok: true, platform: "woocommerce", store_url: store.origin + store.pathname, store_name: system.environment?.site_url || store.hostname, message: "WooCommerce store connected. Product publishing is the next step." }, 200, origin);
+  return json({ ok: true, platform: "woocommerce", store_url: store.origin + store.pathname, store_name: storeName, message: "WooCommerce store connected. Product publishing is the next step." }, 200, origin);
 });
