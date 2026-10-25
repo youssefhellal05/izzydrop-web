@@ -18,7 +18,7 @@ assert.ok(js.indexOf("const storeConnectionForm=$('#store-connection-form');") <
   'storeConnectionForm must be initialized before updatePlatformFields runs');
 assert.match(js, /\/functions\/v1\/woocommerce-connect/);
 assert.match(js, /\/functions\/v1\/woocommerce-products/);
-assert.match(js, /class="woocommerce-publish-linked"/);
+assert.match(js, /class="[^"]*woocommerce-publish-linked/);
 assert.match(js, /publishWooCommerceProduct\(b\)/);
 assert.match(js, /wooKey\.value='';wooSecret\.value='';/);
 
