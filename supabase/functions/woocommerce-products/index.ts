@@ -325,14 +325,15 @@ Deno.serve(async (req: Request) => {
       return { ...variant, publish_price: Number(price.toFixed(2)), publish_stock: stock };
     });
 
-    const isVariable = pricedVariants.length > 1;
-    const productType = isVariable ? "variable" : "simple";
     const productMapRows = asArray<Record<string, any>>(await db(
       "woocommerce_product_mappings?select=id,woo_product_id,product_type&store_credential_id=eq." +
       encodeURIComponent(credential.id) + "&store_url=eq." + encodeURIComponent(credential.store_url) +
       "&supplier_product_id=eq." + encodeURIComponent(productId) + "&limit=1"
     ));
     const existingProductMap = productMapRows[0] || null;
+    // Keep an already-published variable product variable even if a variant is temporarily disabled.
+    const isVariable = pricedVariants.length > 1 || existingProductMap?.product_type === "variable";
+    const productType = isVariable ? "variable" : "simple";
     if (existingProductMap && existingProductMap.product_type !== productType) {
       return json({ error: "This product's variant structure changed after publishing. For safety, remove the old product in WooCommerce and ask IzzyDrop support to reset its mapping before publishing again." }, 409);
     }
