@@ -245,7 +245,7 @@ async function readHttpResponse(conn: Deno.Conn, signal: AbortSignal): Promise<S
         headers.append(line.slice(0, separator).trim(), line.slice(separator + 1).trim());
       }
       const whole = current;
-      let body = whole.slice(headerEnd + 4);
+      let body: Uint8Array<ArrayBufferLike> = whole.slice(headerEnd + 4);
       while (true) {
         const countBody = await abortable(conn.read(buffer), signal);
         if (countBody === null) break;
