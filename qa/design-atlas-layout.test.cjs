@@ -57,10 +57,14 @@ test('Changed functionality-bearing page markup has no unrelated drift',()=>{
    // The PR merge result inherits unchanged pages from main; a stale feature-branch checkout
    // must not be treated as a change to a page that is absent from the PR diff.
    if(!changedFiles.has(path))continue;
-   const base=execFileSync('git',['show','origin/main:'+path],{encoding:'utf8'});
+   let base=execFileSync('git',['show','origin/main:'+path],{encoding:'utf8'});
    let next=fs.readFileSync(path,'utf8');
    assert.equal(next.split('design-atlas.css?v=20261017-atlas1').length-1,1,path+' Atlas link');
    assert.equal(next.split('design-preview.js?v=20261017-atlas1').length-1,1,path+' preview script');
+   // Compare the base and PR markup after removing only the opt-in Atlas asset loader
+   // from both sides; main may already contain that loader.
+   base=base.replace('design-preview.js?v=20261017-atlas1','design-preview.js?v=20261017-pulse1')
+            .replace('<link rel="stylesheet" href="design-atlas.css?v=20261017-atlas1">','');
    next=next.replace('design-preview.js?v=20261017-atlas1','design-preview.js?v=20261017-pulse1')
             .replace('<link rel="stylesheet" href="design-atlas.css?v=20261017-atlas1">','');
    if(path==='app.html'){
