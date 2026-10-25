@@ -228,7 +228,7 @@ async function readHttpResponse(conn: Deno.Conn, signal: AbortSignal): Promise<S
         if (separator <= 0) throw new Error("WooCommerce returned malformed HTTP headers.");
         headers.append(line.slice(0, separator).trim(), line.slice(separator + 1).trim());
       }
-      let body = current.slice(headerEnd + 4);
+      let body: Uint8Array<ArrayBufferLike> = current.slice(headerEnd + 4);
       while (true) {
         const countBody = await abortable(conn.read(buffer), signal);
         if (countBody === null) break;
@@ -280,7 +280,7 @@ async function secureHttpsRequest(rawUrl: string | URL, init: RequestInit = {}, 
         const tls = await abortable(Deno.startTls(tcp, { hostname: url.hostname }), controller.signal);
         activeConn = tls;
         const method = (init.method || "GET").toUpperCase();
-        let payload = new Uint8Array(0);
+        let payload: Uint8Array<ArrayBufferLike> = new Uint8Array(0);
         if (init.body !== undefined && init.body !== null) {
           if (typeof init.body === "string") payload = new TextEncoder().encode(init.body);
           else if (init.body instanceof Uint8Array) payload = init.body;
