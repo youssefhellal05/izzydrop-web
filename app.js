@@ -271,10 +271,39 @@
       <div class="linked-actions">
         <button class="btn save-linked-price" data-link-id="${l.id}" ${available?'':'disabled'}>${local('Save price','حفظ السعر')}</button>
         <button class="btn secondary web-setup-linked" data-id="${IZZY.esc(p.product_id||'')}" ${available?'':'disabled'}>${local('Add to your web','أضفه إلى موقعك')}</button>
+        <button class="btn secondary woocommerce-publish-linked" data-id="${IZZY.esc(p.product_id||'')}" ${available?'':'disabled'}>${local('Publish / sync WooCommerce','نشر / مزامنة WooCommerce')}</button>
         ${details?`<a class="btn secondary" href="${details}">${local('Details','التفاصيل')}</a>`:''}
         <button class="text-danger remove-linked" data-link-id="${l.id}" data-product-name="${IZZY.esc(productName(p)||(ar()?'هذا المنتج':'this product'))}">${local('Remove','إزالة')}</button>
       </div>
     </article>`;
+  }
+
+  async function publishWooCommerceProduct(btn){
+    const productId=btn.dataset.id;
+    if(!productId)return;
+    const session=IZZY.session();
+    if(!session?.access_token){
+      status(local('Your session has expired. Please sign in again.','انتهت جلستك. سجّل الدخول مرة أخرى.'),true);
+      location.href='login.html';
+      return;
+    }
+    const previousLabel=btn.textContent;
+    btn.disabled=true;
+    btn.textContent=local('Syncing WooCommerce…','جارٍ مزامنة WooCommerce…');
+    status(local('Publishing product and syncing current prices and sellable stock…','جارٍ نشر المنتج ومزامنة الأسعار والمخزون المتاح…'));
+    try{
+      const result=await IZZY.request('/functions/v1/woocommerce-products',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'publish',product_id:productId})
+      });
+      status(result?.message||local('WooCommerce product synchronized.','تمت مزامنة المنتج مع WooCommerce.'));
+    }catch(error){
+      status(local('WooCommerce publish/sync failed: ','فشل النشر/المزامنة مع WooCommerce: ')+(error?.message||'Please check Store Connections and try again.'),true);
+    }finally{
+      btn.disabled=false;
+      btn.textContent=previousLabel;
+    }
   }
 
   function renderLinked(){
@@ -288,6 +317,7 @@
 
     document.querySelectorAll('.save-linked-price').forEach(b=>b.onclick=()=>saveLinkedPrice(b));
     document.querySelectorAll('.web-setup-linked').forEach(b=>b.onclick=()=>openWebSetup(b.dataset.id));
+    document.querySelectorAll('.woocommerce-publish-linked').forEach(b=>b.onclick=()=>publishWooCommerceProduct(b));
     document.querySelectorAll('.remove-linked').forEach(b=>b.onclick=()=>removeLinked(b));
     const browse=$('#browse-products-empty');
     if(browse)browse.onclick=()=>go('products');
@@ -980,25 +1010,134 @@
   const storeUrl=$('#store-url');
   const storeGuidance=$('#store-platform-guidance');
   const storeConnectionStatus=$('#store-connection-status');
+  const storeConnectionForm=$('#store-connection-form');
+  const wooCredentials=$('#woocommerce-credentials');
+  const wooKey=$('#woocommerce-key');
+  const wooSecret=$('#woocommerce-secret');
+  const wooDisconnectButton=$('#disconnect-woocommerce');
+  let wooIsConnected=false;
   const platformGuidance={
     shopify:'Enter your Shopify admin domain. You will be redirected to Shopify to authorize IzzyDrop.',
-    woocommerce:'Enter your WooCommerce site URL. A secure WooCommerce REST API setup will be needed to verify and connect the store.',
-    custom:'Enter your website URL. A supported API or integration endpoint will be needed to verify and connect the store.'
+    woocommerce:'Enter your HTTPS WordPress site URL and WooCommerce REST API consumer key and secret.',
+    custom:'Custom websites can use IzzyDrop’s separate web integration. A generic custom-store connector is not available yet.'
+  };
+  const updatePlatformFields=()=>{
+    const platform=storePlatform?.value||'shopify';
+    if(wooCredentials)wooCredentials.hidden=platform!=='woocommerce';
+    if(storeUrl){
+      storeUrl.placeholder=platform==='woocommerce'?'https://yourstore.com':'https://your-store.myshopify.com';
+    }
+    const button=storeConnectionForm?.querySelector('button[type="submit"]');
+    if(button)button.textContent=platform==='woocommerce'?(wooIsConnected?'Reconnect WooCommerce':'Connect WooCommerce'):platform==='custom'?'Custom website unavailable':'Connect Shopify';
+    if(wooDisconnectButton)wooDisconnectButton.hidden=platform!=='woocommerce'||!wooIsConnected;
+    if(storeGuidance)storeGuidance.textContent=platformGuidance[platform]||platformGuidance.shopify;
   };
   if(storePlatform&&storeGuidance){
     storePlatform.addEventListener('change',()=>{
-      storeGuidance.textContent=platformGuidance[storePlatform.value]||platformGuidance.shopify;
+      updatePlatformFields();
       if(storeConnectionStatus)storeConnectionStatus.textContent='Not connected — run a new test after changing the platform.';
+      if(storePlatform.value==='woocommerce')refreshWooConnectionStatus();
+    });
+    updatePlatformFields();
+  }
+
+  async function refreshWooConnectionStatus(){
+    if(storePlatform?.value!=='woocommerce'||!storeConnectionStatus)return;
+    const session=IZZY.session();
+    if(!session?.access_token)return;
+    try{
+      const result=await IZZY.request('/functions/v1/woocommerce-connect',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'status'})
+      });
+      wooIsConnected=result?.connected===true;
+      if(wooIsConnected){
+        if(storeUrl&&result.store_url)storeUrl.value=result.store_url;
+        storeConnectionStatus.textContent='WooCommerce connected: '+(result.store_name||result.store_url||'your store')+(result.currency?' · '+result.currency:'')+'.';
+      }else{
+        storeConnectionStatus.textContent='No WooCommerce store is connected yet.';
+      }
+      updatePlatformFields();
+    }catch(error){
+      wooIsConnected=false;
+      updatePlatformFields();
+      storeConnectionStatus.textContent='Could not load WooCommerce connection status: '+(error?.message||'Try again or reconnect the store.');
+    }
+  }
+
+  if(wooDisconnectButton){
+    wooDisconnectButton.addEventListener('click',async()=>{
+      if(!confirm('Disconnect WooCommerce? Products already published in your store will remain there, but IzzyDrop will stop managing and syncing them.'))return;
+      const session=IZZY.session();
+      if(!session?.access_token){storeConnectionStatus.textContent='Your session has expired. Please sign in again.';location.href='login.html';return;}
+      wooDisconnectButton.disabled=true;
+      const previous=wooDisconnectButton.textContent;
+      wooDisconnectButton.textContent='Disconnecting…';
+      try{
+        const result=await IZZY.request('/functions/v1/woocommerce-connect',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({action:'disconnect'})
+        });
+        wooIsConnected=false;
+        if(storeUrl)storeUrl.value='';
+        if(wooKey)wooKey.value='';
+        if(wooSecret)wooSecret.value='';
+        storeConnectionStatus.textContent=result?.message||'WooCommerce disconnected.';
+        updatePlatformFields();
+      }catch(error){
+        storeConnectionStatus.textContent='Could not disconnect WooCommerce: '+(error?.message||'Please try again.');
+      }finally{
+        wooDisconnectButton.disabled=false;
+        wooDisconnectButton.textContent=previous;
+      }
     });
   }
-  const storeConnectionForm=$('#store-connection-form');
   if(storeConnectionForm){
     storeConnectionForm.addEventListener('submit',async event=>{
       event.preventDefault();
       if(!storeConnectionStatus)return;
       const raw=storeUrl?.value.trim()||'';
-      if(storePlatform?.value!=='shopify'){
-        storeConnectionStatus.textContent='This platform is not connected yet. Shopify authorization is currently the only supported store connection.';
+      const platform=storePlatform?.value||'shopify';
+      if(platform==='custom'){
+        storeConnectionStatus.textContent='Custom website connections are not available through this form yet. Use the separate IzzyDrop web integration.';
+        return;
+      }
+      if(platform==='woocommerce'){
+        let wooUrl;
+        try{wooUrl=new URL(raw)}catch{}
+        if(!wooUrl||wooUrl.protocol!=='https:'||wooUrl.username||wooUrl.password||wooUrl.port||wooUrl.search||wooUrl.hash||!['','/'].includes(wooUrl.pathname)){
+          storeConnectionStatus.textContent='Enter your store’s HTTPS root URL, with no path, query string, or port.';
+          return;
+        }
+        if(!wooKey?.value.trim().startsWith('ck_')||!wooSecret?.value.trim().startsWith('cs_')){
+          storeConnectionStatus.textContent='Enter the WooCommerce consumer key (ck_…) and consumer secret (cs_…).';
+          return;
+        }
+        const session=IZZY.session();
+        if(!session?.access_token){storeConnectionStatus.textContent='Your session has expired. Please sign in again.';location.href='login.html';return;}
+        const button=storeConnectionForm.querySelector('button[type="submit"]');
+        const previousLabel=button?.textContent||'Connect WooCommerce';
+        if(button){button.disabled=true;button.textContent='Verifying WooCommerce…';}
+        storeConnectionStatus.textContent='Verifying API credentials securely…';
+        try{
+          const result=await IZZY.request('/functions/v1/woocommerce-connect',{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({store_url:wooUrl.origin,consumer_key:wooKey.value.trim(),consumer_secret:wooSecret.value.trim()})
+          });
+          wooIsConnected=true;
+          storeConnectionStatus.textContent='WooCommerce connected and verified: '+(result.store_name||result.store_url||wooUrl.hostname)+'.';
+          wooKey.value='';wooSecret.value='';
+          if(wooDisconnectButton)wooDisconnectButton.hidden=false;
+          updatePlatformFields();
+        }catch(error){
+          storeConnectionStatus.textContent='Could not connect WooCommerce: '+(error?.message||'Check the URL and REST API credentials.');
+        }finally{
+          if(button){button.disabled=false;button.textContent=previousLabel;}
+          if(wooIsConnected)updatePlatformFields();
+        }
         return;
       }
       let parsed;

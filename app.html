@@ -235,7 +235,7 @@
         <div class="connections-panel card">
           <div class="premium-chip">STORE INTEGRATION</div>
           <h2>Connect your store</h2>
-          <p class="muted">Connect your Shopify store securely. You’ll be redirected to Shopify to approve IzzyDrop.</p>
+          <p class="muted">Connect a sales channel to IzzyDrop. Shopify uses secure authorization; WooCommerce uses API credentials that are sent directly to IzzyDrop over HTTPS.</p>
           <form id="store-connection-form" class="form store-connection-form">
             <div class="field">
               <label class="field-label" for="store-platform">Platform</label>
@@ -249,10 +249,18 @@
               <label class="field-label" for="store-url">Store URL</label>
               <input id="store-url" type="url" placeholder="https://your-store.myshopify.com" autocomplete="url" required>
             </div>
+            <div class="field" id="woocommerce-credentials" hidden>
+              <label class="field-label" for="woocommerce-key">WooCommerce consumer key</label>
+              <input id="woocommerce-key" type="password" autocomplete="off" placeholder="ck_…" spellcheck="false">
+              <label class="field-label" for="woocommerce-secret">WooCommerce consumer secret</label>
+              <input id="woocommerce-secret" type="password" autocomplete="off" placeholder="cs_…" spellcheck="false">
+              <small class="muted">Create a WooCommerce REST API key with Read/Write access in your WordPress admin. Credentials are sent to IzzyDrop’s server for verification.</small>
+            </div>
             <div id="store-platform-guidance" class="notice store-platform-guidance">Enter your Shopify store URL. Shopify authorization will be needed to verify and connect the store.</div>
             <button id="test-store-connection" class="btn" type="submit">Connect Shopify</button>
             <p id="store-connection-status" class="status store-connection-status" role="status" aria-live="polite">Not connected — no test run.</p>
-            <p class="muted store-connection-note">After authorization, we’ll verify the connection and its permissions. WooCommerce and custom website connections are not available yet.</p>
+            <button id="disconnect-woocommerce" class="btn secondary" type="button" hidden>Disconnect WooCommerce</button>
+            <p class="muted store-connection-note">Shopify authorization and WooCommerce API credential verification are supported here. Custom website connections use the separate IzzyDrop web integration.</p>
           </form>
         </div>
       </section>
@@ -317,7 +325,7 @@
 <script src="config.js"></script>
 <script src="common.js?v=20261006-sessioncheck1"></script><script src="i18n.js?v=20261019-verification-arabic1"></script>
 <script src="sourcing.js?v=20261003-usercontent1"></script>
-<script src="app.js?v=20261019-verification1"></script>
+<script src="app.js?v=20261025-woocommerceconnectmanage1"></script>
 <script>window.IZZY_SETTINGS_ROLE="dropshipper"</script>
 <script src="settings.js?v=20261017-accountlang1"></script>
  <script src="payout-settings.js?v=20261017-arcoverage2"></script>
