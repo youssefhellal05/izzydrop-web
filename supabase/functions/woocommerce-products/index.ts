@@ -373,6 +373,9 @@ Deno.serve(async (req: Request) => {
         { key: "_izzydrop_supplier_sku", value: safeText(product.sku) }
       ]
     };
+    if (imageSources.length) {
+      parentPayload.images = imageSources.map((src) => ({ src }));
+    }
     if (isVariable) {
       const names = Array.from(attributeNames);
       parentPayload.attributes = names.map((name) => ({
@@ -402,10 +405,7 @@ Deno.serve(async (req: Request) => {
         wooProductId = Number(recovered[0].id);
         await wooRequest(store, credential.consumer_key, credential.consumer_secret, "products/" + wooProductId, "PUT", parentPayload);
       } else {
-        const created = await wooRequest(store, credential.consumer_key, credential.consumer_secret, "products", "POST", {
-          ...parentPayload,
-          ...(imageSources.length ? { images: imageSources.map((src) => ({ src })) } : {})
-        });
+        const created = await wooRequest(store, credential.consumer_key, credential.consumer_secret, "products", "POST", parentPayload);
         wooProductId = Number(created?.id);
         parentCreated = true;
         if (!Number.isFinite(wooProductId) || wooProductId <= 0) throw new Error("WooCommerce did not return a product ID after publishing.");
@@ -434,7 +434,7 @@ Deno.serve(async (req: Request) => {
     for (const variant of pricedVariants) {
       const variantId = String(variant.id);
       const mapped = mappingByVariant.get(variantId);
-      const sku = stableSku("IZZY-V", variantId);
+      const sku = isVariable ? stableSku("IZZY-V", variantId) : parentSku;
       const stock = variant.publish_stock;
       const price = variant.publish_price;
       const options = variationOptions.get(variantId) || {};
@@ -454,12 +454,13 @@ Deno.serve(async (req: Request) => {
         ...weightField,
         meta_data: meta
       };
+      const variantImage = isVariable ? await safeImageSource(variant.variant_image_url) : null;
+      if (variantImage) variantPayload.image = { src: variantImage };
       let wooItemId: number;
       if (!isVariable) {
         wooItemId = wooProductId;
       } else {
         variantPayload.attributes = Object.entries(options).map(([name, option]) => ({ name, option }));
-        const variantImage = await safeImageSource(variant.variant_image_url);
         if (mapped && mapped.is_variation) {
           wooItemId = Number(mapped.woo_item_id);
           await wooRequest(store, credential.consumer_key, credential.consumer_secret,
