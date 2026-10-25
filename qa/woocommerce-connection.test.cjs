@@ -35,12 +35,12 @@ assert.match(productsFn, /Authorization: "Bearer " \+ SERVICE_KEY/);
 assert.match(productsFn, /redirect: "error"/);
 assert.match(productsFn, /assertPublicHostname\(store\.hostname\)/);
 assert.match(productsFn, /dropshipper_product_links/);
-assert.match(productsFn, /marketplace_variants_v3/);
+assert.match(productsFn, /product_variants\\?select=id,variant_name/);
 assert.match(productsFn, /woocommerce_product_mappings/);
 assert.match(productsFn, /woocommerce_variant_mappings/);
 assert.match(productsFn, /stock_quantity: stock/);
 assert.match(productsFn, /regular_price: price\.toFixed\(2\)/);
-assert.match(productsFn, /productCurrency/);
+assert.match(productsFn, /productCurrency/);\nassert.match(productsFn, /suppliers\\?select=id,status/);\nassert.match(productsFn, /status !== \\\"approved\\\"/);
 assert.match(productsFn, /only dropshipper accounts can publish products/i);
 
 assert.match(migration, /enable row level security/ig);
