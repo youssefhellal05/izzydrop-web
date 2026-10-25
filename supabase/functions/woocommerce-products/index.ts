@@ -27,9 +27,8 @@ function isPrivateIPv4(ip: string): boolean {
     (a === 100 && b >= 64 && b <= 127) ||
     (a === 169 && b === 254) ||
     (a === 172 && b >= 16 && b <= 31) ||
-    (a === 192 && (b === 0 || b === 168)) ||
-    (a === 192 && b === 0 && c === 2) ||
-    (a === 198 && (b === 18 || b === 19 || b === 51 && ip.split(".")[2] === "51" && ip.split(".")[3] === "100") ) ||
+    (a === 192 && (b === 0 || b === 168 || b === 88 && c === 99)) ||
+    (a === 198 && (b === 18 || b === 19 || b === 51 && c === 100)) ||
     (a === 203 && b === 0 && c === 113);
 }
 
@@ -264,7 +263,7 @@ Deno.serve(async (req: Request) => {
     if (!link || link.status !== "active") return json({ error: "Add this active product to My Products before publishing it." }, 409);
 
     const products = asArray<Record<string, any>>(await db(
-      "supplier_products?select=id,name,name_en,name_ar,description,description_en,description_ar,sku,currency,suggested_retail_price,status,admin_blocked& id=eq." +
+      "supplier_products?select=id,name,name_en,name_ar,description,description_en,description_ar,sku,currency,suggested_retail_price,status,admin_blocked&id=eq." +
       encodeURIComponent(productId) + "&limit=1"
     ));
     const product = products[0];
