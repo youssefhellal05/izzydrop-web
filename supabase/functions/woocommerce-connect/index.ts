@@ -114,6 +114,46 @@ Deno.serve(async (req: Request) => {
 
   let body: Record<string, unknown>;
   try { body = await req.json(); } catch { return json({ error: "Invalid request body." }, 400, origin); }
+
+  if (body.action === "status" || body.action === "disconnect") {
+    const profileResponse = await fetch(SUPABASE_URL + "/rest/v1/dropshippers?select=id&profile_id=eq." + encodeURIComponent(user.id) + "&limit=1", {
+      headers: { apikey: SERVICE_KEY, Authorization: "Bearer " + SERVICE_KEY },
+      redirect: "error",
+      signal: AbortSignal.timeout(12000)
+    });
+    if (!profileResponse.ok) return json({ error: "Could not verify your IzzyDrop account." }, 500, origin);
+    const profiles = await profileResponse.json();
+    const dropshipperId = profiles?.[0]?.id;
+    if (!dropshipperId) return json({ error: "Only dropshipper accounts can manage WooCommerce stores." }, 403, origin);
+
+    if (body.action === "status") {
+      const response = await fetch(SUPABASE_URL + "/rest/v1/woocommerce_store_credentials?select=store_url,store_name,currency,connected_at&dropshipper_id=eq." + encodeURIComponent(dropshipperId) + "&limit=1", {
+        headers: { apikey: SERVICE_KEY, Authorization: "Bearer " + SERVICE_KEY },
+        redirect: "error",
+        signal: AbortSignal.timeout(12000)
+      });
+      if (!response.ok) return json({ error: "Could not load WooCommerce connection status." }, 500, origin);
+      const rows = await response.json();
+      const row = rows?.[0];
+      return json(row ? {
+        ok: true, connected: true, store_url: row.store_url,
+        store_name: row.store_name, currency: row.currency, connected_at: row.connected_at
+      } : { ok: true, connected: false }, 200, origin);
+    }
+
+    const removed = await fetch(SUPABASE_URL + "/rest/v1/woocommerce_store_credentials?dropshipper_id=eq." + encodeURIComponent(dropshipperId), {
+      method: "DELETE",
+      headers: { apikey: SERVICE_KEY, Authorization: "Bearer " + SERVICE_KEY, Prefer: "return=minimal" },
+      redirect: "error",
+      signal: AbortSignal.timeout(12000)
+    });
+    if (!removed.ok) return json({ error: "Could not disconnect WooCommerce. Please try again." }, 500, origin);
+    return json({
+      ok: true, connected: false,
+      message: "WooCommerce disconnected. Products already published in your store remain there; IzzyDrop has removed its saved connection and mappings."
+    }, 200, origin);
+  }
+
   let store: URL;
   try { store = normalizeStoreUrl(body.store_url); } catch (e) { return json({ error: e instanceof Error ? e.message : "Invalid store URL." }, 400, origin); }
 
