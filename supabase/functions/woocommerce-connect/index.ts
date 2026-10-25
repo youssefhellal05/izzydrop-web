@@ -10,7 +10,7 @@ function json(body: unknown, status = 200, origin = "") {
     headers: {
       "Content-Type": "application/json",
       "Cache-Control": "no-store",
-      "Access-Control-Allow-Origin": origin || ALLOWED_ORIGIN,
+      "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
       "Access-Control-Allow-Headers": "authorization, content-type, apikey",
       "Access-Control-Allow-Methods": "POST, OPTIONS",
       "Vary": "Origin"
@@ -48,8 +48,11 @@ async function getJson(url: string, key: string, secret: string) {
 
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get("origin") || "";
+  if (origin && origin !== ALLOWED_ORIGIN) return new Response(JSON.stringify({ error: "Origin not allowed." }), {
+    status: 403, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" }
+  });
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: {
-    "Access-Control-Allow-Origin": origin || ALLOWED_ORIGIN,
+    "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
     "Access-Control-Allow-Headers": "authorization, content-type, apikey",
     "Access-Control-Allow-Methods": "POST, OPTIONS", "Vary": "Origin"
   }});
