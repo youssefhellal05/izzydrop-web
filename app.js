@@ -271,10 +271,39 @@
       <div class="linked-actions">
         <button class="btn save-linked-price" data-link-id="${l.id}" ${available?'':'disabled'}>${local('Save price','حفظ السعر')}</button>
         <button class="btn secondary web-setup-linked" data-id="${IZZY.esc(p.product_id||'')}" ${available?'':'disabled'}>${local('Add to your web','أضفه إلى موقعك')}</button>
+        <button class="btn secondary woocommerce-publish-linked" data-id="${IZZY.esc(p.product_id||'')}" ${available?'':'disabled'}>${local('Publish / sync WooCommerce','نشر / مزامنة WooCommerce')}</button>
         ${details?`<a class="btn secondary" href="${details}">${local('Details','التفاصيل')}</a>`:''}
         <button class="text-danger remove-linked" data-link-id="${l.id}" data-product-name="${IZZY.esc(productName(p)||(ar()?'هذا المنتج':'this product'))}">${local('Remove','إزالة')}</button>
       </div>
     </article>`;
+  }
+
+  async function publishWooCommerceProduct(btn){
+    const productId=btn.dataset.id;
+    if(!productId)return;
+    const session=IZZY.session();
+    if(!session?.access_token){
+      status(local('Your session has expired. Please sign in again.','انتهت جلستك. سجّل الدخول مرة أخرى.'),true);
+      location.href='login.html';
+      return;
+    }
+    const previousLabel=btn.textContent;
+    btn.disabled=true;
+    btn.textContent=local('Syncing WooCommerce…','جارٍ مزامنة WooCommerce…');
+    status(local('Publishing product and syncing current prices and sellable stock…','جارٍ نشر المنتج ومزامنة الأسعار والمخزون المتاح…'));
+    try{
+      const result=await IZZY.request('/functions/v1/woocommerce-products',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'publish',product_id:productId})
+      });
+      status(result?.message||local('WooCommerce product synchronized.','تمت مزامنة المنتج مع WooCommerce.'));
+    }catch(error){
+      status(local('WooCommerce publish/sync failed: ','فشل النشر/المزامنة مع WooCommerce: ')+(error?.message||'Please check Store Connections and try again.'),true);
+    }finally{
+      btn.disabled=false;
+      btn.textContent=previousLabel;
+    }
   }
 
   function renderLinked(){
@@ -288,6 +317,7 @@
 
     document.querySelectorAll('.save-linked-price').forEach(b=>b.onclick=()=>saveLinkedPrice(b));
     document.querySelectorAll('.web-setup-linked').forEach(b=>b.onclick=()=>openWebSetup(b.dataset.id));
+    document.querySelectorAll('.woocommerce-publish-linked').forEach(b=>b.onclick=()=>publishWooCommerceProduct(b));
     document.querySelectorAll('.remove-linked').forEach(b=>b.onclick=()=>removeLinked(b));
     const browse=$('#browse-products-empty');
     if(browse)browse.onclick=()=>go('products');
