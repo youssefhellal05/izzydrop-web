@@ -7,6 +7,7 @@ on:
       - 'app.html'
       - 'app.js'
       - 'supabase/functions/woocommerce-connect/**'
+      - 'supabase/functions/woocommerce-products/**'
       - 'supabase/migrations/20261025_woocommerce_store_credentials.sql'
       - 'qa/woocommerce-connection.test.cjs'
   push:
@@ -15,6 +16,7 @@ on:
       - 'app.html'
       - 'app.js'
       - 'supabase/functions/woocommerce-connect/**'
+      - 'supabase/functions/woocommerce-products/**'
       - 'supabase/migrations/20261025_woocommerce_store_credentials.sql'
       - 'qa/woocommerce-connection.test.cjs'
 
