@@ -28,5 +28,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Check browser JavaScript syntax
+        run: node --check app.js
+      - name: Check WooCommerce Edge Function types
+        run: deno check --no-lock supabase/functions/woocommerce-connect/index.ts supabase/functions/woocommerce-products/index.ts
       - name: Run WooCommerce connection regression checks
         run: node qa/woocommerce-connection.test.cjs
