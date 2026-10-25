@@ -1136,6 +1136,7 @@
           storeConnectionStatus.textContent='Could not connect WooCommerce: '+(error?.message||'Check the URL and REST API credentials.');
         }finally{
           if(button){button.disabled=false;button.textContent=previousLabel;}
+          if(wooIsConnected)updatePlatformFields();
         }
         return;
       }
