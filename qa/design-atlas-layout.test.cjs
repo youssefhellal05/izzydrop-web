@@ -67,6 +67,8 @@ test('Changed functionality-bearing page markup has no unrelated drift',()=>{
      // WooCommerce adds an optional credentials area, disconnect action, and updated cache URL.
      next=next.replace('Connect a sales channel to IzzyDrop. Shopify uses secure authorization; WooCommerce uses API credentials that are sent directly to IzzyDrop over HTTPS.',
        'Connect your Shopify store securely. You’ll be redirected to Shopify to approve IzzyDrop.');
+     next=next.replace('Shopify authorization and WooCommerce API credential verification are supported here. Custom website connections use the separate IzzyDrop web integration.',
+       'After authorization, we’ll verify the connection and its permissions. WooCommerce and custom website connections are not available yet.');
      next=next.replace(wooCredentialsBlock,'').replace(disconnectButton,'');
      next=next.replace('app.js?v=20261025-woocommerceconnectmanage1','app.js?v=20261019-verification1');
    }
