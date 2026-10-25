@@ -47,6 +47,8 @@ assert.match(productsFn, /woocommerce_variant_mappings/);
 assert.match(productsFn, /stock_quantity: stock/);
 assert.match(productsFn, /regular_price: price\.toFixed\(2\)/);
 assert.match(productsFn, /productCurrency/);
+assert.match(productsFn, /seenCombinations/);
+assert.match(productsFn, /Two enabled variants have the same option combination/);
 assert.match(productsFn, /suppliers\?select=id,status/);
 assert.match(productsFn, /status !== "approved"/);
 assert.match(productsFn, /only dropshipper accounts can publish products/i);
