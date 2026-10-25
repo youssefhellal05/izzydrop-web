@@ -1,6 +1,6 @@
 # IzzyDrop Project Checkpoint
 
-**Last updated:** 2026-10-25  
+**Last updated:** 2026-10-26  
 **Active task:** WooCommerce store connection and on-demand product publish/sync  
 **Working branch:** `feat/woocommerce-store-connection`  
 **Pull request:** [#36 — Add WooCommerce store connection and product sync](https://github.com/youssefhellal05/izzydrop-web/pull/36)  
@@ -41,13 +41,13 @@ Checks cover JavaScript syntax, Deno type-checking of both WooCommerce Edge Func
 - Neither WooCommerce Edge Function is deployed and the migration has not been applied to production.
 - No live WooCommerce credential verification, product publish, or price/stock sync has been exercised against a real store.
 - Sync is manual/on-demand; automatic scheduled price/stock updates, order import/webhooks, and remote product deletion on disconnect are not implemented.
-- DNS/private-address checks are defense-in-depth and do not fully eliminate DNS-rebinding risk.
+- WooCommerce outbound requests now resolve A/AAAA records, reject mixed/private/reserved answers, connect directly to the selected public IP, and start TLS while verifying the original hostname. Redirects are not followed. Connection-level security changes are awaiting the new CI run and final review; do not deploy until those checks pass.
 - Do not describe the connection as production-ready until a deliberate outbound-request security review and live-store E2E test are complete.
 
 ## Exact next task
 
-1. Obtain explicit approval to promote PR #36 and make the production changes.
-2. After approval, apply the migration and deploy `woocommerce-connect` and `woocommerce-products` to the Supabase project `izzydrop-production` (`bbqpowtmzsoorluqwfbm`).
+1. Review the DNS-rebinding hardening and rerun the WooCommerce CI, including Deno type-checking.
+2. After all checks pass, complete the already-approved PR #36 promotion, apply the additive migration, and deploy `woocommerce-connect` and `woocommerce-products` to `izzydrop-production` (`bbqpowtmzsoorluqwfbm`).
 3. Use a real WooCommerce store connected through the in-product form—**never paste consumer secrets into chat**—to test:
    - connect/status/disconnect and secret clearing;
    - one single-variant product and one multi-variant product;
