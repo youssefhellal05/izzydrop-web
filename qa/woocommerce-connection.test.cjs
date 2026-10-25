@@ -49,7 +49,7 @@ assert.match(migration, /enable row level security/ig);
 assert.match(migration, /revoke all on public\.woocommerce_store_credentials from anon, authenticated/i);
 assert.match(migration, /revoke all on public\.woocommerce_product_mappings from anon, authenticated/i);
 assert.match(migration, /revoke all on public\.woocommerce_variant_mappings from anon, authenticated/i);
-assert.match(migration, /unique \(dropshipper_id\)/i);
+assert.match(migration, /dropshippers\?\(id\) on delete cascade unique/i);
 assert.match(migration, /unique \(store_credential_id, store_url, supplier_product_id\)/i);
 assert.match(migration, /unique \(store_credential_id, store_url, supplier_variant_id\)/i);
 
