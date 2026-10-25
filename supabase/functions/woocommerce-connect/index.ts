@@ -31,6 +31,49 @@ function normalizeStoreUrl(raw: unknown): URL {
   return url;
 }
 
+function isPrivateIPv4(ip: string): boolean {
+  const parts = ip.split(".").map(Number);
+  if (parts.length !== 4 || parts.some((n) => !Number.isInteger(n) || n < 0 || n > 255)) return true;
+  const [a, b] = parts;
+  return a === 0 || a === 10 || a === 127 || a >= 224 ||
+    (a === 100 && b >= 64 && b <= 127) ||
+    (a === 169 && b === 254) ||
+    (a === 172 && b >= 16 && b <= 31) ||
+    (a === 192 && (b === 0 || b === 168)) ||
+    (a === 198 && (b === 18 || b === 19)) ||
+    (a === 192 && b === 88);
+}
+
+function isPrivateIPv6(ip: string): boolean {
+  const value = ip.toLowerCase().split("%")[0];
+  if (value === "::" || value === "::1" || value.startsWith("fc") || value.startsWith("fd") ||
+      /^fe[89ab]/.test(value) || value.startsWith("ff") || value.startsWith("2001:db8:")) return true;
+  const mapped = value.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
+  return mapped ? isPrivateIPv4(mapped[1]) : false;
+}
+
+async function assertPublicHostname(hostname: string): Promise<void> {
+  // Reject IP literals, local names and special-use suffixes before DNS resolution.
+  if (!hostname || hostname.includes(":") || /^[0-9.]+$/.test(hostname) ||
+      hostname === "localhost" || hostname.endsWith(".localhost") ||
+      hostname.endsWith(".local") || hostname.endsWith(".internal") ||
+      hostname.endsWith(".test") || hostname.endsWith(".invalid")) {
+    throw new Error("Private and local network addresses are not supported.");
+  }
+  let addresses: string[] = [];
+  const lookups = await Promise.allSettled([
+    Deno.resolveDns(hostname, "A"),
+    Deno.resolveDns(hostname, "AAAA")
+  ]);
+  for (const lookup of lookups) {
+    if (lookup.status === "fulfilled") addresses.push(...lookup.value);
+  }
+  if (!addresses.length) throw new Error("The store hostname could not be resolved publicly.");
+  if (addresses.some((ip) => ip.includes(":") ? isPrivateIPv6(ip) : isPrivateIPv4(ip))) {
+    throw new Error("The store hostname resolves to a private or reserved network address.");
+  }
+}
+
 async function getJson(url: string, key: string, secret: string) {
   const auth = btoa(key + ":" + secret);
   const response = await fetch(url, {
@@ -89,6 +132,7 @@ Deno.serve(async (req: Request) => {
 
   let system: Record<string, unknown>;
   try {
+    await assertPublicHostname(store.hostname);
     system = await getJson(store.origin + store.pathname + "/wp-json/wc/v3/system_status", key, secret);
   } catch (e) {
     return json({ error: e instanceof Error ? e.message : "Could not verify WooCommerce credentials." }, 400, origin);
