@@ -263,12 +263,18 @@ Deno.serve(async (req: Request) => {
     if (!link || link.status !== "active") return json({ error: "Add this active product to My Products before publishing it." }, 409);
 
     const products = asArray<Record<string, any>>(await db(
-      "supplier_products?select=id,name,name_en,name_ar,description,description_en,description_ar,sku,currency,suggested_retail_price,status,admin_blocked&id=eq." +
+      "supplier_products?select=id,supplier_id,name,name_en,name_ar,description,description_en,description_ar,sku,currency,suggested_retail_price,status,admin_blocked&id=eq." +
       encodeURIComponent(productId) + "&limit=1"
     ));
     const product = products[0];
     if (!product || product.status !== "active" || product.admin_blocked === true) {
       return json({ error: "This product is not currently available for publishing." }, 409);
+    }
+    const suppliers = asArray<Record<string, any>>(await db(
+      "suppliers?select=id,status&id=eq." + encodeURIComponent(String(product.supplier_id || "")) + "&limit=1"
+    ));
+    if (!suppliers[0] || suppliers[0].status !== "approved") {
+      return json({ error: "This supplier is not currently approved to sell on IzzyDrop." }, 409);
     }
 
     const productCurrency = safeText(product.currency).toUpperCase() || "EGP";
@@ -284,14 +290,9 @@ Deno.serve(async (req: Request) => {
     ));
     if (!rawVariants.length) return json({ error: "This product has no enabled variants." }, 409);
 
-    const liveVariants: Array<Record<string, any>> = asArray<Record<string, any>>(await db("rpc/marketplace_variants_v3", {
-      method: "POST",
-      body: JSON.stringify({ _product_id: productId })
-    }));
-    const liveStock = new Map(liveVariants.map((v) => [String(v.id), Math.max(0, Math.floor(Number(v.stock_quantity) || 0))]));
     let variants: Array<Record<string, any>> = rawVariants.map((v: Record<string, any>) => ({
       ...v,
-      stock_quantity: liveStock.has(String(v.id)) ? liveStock.get(String(v.id))! : 0
+      stock_quantity: Math.max(0, Math.floor(Number(v.stock_quantity) || 0))
     }));
     if (link.sourced_variant_id) {
       const chosen = variants.find((v) => String(v.id) === String(link.sourced_variant_id));
