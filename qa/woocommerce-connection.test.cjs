@@ -31,7 +31,7 @@ assert.match(connectFn, /currencyValue/);
 
 assert.match(productsFn, /if \(origin && origin !== ALLOWED_ORIGIN\)/);
 assert.match(productsFn, /Authorization: "Basic " \+ btoa\(key \+ ":" \+ secret\)/);
-assert.match(productsFn, /Authorization: "Bearer " \+ SERVICE_KEY/);
+assert.match(productsFn, /headers\.set\("Authorization", "Bearer " \+ SERVICE_KEY\)/);
 assert.match(productsFn, /redirect: "error"/);
 assert.match(productsFn, /assertPublicHostname\(store\.hostname\)/);
 assert.match(productsFn, /dropshipper_product_links/);
