@@ -980,6 +980,7 @@
   const storeUrl=$('#store-url');
   const storeGuidance=$('#store-platform-guidance');
   const storeConnectionStatus=$('#store-connection-status');
+  const storeConnectionForm=$('#store-connection-form');
   const wooCredentials=$('#woocommerce-credentials');
   const wooKey=$('#woocommerce-key');
   const wooSecret=$('#woocommerce-secret');
@@ -1005,7 +1006,6 @@
     });
     updatePlatformFields();
   }
-  const storeConnectionForm=$('#store-connection-form');
   if(storeConnectionForm){
     storeConnectionForm.addEventListener('submit',async event=>{
       event.preventDefault();
