@@ -143,9 +143,11 @@ Deno.serve(async (req: Request) => {
   const settings = system.settings && typeof system.settings === "object"
     ? system.settings as Record<string, unknown> : {};
   const storeName = typeof environment.site_url === "string" ? environment.site_url : store.hostname;
-  const currency = typeof settings.woocommerce_currency === "string" ? settings.woocommerce_currency : null;
+  const currencyValue = settings.woocommerce_currency && typeof settings.woocommerce_currency === "object"
+    ? (settings.woocommerce_currency as Record<string, unknown>).value : settings.woocommerce_currency;
+  const currency = typeof currencyValue === "string" ? currencyValue.toUpperCase() : null;
 
-  const saved = await fetch(SUPABASE_URL + "/rest/v1/woocommerce_store_credentials?on_conflict=dropshipper_id,store_url", {
+  const saved = await fetch(SUPABASE_URL + "/rest/v1/woocommerce_store_credentials?on_conflict=dropshipper_id", {
     method: "POST",
     headers: {
       apikey: SERVICE_KEY, Authorization: "Bearer " + SERVICE_KEY,
@@ -162,5 +164,5 @@ Deno.serve(async (req: Request) => {
     })
   });
   if (!saved.ok) return json({ error: "The store was verified, but IzzyDrop could not save the connection. Please try again." }, 500, origin);
-  return json({ ok: true, platform: "woocommerce", store_url: store.origin + store.pathname, store_name: storeName, message: "WooCommerce store connected. Product publishing is the next step." }, 200, origin);
+  return json({ ok: true, platform: "woocommerce", store_url: store.origin + store.pathname, store_name: storeName, message: "WooCommerce store connected and verified. You can now publish products and sync current variant prices and stock." }, 200, origin);
 });
