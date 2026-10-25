@@ -73,7 +73,7 @@ test('Changed functionality-bearing page markup has no unrelated drift',()=>{
        'Connect your Shopify store securely. You’ll be redirected to Shopify to approve IzzyDrop.');
      next=next.replace('Shopify authorization and WooCommerce API credential verification are supported here. Custom website connections use the separate IzzyDrop web integration.',
        'After authorization, we’ll verify the connection and its permissions. WooCommerce and custom website connections are not available yet.');
-     next=next.replace(wooCredentialsBlock,'').replace(disconnectButton,'');
+     next=next.replace(wooCredentialsBlock,'').replace(disconnectButton+String.fromCharCode(10),'');
      next=next.replace('app.js?v=20261025-woocommerceconnectmanage1','app.js?v=20261019-verification1');
    }
    assert.equal(next,base,path+' drifted outside opt-in asset loader and explicitly allowed integration changes');
