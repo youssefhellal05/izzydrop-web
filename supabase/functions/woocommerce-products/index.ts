@@ -19,43 +19,306 @@ function json(body: unknown, status = 200) {
   });
 }
 
-function isPrivateIPv4(ip: string): boolean {
-  const parts = ip.split(".").map(Number);
-  if (parts.length !== 4 || parts.some((n) => !Number.isInteger(n) || n < 0 || n > 255)) return true;
-  const [a, b, c] = parts;
-  return a === 0 || a === 10 || a === 127 || a >= 224 ||
-    (a === 100 && b >= 64 && b <= 127) ||
-    (a === 169 && b === 254) ||
-    (a === 172 && b >= 16 && b <= 31) ||
-    (a === 192 && (b === 0 || b === 168 || b === 88 && c === 99)) ||
-    (a === 198 && (b === 18 || b === 19 || b === 51 && c === 100)) ||
-    (a === 203 && b === 0 && c === 113);
+function ipv4Number(ip: string): number | null {
+  const parts = ip.split(".");
+  if (parts.length !== 4) return null;
+  let value = 0;
+  for (const part of parts) {
+    if (!/^\d{1,3}$/.test(part)) return null;
+    const octet = Number(part);
+    if (octet < 0 || octet > 255) return null;
+    value = value * 256 + octet;
+  }
+  return value;
 }
 
-function isPrivateIPv6(ip: string): boolean {
-  const value = ip.toLowerCase().split("%")[0];
-  if (value === "::" || value === "::1" || value.startsWith("fc") || value.startsWith("fd") ||
-      /^fe[89ab]/.test(value) || value.startsWith("ff") || value.startsWith("2001:db8:")) return true;
-  const mapped = value.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
-  return mapped ? isPrivateIPv4(mapped[1]) : false;
+function ipv4InCidr(ip: string, base: number, prefix: number): boolean {
+  const value = ipv4Number(ip);
+  if (value === null) return true;
+  const divisor = 2 ** (32 - prefix);
+  return Math.floor(value / divisor) === Math.floor(base / divisor);
 }
 
-async function assertPublicHostname(hostname: string): Promise<void> {
-  if (!hostname || hostname.includes(":") || /^[0-9.]+$/.test(hostname) ||
-      hostname === "localhost" || hostname.endsWith(".localhost") ||
-      hostname.endsWith(".local") || hostname.endsWith(".internal") ||
-      hostname.endsWith(".test") || hostname.endsWith(".invalid")) {
+function isPublicIPv4(ip: string): boolean {
+  const denied: Array<[number, number]> = [
+    [0x00000000, 8], [0x0a000000, 8], [0x64400000, 10],
+    [0x7f000000, 8], [0xa9fe0000, 16], [0xac100000, 12],
+    [0xc0000000, 24], [0xc0000200, 24], [0xc0586300, 24],
+    [0xc0a80000, 16], [0xc6120000, 15], [0xc6336400, 24],
+    [0xcb007100, 24], [0xe0000000, 4], [0xf0000000, 4]
+  ];
+  return ipv4Number(ip) !== null && !denied.some(([base, prefix]) => ipv4InCidr(ip, base, prefix));
+}
+
+function ipv6Words(ip: string): number[] | null {
+  let value = ip.toLowerCase().split("%")[0];
+  if (!value || value.includes(":::")) return null;
+  if (value.includes(".")) {
+    const cut = value.lastIndexOf(":");
+    if (cut < 0) return null;
+    const v4 = ipv4Number(value.slice(cut + 1));
+    if (v4 === null) return null;
+    const high = Math.floor(v4 / 65536).toString(16);
+    const low = (v4 % 65536).toString(16);
+    value = value.slice(0, cut + 1) + high + ":" + low;
+  }
+  const halves = value.split("::");
+  if (halves.length > 2) return null;
+  const left = halves[0] ? halves[0].split(":") : [];
+  const right = halves.length === 2 && halves[1] ? halves[1].split(":") : [];
+  if (left.concat(right).some((part) => !/^[0-9a-f]{1,4}$/.test(part))) return null;
+  let words: number[];
+  if (halves.length === 1) {
+    if (left.length !== 8) return null;
+    words = left.map((part) => parseInt(part, 16));
+  } else {
+    const fill = 8 - left.length - right.length;
+    if (fill < 1) return null;
+    words = left.map((part) => parseInt(part, 16))
+      .concat(Array.from({ length: fill }, () => 0), right.map((part) => parseInt(part, 16)));
+  }
+  return words.length === 8 ? words : null;
+}
+
+function isPublicIPv6(ip: string): boolean {
+  const words = ipv6Words(ip);
+  if (!words) return false;
+  if (words[0] < 0x2000 || words[0] > 0x3fff) return false;
+  if (words[0] === 0x2001 && words[1] <= 0x01ff) return false;
+  if (words[0] === 0x2001 && words[1] === 0x0db8) return false;
+  if (words[0] === 0x2002) return false;
+  if (words[0] === 0x3fff && (words[1] & 0xfff0) === 0) return false;
+  return true;
+}
+
+function isPublicAddress(ip: string): boolean {
+  return ip.includes(":") ? isPublicIPv6(ip) : isPublicIPv4(ip);
+}
+
+async function resolvePublicAddresses(hostname: string): Promise<string[]> {
+  const host = hostname.toLowerCase().replace(/\.$/, "");
+  if (!host || host.includes(":") || /^[0-9.]+$/.test(host) ||
+      host === "localhost" || host.endsWith(".localhost") ||
+      host.endsWith(".local") || host.endsWith(".internal") ||
+      host.endsWith(".test") || host.endsWith(".invalid")) {
     throw new Error("Private and local network addresses are not supported.");
   }
   const lookups = await Promise.allSettled([
-    Deno.resolveDns(hostname, "A"),
-    Deno.resolveDns(hostname, "AAAA")
+    Deno.resolveDns(host, "A"),
+    Deno.resolveDns(host, "AAAA")
   ]);
   const addresses: string[] = [];
-  for (const result of lookups) if (result.status === "fulfilled") addresses.push(...result.value);
-  if (!addresses.length) throw new Error("A public hostname could not be resolved.");
-  if (addresses.some((ip) => ip.includes(":") ? isPrivateIPv6(ip) : isPrivateIPv4(ip))) {
-    throw new Error("A hostname resolves to a private or reserved network address.");
+  for (const lookup of lookups) {
+    if (lookup.status === "fulfilled") addresses.push(...lookup.value);
+  }
+  const unique = Array.from(new Set(addresses));
+  if (!unique.length) throw new Error("The store hostname could not be resolved publicly.");
+  if (unique.some((ip) => !isPublicAddress(ip))) {
+    throw new Error("The store hostname resolves to a private or reserved network address.");
+  }
+  return unique;
+}
+
+async function assertPublicHostname(hostname: string): Promise<void> {
+  await resolvePublicAddresses(hostname);
+}
+
+type SecureHttpResponse = {
+  ok: boolean;
+  status: number;
+  headers: Headers;
+  text: () => Promise<string>;
+};
+
+function findBytes(data: Uint8Array, needle: number[], start = 0): number {
+  outer: for (let i = start; i <= data.length - needle.length; i++) {
+    for (let j = 0; j < needle.length; j++) {
+      if (data[i + j] !== needle[j]) continue outer;
+    }
+    return i;
+  }
+  return -1;
+}
+
+function joinBytes(chunks: Uint8Array[], length: number): Uint8Array {
+  const output = new Uint8Array(length);
+  let offset = 0;
+  for (const chunk of chunks) {
+    output.set(chunk, offset);
+    offset += chunk.length;
+  }
+  return output;
+}
+
+function decodeChunkedBody(body: Uint8Array): Uint8Array {
+  const output: Uint8Array[] = [];
+  let outputLength = 0;
+  let cursor = 0;
+  const crlf = [13, 10];
+  while (cursor < body.length) {
+    const lineEnd = findBytes(body, crlf, cursor);
+    if (lineEnd < 0) throw new Error("WooCommerce returned malformed HTTP framing.");
+    const sizeLine = new TextDecoder().decode(body.slice(cursor, lineEnd)).split(";")[0].trim();
+    if (!/^[0-9a-f]+$/i.test(sizeLine)) throw new Error("WooCommerce returned malformed HTTP framing.");
+    const chunkSize = Number.parseInt(sizeLine, 16);
+    cursor = lineEnd + 2;
+    if (!Number.isSafeInteger(chunkSize) || chunkSize < 0 || chunkSize > 8 * 1024 * 1024) {
+      throw new Error("WooCommerce response exceeded the allowed size.");
+    }
+    if (chunkSize === 0) return joinBytes(output, outputLength);
+    if (cursor + chunkSize + 2 > body.length ||
+        body[cursor + chunkSize] !== 13 || body[cursor + chunkSize + 1] !== 10) {
+      throw new Error("WooCommerce returned incomplete HTTP framing.");
+    }
+    output.push(body.slice(cursor, cursor + chunkSize));
+    outputLength += chunkSize;
+    if (outputLength > 8 * 1024 * 1024) throw new Error("WooCommerce response exceeded the allowed size.");
+    cursor += chunkSize + 2;
+  }
+  throw new Error("WooCommerce returned incomplete HTTP framing.");
+}
+
+function abortable<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> {
+  if (signal.aborted) {
+    return Promise.reject(signal.reason instanceof Error ? signal.reason : new DOMException("Request timed out.", "TimeoutError"));
+  }
+  return new Promise<T>((resolve, reject) => {
+    const onAbort = () => reject(signal.reason instanceof Error ? signal.reason : new DOMException("Request timed out.", "TimeoutError"));
+    signal.addEventListener("abort", onAbort, { once: true });
+    promise.then(
+      (value) => { signal.removeEventListener("abort", onAbort); resolve(value); },
+      (error) => { signal.removeEventListener("abort", onAbort); reject(error); }
+    );
+  });
+}
+
+async function writeAll(conn: Deno.Conn, data: Uint8Array, signal: AbortSignal): Promise<void> {
+  let offset = 0;
+  while (offset < data.length) {
+    const written = await abortable(conn.write(data.subarray(offset)), signal);
+    if (written <= 0) throw new Error("Connection closed while sending request.");
+    offset += written;
+  }
+}
+
+async function readHttpResponse(conn: Deno.Conn, signal: AbortSignal): Promise<SecureHttpResponse> {
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  const buffer = new Uint8Array(16384);
+  const delimiter = [13, 10, 13, 10];
+  let headerEnd = -1;
+  while (headerEnd < 0) {
+    const count = await abortable(conn.read(buffer), signal);
+    if (count === null) throw new Error("WooCommerce closed the connection before returning HTTP headers.");
+    const part = buffer.slice(0, count);
+    chunks.push(part);
+    total += count;
+    if (total > 8 * 1024 * 1024) throw new Error("WooCommerce response exceeded the allowed size.");
+    const current = joinBytes(chunks, total);
+    headerEnd = findBytes(current, delimiter);
+    if (headerEnd >= 0) {
+      const headerText = new TextDecoder().decode(current.slice(0, headerEnd));
+      const lines = headerText.split("\r\n");
+      const statusMatch = lines.shift()?.match(/^HTTP\/1\.[01]\s+(\d{3})(?:\s|$)/);
+      if (!statusMatch) throw new Error("WooCommerce returned an invalid HTTP status line.");
+      const status = Number(statusMatch[1]);
+      const headers = new Headers();
+      for (const line of lines) {
+        const separator = line.indexOf(":");
+        if (separator <= 0) throw new Error("WooCommerce returned malformed HTTP headers.");
+        headers.append(line.slice(0, separator).trim(), line.slice(separator + 1).trim());
+      }
+      let body = current.slice(headerEnd + 4);
+      while (true) {
+        const countBody = await abortable(conn.read(buffer), signal);
+        if (countBody === null) break;
+        const partBody = buffer.slice(0, countBody);
+        if (total + countBody > 8 * 1024 * 1024) throw new Error("WooCommerce response exceeded the allowed size.");
+        chunks.push(partBody);
+        total += countBody;
+        body = joinBytes(chunks, total).slice(headerEnd + 4);
+      }
+      if (headers.get("content-encoding") && headers.get("content-encoding")?.toLowerCase() !== "identity") {
+        throw new Error("WooCommerce returned an unsupported compressed response.");
+      }
+      if (headers.get("transfer-encoding")?.toLowerCase().split(",").map((v) => v.trim()).includes("chunked")) {
+        body = decodeChunkedBody(body);
+      } else {
+        const contentLength = headers.get("content-length");
+        if (contentLength !== null) {
+          if (!/^\d+$/.test(contentLength)) throw new Error("WooCommerce returned an invalid content length.");
+          const expected = Number(contentLength);
+          if (body.length < expected) throw new Error("WooCommerce returned an incomplete response body.");
+          body = body.slice(0, expected);
+        }
+      }
+      if (status === 204 || status === 304) body = new Uint8Array(0);
+      if (body.length > 8 * 1024 * 1024) throw new Error("WooCommerce response exceeded the allowed size.");
+      const bodyText = new TextDecoder().decode(body);
+      return { ok: status >= 200 && status < 300, status, headers, text: async () => bodyText };
+    }
+  }
+  throw new Error("WooCommerce returned malformed HTTP data.");
+}
+
+async function secureHttpsRequest(rawUrl: string | URL, init: RequestInit = {}, timeoutMs = 12000): Promise<SecureHttpResponse> {
+  const url = new URL(rawUrl.toString());
+  if (url.protocol !== "https:" || url.username || url.password || (url.port && url.port !== "443")) {
+    throw new Error("Only public HTTPS destinations on port 443 are supported.");
+  }
+  const addresses = await resolvePublicAddresses(url.hostname);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(new DOMException("WooCommerce request timed out.", "TimeoutError")), timeoutMs);
+  let activeConn: Deno.Conn | undefined;
+  let requestStarted = false;
+  let lastError: unknown;
+  try {
+    for (const address of addresses) {
+      try {
+        const tcp = await abortable(Deno.connect({ hostname: address, port: 443, signal: controller.signal }), controller.signal);
+        activeConn = tcp;
+        const tls = await abortable(Deno.startTls(tcp, { hostname: url.hostname }), controller.signal);
+        activeConn = tls;
+        const method = (init.method || "GET").toUpperCase();
+        let payload = new Uint8Array(0);
+        if (init.body !== undefined && init.body !== null) {
+          if (typeof init.body === "string") payload = new TextEncoder().encode(init.body);
+          else if (init.body instanceof Uint8Array) payload = init.body;
+          else throw new Error("Unsupported request payload type.");
+        }
+        const headers = new Headers(init.headers || {});
+        headers.delete("host");
+        headers.delete("connection");
+        headers.delete("transfer-encoding");
+        headers.delete("content-length");
+        headers.set("Host", url.host);
+        headers.set("Connection", "close");
+        headers.set("Accept-Encoding", "identity");
+        if (init.body !== undefined && init.body !== null) headers.set("Content-Length", String(payload.length));
+        const requestTarget = url.pathname + url.search || "/";
+        const headerLines = [method + " " + requestTarget + " HTTP/1.1"];
+        for (const [name, value] of headers.entries()) {
+          if (/[\r\n]/.test(name + value)) throw new Error("Invalid HTTP header.");
+          headerLines.push(name + ": " + value);
+        }
+        headerLines.push("", "");
+        const requestHead = new TextEncoder().encode(headerLines.join("\r\n"));
+        requestStarted = true;
+        await writeAll(tls, requestHead, controller.signal);
+        if (payload.length) await writeAll(tls, payload, controller.signal);
+        return await readHttpResponse(tls, controller.signal);
+      } catch (error) {
+        activeConn?.close();
+        activeConn = undefined;
+        if (controller.signal.aborted) throw new DOMException("WooCommerce request timed out. Try again.", "TimeoutError");
+        if (requestStarted) throw error;
+        lastError = error;
+      }
+    }
+    throw lastError instanceof Error ? lastError : new Error("Could not connect to the public store address.");
+  } finally {
+    clearTimeout(timer);
+    activeConn?.close();
   }
 }
 
@@ -104,7 +367,6 @@ function normalizeStoreUrl(value: unknown): URL {
 }
 
 async function wooRequest(store: URL, key: string, secret: string, path: string, method = "GET", payload?: unknown): Promise<any> {
-  await assertPublicHostname(store.hostname);
   const base = store.origin + store.pathname + API_ROOT;
   const url = base + "/" + path.replace(/^\/+/, "");
   const headers: Record<string, string> = {
@@ -116,8 +378,8 @@ async function wooRequest(store: URL, key: string, secret: string, path: string,
     headers["Content-Type"] = "application/json";
     init.body = JSON.stringify(payload);
   }
-  let response: Response;
-  try { response = await fetch(url, init); }
+  let response: SecureHttpResponse;
+  try { response = await secureHttpsRequest(new URL(url), init, 20000); }
   catch (error) {
     if (error instanceof Error && error.name === "TimeoutError") throw new Error("WooCommerce did not respond in time. Try again.");
     throw new Error("Could not reach WooCommerce securely. Check the store URL and hosting firewall.");
