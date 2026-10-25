@@ -1,0 +1,30 @@
+name: WooCommerce connection regression
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'app.html'
+      - 'app.js'
+      - 'supabase/functions/woocommerce-connect/**'
+      - 'supabase/migrations/20261025_woocommerce_store_credentials.sql'
+      - 'qa/woocommerce-connection.test.cjs'
+  push:
+    branches: [feat/woocommerce-store-connection]
+    paths:
+      - 'app.html'
+      - 'app.js'
+      - 'supabase/functions/woocommerce-connect/**'
+      - 'supabase/migrations/20261025_woocommerce_store_credentials.sql'
+      - 'qa/woocommerce-connection.test.cjs'
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Run WooCommerce connection regression checks
+        run: node qa/woocommerce-connection.test.cjs
