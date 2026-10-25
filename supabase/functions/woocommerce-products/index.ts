@@ -278,18 +278,21 @@ Deno.serve(async (req: Request) => {
         " but your WooCommerce store uses " + storeCurrency + ". Change the store currency or use a matching product before publishing." }, 409);
     }
 
-    const rawVariants = asArray<Record<string, any>>(await db(
+    const rawVariants: Array<Record<string, any>> = asArray<Record<string, any>>(await db(
       "product_variants?select=id,variant_name,sku,stock_quantity,option_values,is_enabled,variant_image_url,suggested_retail_price,barcode,weight_grams,created_at&product_id=eq." +
       encodeURIComponent(productId) + "&is_enabled=eq.true&order=created_at.asc"
     ));
     if (!rawVariants.length) return json({ error: "This product has no enabled variants." }, 409);
 
-    const liveVariants = asArray<Record<string, any>>(await db("rpc/marketplace_variants_v3", {
+    const liveVariants: Array<Record<string, any>> = asArray<Record<string, any>>(await db("rpc/marketplace_variants_v3", {
       method: "POST",
       body: JSON.stringify({ _product_id: productId })
     }));
     const liveStock = new Map(liveVariants.map((v) => [String(v.id), Math.max(0, Math.floor(Number(v.stock_quantity) || 0))]));
-    let variants = rawVariants.map((v) => ({ ...v, stock_quantity: liveStock.has(String(v.id)) ? liveStock.get(String(v.id))! : 0 }));
+    let variants: Array<Record<string, any>> = rawVariants.map((v: Record<string, any>) => ({
+      ...v,
+      stock_quantity: liveStock.has(String(v.id)) ? liveStock.get(String(v.id))! : 0
+    }));
     if (link.sourced_variant_id) {
       const chosen = variants.find((v) => String(v.id) === String(link.sourced_variant_id));
       if (chosen) variants = [chosen];
@@ -313,7 +316,7 @@ Deno.serve(async (req: Request) => {
     };
     const customPrice = link.pricing_mode === "custom" && link.retail_price !== null && link.retail_price !== undefined
       ? Number(link.retail_price) : null;
-    const pricedVariants = variants.map((variant) => {
+    const pricedVariants: Array<Record<string, any>> = variants.map((variant: Record<string, any>) => {
       const suggested = variant.suggested_retail_price ?? product.suggested_retail_price ?? 0;
       const price = customPrice !== null ? customPrice : Number(suggested);
       const stock = Math.max(0, Math.floor(Number(variant.stock_quantity) || 0));
