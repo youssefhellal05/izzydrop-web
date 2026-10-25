@@ -12,11 +12,15 @@ const migration = read('supabase/migrations/20261025_woocommerce_store_credentia
 assert.match(html, /id="woocommerce-credentials" hidden/);
 assert.match(html, /id="woocommerce-key"/);
 assert.match(html, /id="woocommerce-secret"/);
+assert.match(html, /id="disconnect-woocommerce"/);
 assert.match(html, /app\.js\?v=20261025-woocommercepublish1/);
 assert.match(js, /const storeConnectionForm=\$\('#store-connection-form'\);/);
 assert.ok(js.indexOf("const storeConnectionForm=$('#store-connection-form');") < js.indexOf('updatePlatformFields();'),
   'storeConnectionForm must be initialized before updatePlatformFields runs');
 assert.match(js, /\/functions\/v1\/woocommerce-connect/);
+assert.match(js, /action:'status'/);
+assert.match(js, /action:'disconnect'/);
+assert.match(js, /wooIsConnected/);
 assert.match(js, /\/functions\/v1\/woocommerce-products/);
 assert.match(js, /class="[^"]*woocommerce-publish-linked/);
 assert.match(js, /publishWooCommerceProduct\(b\)/);
@@ -28,6 +32,8 @@ assert.match(connectFn, /Authorization: "Bearer " \+ jwt/);
 assert.match(connectFn, /consumer_secret: secret/);
 assert.match(connectFn, /on_conflict=dropshipper_id/);
 assert.match(connectFn, /currencyValue/);
+assert.match(connectFn, /body.action === "status"/);
+assert.match(connectFn, /body.action === "disconnect"/);
 
 assert.match(productsFn, /if \(origin && origin !== ALLOWED_ORIGIN\)/);
 assert.match(productsFn, /Authorization: "Basic " \+ btoa\(key \+ ":" \+ secret\)/);
