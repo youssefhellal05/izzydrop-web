@@ -348,6 +348,7 @@ Deno.serve(async (req: Request) => {
       }
       const names = Array.from(attributeNames);
       if (names.length > 3) return json({ error: "WooCommerce publishing currently supports up to three variant option attributes per product." }, 409);
+      const seenCombinations = new Set<string>();
       for (const variant of pricedVariants) {
         const options = variationOptions.get(String(variant.id)) || {};
         for (const name of names) {
@@ -355,6 +356,11 @@ Deno.serve(async (req: Request) => {
             return json({ error: "Every enabled variant must define the same option attributes before publishing." }, 409);
           }
         }
+        const signature = names.map((name) => String(options[name]).trim().toLowerCase()).join("\\u0000");
+        if (seenCombinations.has(signature)) {
+          return json({ error: "Two enabled variants have the same option combination. Correct the variant options before publishing to WooCommerce." }, 409);
+        }
+        seenCombinations.add(signature);
       }
     }
 
