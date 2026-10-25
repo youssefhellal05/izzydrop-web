@@ -1,10 +1,10 @@
 const fs = require('node:fs');
 const assert = require('node:assert/strict');
 
-const html = fs.readFileSync(new URL('../app.html', import.meta.url), 'utf8');
-const js = fs.readFileSync(new URL('../app.js', import.meta.url), 'utf8');
-const fn = fs.readFileSync(new URL('../supabase/functions/woocommerce-connect/index.ts', import.meta.url), 'utf8');
-const migration = fs.readFileSync(new URL('../supabase/migrations/20261025_woocommerce_store_credentials.sql', import.meta.url), 'utf8');
+const html = fs.readFileSync(require('node:path').join(__dirname, '../app.html'), 'utf8');
+const js = fs.readFileSync(require('node:path').join(__dirname, '../app.js'), 'utf8');
+const fn = fs.readFileSync(require('node:path').join(__dirname, '../supabase/functions/woocommerce-connect/index.ts'), 'utf8');
+const migration = fs.readFileSync(require('node:path').join(__dirname, '../supabase/migrations/20261025_woocommerce_store_credentials.sql'), 'utf8');
 
 assert.match(html, /id="woocommerce-credentials" hidden/);
 assert.match(html, /id="woocommerce-key"/);
