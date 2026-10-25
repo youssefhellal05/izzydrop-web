@@ -27,6 +27,12 @@ assert.match(js, /publishWooCommerceProduct\(b\)/);
 assert.match(js, /wooKey\.value='';wooSecret\.value='';/);
 
 assert.match(connectFn, /if \(origin && origin !== ALLOWED_ORIGIN\)/);
+assert.match(connectFn, /Deno\.connect\(\{ hostname: address, port: 443/);
+assert.match(connectFn, /Deno\.startTls\(tcp, \{ hostname: url\.hostname \}\)/);
+assert.match(connectFn, /await secureHttpsRequest\(new URL\(url\)/);
+assert.match(connectFn, /unique\.some\(\(ip\) => !isPublicAddress\(ip\)\)/);
+assert.match(connectFn, /headers\.set\("Connection", "close"\)/);
+assert.match(connectFn, /requestStarted\) throw error/);
 assert.match(connectFn, /redirect: "error"/);
 assert.match(connectFn, /Authorization: "Bearer " \+ jwt/);
 assert.match(connectFn, /consumer_secret: secret/);
@@ -36,10 +42,16 @@ assert.match(connectFn, /body.action === "status"/);
 assert.match(connectFn, /body.action === "disconnect"/);
 
 assert.match(productsFn, /if \(origin && origin !== ALLOWED_ORIGIN\)/);
+assert.match(productsFn, /Deno\.connect\(\{ hostname: address, port: 443/);
+assert.match(productsFn, /Deno\.startTls\(tcp, \{ hostname: url\.hostname \}\)/);
+assert.match(productsFn, /await secureHttpsRequest\(new URL\(url\), init, 20000\)/);
+assert.match(productsFn, /unique\.some\(\(ip\) => !isPublicAddress\(ip\)\)/);
+assert.match(productsFn, /headers\.set\("Connection", "close"\)/);
+assert.match(productsFn, /requestStarted\) throw error/);
 assert.match(productsFn, /Authorization: "Basic " \+ btoa\(key \+ ":" \+ secret\)/);
 assert.match(productsFn, /headers\.set\("Authorization", "Bearer " \+ SERVICE_KEY\)/);
 assert.match(productsFn, /redirect: "error"/);
-assert.match(productsFn, /assertPublicHostname\(store\.hostname\)/);
+
 assert.match(productsFn, /dropshipper_product_links/);
 assert.match(productsFn, /product_variants\?select=id,variant_name/);
 assert.match(productsFn, /woocommerce_product_mappings/);
