@@ -11,6 +11,7 @@
     money:['Money','Track actual COD profit and payout status.'],
     requests:['Sourcing requests','Products the community wants suppliers to find.'],
     sourced:['Sourced products','Real published products linked to community sourcing requests.'],
+    store:['My Store','Customize and publish your own IzzyDrop storefront.'],
     connections:['Store Connections','Connect Shopify, WooCommerce, or a custom website.'],
     settings:['Settings','Account and preferences.']
   };
