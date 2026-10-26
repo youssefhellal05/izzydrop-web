@@ -41,7 +41,20 @@ BEGIN
   END IF;
 END $$;
 
-DO $$
+UPDATE public.dropshipper_store_product_variants SET enabled = false
+WHERE store_product_id = '90000000-0000-0000-0000-000000000001';
+DO $
+DECLARE doc jsonb;
+BEGIN
+  doc := public.public_dropshipper_store_by_slug('youssef-shop');
+  IF jsonb_array_length(doc->'products') <> 0 THEN
+    RAISE EXCEPTION 'Product should be omitted when the seller disables every variant';
+  END IF;
+END $;
+UPDATE public.dropshipper_store_product_variants SET enabled = true
+WHERE store_product_id = '90000000-0000-0000-0000-000000000001';
+
+DO $
 BEGIN
   IF has_table_privilege('anon','public.dropshipper_stores','SELECT') THEN
     RAISE EXCEPTION 'anon role can directly read the private store profile table';
