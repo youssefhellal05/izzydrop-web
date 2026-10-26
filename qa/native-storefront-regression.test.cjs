@@ -56,7 +56,7 @@ test('public customer page never requests or renders supplier identity or suppli
 });
 
 test('native storefront navigation preserves existing external integrations', () => {
-  assert.match(read('app.html'), /store-manager\.html/);
+  assert.match(read('config.js'), /store-manager-nav\\.js/);
   const app = read('app.js');
   assert.match(app, /function openWebSetup/);
   assert.match(app, /woocommerce-publish-linked/);
@@ -68,6 +68,6 @@ test('uploads are scoped to the signed-in user and validate image type and size'
   assert.match(migration, /\(storage\.foldername\(name\)\)\[1\] = \(select auth\.uid\(\)\)::text/i);
   const js = read('store-manager.js');
   assert.match(js, /f\.size>5242880/);
-  assert.match(js, /image\/\(jpeg\|png\|webp\|avif\)/);
+  assert.ok(js.includes('image\\\\/(jpeg|png|webp|avif)'));
   assert.match(js, /storage\/v1\/object\/storefront-images/);
 });
