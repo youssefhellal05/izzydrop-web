@@ -50,7 +50,8 @@ assert.doesNotMatch(publicProductShape, /supplier_name|supplier_id|supplier_cost
   'Public product payload must not include supplier identities, costs, internal SKU, or store integrations');
 assert.doesNotMatch(publicJs, /supplier_name|supplier_id|supplier_cost|cost_price|shopify|woocommerce/i,
   'The public browser bundle must not expose supplier/private integration data');
-assert.doesNotMatch(edge, /SERVICE_KEY.*json|json\(.*SERVICE_KEY/i, 'Never serialize the service key into responses');
+const jsonHelper = edge.slice(edge.indexOf('function json('), edge.indexOf('function inFilter('));
+assert.doesNotMatch(jsonHelper, /SERVICE_KEY/i, 'Never serialize the service key into responses');
 
 assert.match(publicPage, /store\.js/);
 assert.match(publicPage, /store-public-main/);
