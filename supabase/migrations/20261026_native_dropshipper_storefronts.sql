@@ -289,7 +289,7 @@ as $function$
               'name', coalesce(nullif(btrim(v.variant_name), ''), v.sku, 'Option'),
               'options', coalesce(v.option_values, '{}'::jsonb),
               'price', spv.retail_price,
-              'stock_quantity', v.stock_quantity,
+              'in_stock', (v.stock_quantity > 0),
               'image_url', case when v.variant_image_url ~* '^https://[^[:space:]]+$' then v.variant_image_url else null end
             ) order by v.created_at, v.id)
             from public.dropshipper_store_product_variants spv
