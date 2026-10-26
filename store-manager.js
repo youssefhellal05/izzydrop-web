@@ -32,8 +32,8 @@
     return unique([...fromProducts.map(image=>image.url),...fromVariants]);
   };
   const variantPrice=(product,link,variant)=>{
-    if(variant.suggested_retail_price!=null&&Number.isFinite(Number(variant.suggested_retail_price)))return Number(variant.suggested_retail_price);
     if(link?.pricing_mode==='custom'&&link.retail_price!=null&&Number.isFinite(Number(link.retail_price)))return Number(link.retail_price);
+    if(variant.suggested_retail_price!=null&&Number.isFinite(Number(variant.suggested_retail_price)))return Number(variant.suggested_retail_price);
     if(product.suggested_retail_price!=null&&Number.isFinite(Number(product.suggested_retail_price)))return Number(product.suggested_retail_price);
     return 0;
   };
