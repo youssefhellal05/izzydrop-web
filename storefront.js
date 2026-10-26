@@ -20,7 +20,7 @@
     const images=(Array.isArray(p.images)?p.images:[]).map(safeUrl).filter(Boolean);
     const variants=Array.isArray(p.variants)?p.variants:[];
     const v=variants[0]||null;
-    const out=!v||Number(v.stock_quantity||0)<1;
+    const out=!v||v.in_stock!==true;
     const gallery=images.length
       ? "<div class='storefront-gallery'><img class='storefront-main-image' src='"+esc(images[0])+"' alt='"+esc(p.title)+"' loading='lazy'>"+
         (images.length>1?"<div class='storefront-photo-dots'>"+images.map((url,i)=>"<button type='button' data-photo-index='"+i+"' class='"+(i===0?'on':'')+"' aria-label='View photo "+(i+1)+"'></button>").join('')+"</div>":"")+"</div>"
@@ -41,7 +41,7 @@
       if(select)select.addEventListener('change',()=>{
         const v=variants.find(x=>x.id===select.value)||variants[0];if(!v)return;
         price.textContent=money(v.price,p.currency);
-        const out=Number(v.stock_quantity||0)<1;stock.textContent=out?'Out of stock':'Available';stock.classList.toggle('out',out);
+        const out=v.in_stock!==true;stock.textContent=out?'Out of stock':'Available';stock.classList.toggle('out',out);
         note.textContent=optionLabel(v);
         const vi=safeUrl(v.image_url);if(image&&vi&&images.includes(vi))image.src=vi;
       });
