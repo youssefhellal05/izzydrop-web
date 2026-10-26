@@ -7,6 +7,9 @@ CREATE SCHEMA IF NOT EXISTS auth;
 CREATE SCHEMA IF NOT EXISTS private;
 CREATE SCHEMA IF NOT EXISTS storage;
 
+-- Mirror Supabase's broad default grants so the hardening migration is exercised in CI.
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON TABLES TO authenticated;
+
 CREATE TYPE public.app_role AS ENUM ('admin','supplier','dropshipper');
 
 CREATE OR REPLACE FUNCTION auth.uid()
