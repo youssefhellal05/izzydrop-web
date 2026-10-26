@@ -32,6 +32,8 @@ BEGIN
   IF doc->'products'->0->>'title' <> 'My custom title' THEN RAISE EXCEPTION 'Store title override was not returned'; END IF;
   IF doc->'products'->0->>'description' <> 'My own product copy' THEN RAISE EXCEPTION 'Store description override was not returned'; END IF;
   IF (doc->'products'->0->'variants'->0->>'price')::numeric <> 725.50 THEN RAISE EXCEPTION 'Store-specific variant price was not returned'; END IF;
+  IF doc->'products'->0->'variants'->0->>'in_stock' <> 'true' THEN RAISE EXCEPTION 'Public variant availability flag was not returned'; END IF;
+  IF doc::text LIKE '%stock_quantity%' THEN RAISE EXCEPTION 'Public storefront exposed exact stock quantities'; END IF;
   IF doc::text NOT LIKE '%selected.jpg%' OR doc::text NOT LIKE '%my-photo.jpg%' THEN RAISE EXCEPTION 'Selected and custom images were not returned'; END IF;
   IF doc::text LIKE '%PRIVATE_SUPPLIER_IDENTITY%' OR doc::text LIKE '%supplier_cost%' OR doc::text LIKE '%cost_price%' OR doc::text LIKE '%supplier_id%' THEN
     RAISE EXCEPTION 'Public storefront leaked supplier information or cost fields';
