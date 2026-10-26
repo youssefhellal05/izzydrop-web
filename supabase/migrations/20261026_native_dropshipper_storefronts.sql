@@ -312,8 +312,13 @@ as $function$
         and p.admin_blocked = false
         and s.status = 'approved'
         and exists (
-          select 1 from public.product_variants available_variant
-          where available_variant.product_id = p.id and available_variant.is_enabled = true
+          select 1
+          from public.dropshipper_store_product_variants selected_variant
+          join public.product_variants available_variant on available_variant.id = selected_variant.variant_id
+          where selected_variant.store_product_id = dsp.id
+            and selected_variant.enabled = true
+            and available_variant.product_id = p.id
+            and available_variant.is_enabled = true
         )
     ), '[]'::jsonb)
   )
