@@ -147,7 +147,7 @@ create or replace function private.validate_dropshipper_store_product()
 returns trigger
 language plpgsql
 security definer
-set search_path = public, private, pg_temp
+set search_path = pg_catalog, public, private, pg_temp
 as $$
 declare
   v_store_dropshipper_id uuid;
@@ -176,7 +176,7 @@ create or replace function private.validate_dropshipper_store_variant()
 returns trigger
 language plpgsql
 security definer
-set search_path = public, private, pg_temp
+set search_path = pg_catalog, public, private, pg_temp
 as $$
 declare
   v_source_product_id uuid;
@@ -249,7 +249,7 @@ returns jsonb
 language sql
 stable
 security definer
-set search_path = public, private, pg_temp
+set search_path = pg_catalog, public, private, pg_temp
 as $function$
   select jsonb_build_object(
     'store', jsonb_build_object(
@@ -287,7 +287,7 @@ as $function$
           'variants', coalesce((
             select jsonb_agg(jsonb_build_object(
               'id', v.id,
-              'name', coalesce(nullif(btrim(v.variant_name), ''), v.sku, 'Option'),
+              'name', coalesce(nullif(btrim(v.variant_name), ''), 'Option'),
               'options', coalesce(v.option_values, '{}'::jsonb),
               'price', spv.retail_price,
               'in_stock', (v.stock_quantity > 0),
