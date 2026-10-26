@@ -31,6 +31,8 @@ test('public storefront RPC exposes presentation data, not supplier identity or 
   assert.match(publicFunction, /s\.status = 'approved'/i);
   assert.match(publicFunction, /ds\.published = true/i);
   assert.match(publicFunction, /selected_variant\.enabled = true/i);
+  assert.match(publicFunction, /dsp\.content_reviewed_at is not null/i);
+  assert.match(publicFunction, /'description', coalesce\(dsp\.description_override, ''\)/i);
   assert.match(publicFunction, /'in_stock', \(v\.stock_quantity > 0\)/i);
   assert.doesNotMatch(publicFunction, /'stock_quantity',/i);
 });
@@ -38,7 +40,7 @@ test('public storefront RPC exposes presentation data, not supplier identity or 
 test('store manager supports profile, photos, descriptions, and per-variant prices', () => {
   const html = read('store-manager.html');
   const js = read('store-manager.js');
-  for (const id of ['store-profile-form', 'store-name', 'store-slug', 'store-published', 'store-catalog-results', 'store-listings', 'store-edit-modal', 'edit-upload-photos']) {
+  for (const id of ['store-profile-form', 'store-name', 'store-slug', 'store-published', 'store-catalog-results', 'store-listings', 'store-edit-modal', 'edit-upload-photos', 'store-content-review']) {
     assert.match(html, new RegExp('id="' + id + '"'));
   }
   for (const table of ['dropshipper_stores', 'dropshipper_store_products', 'dropshipper_store_product_variants']) assert.ok(js.includes(table));
