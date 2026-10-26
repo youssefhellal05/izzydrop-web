@@ -26,6 +26,7 @@ test('public storefront RPC exposes presentation data, not supplier identity or 
   assert.doesNotMatch(publicFunction, /'supplier_id'\s*,/i);
   assert.doesNotMatch(publicFunction, /'supplier_cost'\s*,/i);
   assert.doesNotMatch(publicFunction, /'cost_price'\s*,/i);
+  assert.doesNotMatch(publicFunction, /v\.sku/i, 'Public variant labels must not fall back to supplier SKUs');
   assert.match(publicFunction, /p\.status = 'active'/i);
   assert.match(publicFunction, /p\.admin_blocked = false/i);
   assert.match(publicFunction, /s\.status = 'approved'/i);
