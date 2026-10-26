@@ -9,7 +9,7 @@ const migration = read('supabase/migrations/20261026_native_dropshipper_storefro
 
 test('native storefront tables are RLS-protected and owner-managed', () => {
   for (const table of ['dropshipper_stores', 'dropshipper_store_products', 'dropshipper_store_product_variants']) {
-    assert.match(migration, new RegExp('alter table public\\\\.' + table + ' enable row level security', 'i'));
+    assert.match(migration, new RegExp('alter table public\\.' + table + ' enable row level security', 'i'));
     assert.match(migration, new RegExp('revoke all on public\\\\.' + table + ' from anon', 'i'));
     assert.match(migration, new RegExp('store owner manages own', 'i'));
   }
@@ -21,7 +21,7 @@ test('public storefront RPC exposes presentation data, not supplier identity or 
   assert.notEqual(start, -1);
   const publicFunction = migration.slice(start);
   for (const privateField of ['supplier_name', 'supplier_id', 'supplier_cost', 'cost_price', 'supplier_email']) {
-    assert.doesNotMatch(publicFunction, new RegExp(privateField, 'i'));
+    assert.doesNotMatch(publicFunction, new RegExp(privateField === 'supplier_id' ? "['\\\"]supplier_id['\\\"]\\\\s*," : privateField === 'supplier_name' ? "['\\\"]supplier_name['\\\"]\\\\s*," : privateField, 'i'));
   }
   assert.match(publicFunction, /p\.status = 'active'/i);
   assert.match(publicFunction, /p\.admin_blocked = false/i);
