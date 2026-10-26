@@ -80,8 +80,8 @@ test('uploads are scoped to the signed-in user and validate image type and size'
 });
 
 test('storefront hardening removes non-CRUD authenticated table privileges', () => {
-  assert.match(hardeningMigration, /revoke all privileges on table[\\s\\S]*from public, anon, authenticated/i);
-  assert.match(hardeningMigration, /grant select, insert, update, delete on table[\\s\\S]*to authenticated/i);
+  assert.match(hardeningMigration, /revoke all privileges on table[\s\S]*from public, anon, authenticated/i);
+  assert.match(hardeningMigration, /grant select, insert, update, delete on table[\s\S]*to authenticated/i);
   assert.match(hardeningMigration, /idx_dropshipper_store_products_product_link_id/);
   assert.match(hardeningMigration, /idx_dropshipper_store_product_variants_variant_id/);
   assert.doesNotMatch(hardeningMigration, /grant all privileges[^;]*to authenticated/i);
