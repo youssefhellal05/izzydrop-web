@@ -13,7 +13,7 @@
   <meta name="description" content="IzzyDrop — Egypt’s independent dropshipping marketplace.">
   <link rel="stylesheet" href="styles.css?v=20261011-dropshipper-mobilemenu1">
   <link rel="stylesheet" href="sourcing.css?v=20261003-sourcing-rtl1">
-<script src="design-preview.js?v=20261017-atlas1"></script><link rel="stylesheet" href="design-v2.css?v=20261017-pulse1"><link rel="stylesheet" href="design-atlas.css?v=20261017-atlas1"></head>
+<script src="design-preview.js?v=20261017-atlas1"></script><link rel="stylesheet" href="design-v2.css?v=20261017-pulse1"><link rel="stylesheet" href="design-atlas.css?v=20261017-atlas1"><link rel="stylesheet" href="storefront.css?v=20261026-storefrontv1"></head>
 <body>
 <div class="wrap">
   <header class="nav">
@@ -49,6 +49,10 @@
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12v16l-6-3-6 3z"/></svg>
             <span>My products</span>
           </button>
+          <button data-view="store" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10h18M5 10V7l2-3h10l2 3v3M6 10v10h12V10M9 20v-6h6v6"/></svg>
+            <span>My Store</span>
+          </button>
           <button data-view="orders">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v14H4zM8 3v6M16 3v6M8 13h8M8 17h5"/></svg>
             <span>Orders</span>
@@ -76,6 +80,7 @@
             </div>
           </details>
           <button class="dropshipper-mobile-nav-item" data-view="connections" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.1 0l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1M14 11a5 5 0 0 0-7.1 0l-2 2a5 5 0 0 0 7.1 7.1l1.1-1.1"/></svg><span>Store Connections</span></button>
+          <button class="dropshipper-mobile-nav-item" data-view="store" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10h18M5 10V7l2-3h10l2 3v3M6 10v10h12V10M9 20v-6h6v6"/></svg><span>My Store</span></button>
           <button class="dropshipper-mobile-nav-item" data-view="settings" type="button">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM19 12l2-1-2-4-2 1a8 8 0 0 0-2-1l-1-3h-4L9 7a8 8 0 0 0-2 1L5 7l-2 4 2 1v2l-2 1 2 4 2-1a8 8 0 0 0 2 1l1 3h4l1-3a8 8 0 0 0 2-1l2 1 2-4-2-1z"/></svg><span>Settings</span>
           </button>
@@ -171,6 +176,36 @@
           <div class="notice">Request this product to record demand. This does not create a customer order or add it to My Products. Recommended retail is guidance only.</div>
           <div class="sourcing-alert-stack"></div>
           <div id="sourced-products" class="orders-list"></div>
+        </section>
+
+        <section id="view-store" class="view" hidden>
+          <div class="section-heading">
+            <div><h2>My Store</h2><p class="muted">Create a simple storefront hosted by IzzyDrop. Customize the products you sell without needing Shopify or WooCommerce.</p></div>
+          </div>
+          <div class="notice store-phase-note"><b>Phase 1 storefront</b><span>Customers can browse your products. Online checkout and customer orders will be added in Phase 2.</span></div>
+          <div id="store-manager-status" class="status" role="status" aria-live="polite"></div>
+          <div class="store-manager-layout">
+            <form id="store-profile-form" class="card store-profile-form">
+              <div class="store-panel-heading"><div><div class="eyebrow">Your storefront</div><h3>Store profile</h3><p class="muted">Choose how your shop appears to customers and publish it when you're ready.</p></div><span id="store-publish-state" class="tag">Not saved</span></div>
+              <label for="store-name">Store name</label>
+              <input id="store-name" name="store_name" required maxlength="80" placeholder="e.g. Youssef Finds">
+              <label for="store-slug">Store link name</label>
+              <div class="store-slug-input"><span>store.html?slug=</span><input id="store-slug" name="slug" required maxlength="48" pattern="[a-z0-9]+(-[a-z0-9]+)*" placeholder="youssef-finds" autocapitalize="none" spellcheck="false"></div>
+              <small class="muted">Use 3–48 lowercase letters, numbers, and hyphens. No custom domain is needed.</small>
+              <label for="store-description">Store description</label>
+              <textarea id="store-description" name="description" rows="3" maxlength="500" placeholder="Tell customers what your store is about."></textarea>
+              <label class="store-publish-toggle" for="store-published"><input id="store-published" name="is_published" type="checkbox"><span><b>Publish my store</b><small>Anyone with your link can see your storefront and its eligible products.</small></span></label>
+              <button id="store-profile-save" class="btn" type="submit">Save store settings</button>
+              <div id="store-public-link-wrap" class="store-public-link-wrap" hidden>
+                <label for="store-public-link">Your public store link</label>
+                <div class="store-link-actions"><input id="store-public-link" readonly><button id="store-copy-link" class="btn secondary" type="button">Copy link</button><a id="store-open-link" class="btn ghost" href="#" target="_blank" rel="noopener">Open store</a></div>
+              </div>
+            </form>
+            <div class="card store-products-panel">
+              <div class="store-panel-heading"><div><div class="eyebrow">Your catalog</div><h3>Customize My Products</h3><p class="muted">Your edits affect your store only. They never change the supplier's original listing.</p></div><button id="store-products-refresh" class="btn secondary" type="button">Refresh</button></div>
+              <div id="store-products-list" class="store-products-list"><div class="notice">Open My Store to load your products.</div></div>
+            </div>
+          </div>
         </section>
 
         <section id="view-linked" class="view" hidden>
@@ -326,6 +361,7 @@
 <script src="common.js?v=20261006-sessioncheck1"></script><script src="i18n.js?v=20261019-verification-arabic1"></script>
 <script src="sourcing.js?v=20261003-usercontent1"></script>
 <script src="app.js?v=20261025-woocommerceconnectmanage1"></script>
+<script src="store-manager.js?v=20261026-storefrontv1"></script>
 <script>window.IZZY_SETTINGS_ROLE="dropshipper"</script>
 <script src="settings.js?v=20261017-accountlang1"></script>
  <script src="payout-settings.js?v=20261017-arcoverage2"></script>
