@@ -199,7 +199,7 @@
       const images=await sourceImages(productId,variants);
       const link=await ensureLink(p);
       const data=await IZZY.request('/rest/v1/dropshipper_store_products',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({
-        store_id:state.store.id,product_link_id:link.id,is_published:true,selected_image_urls:images,custom_image_urls:[]
+        store_id:state.store.id,product_link_id:link.id,is_published:false,content_reviewed_at:null,selected_image_urls:images,custom_image_urls:[]
       })});
       const sp=Array.isArray(data)?data[0]:data;
       if(!sp||!sp.id)throw new Error('The store listing could not be created.');
