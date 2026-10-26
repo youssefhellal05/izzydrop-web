@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#111318">
+  <title>My Store · IzzyDrop</title>
+  <meta name="description" content="Create and manage your IzzyDrop storefront.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css?v=20261011-dropshipper-mobilemenu1">
+  <link rel="stylesheet" href="store-manager.css?v=20261026-native-store1">
+  <script src="config.js"></script>
+  <script src="common.js?v=20261006-sessioncheck1"></script>
+</head>
+<body class="store-manager-page">
+  <div class="wrap store-manager-wrap">
+    <header class="nav store-manager-nav">
+      <a class="brand" href="app.html"><span class="brand-mark">IZ</span><span class="brand-word">IzzyDrop</span><span class="brand-role">Dropshipper</span></a>
+      <div class="navlinks"><a href="app.html">Workspace</a><button type="button" id="store-sign-out" class="store-text-button">Sign out</button></div>
+    </header>
+    <main class="store-manager-main">
+      <div class="store-manager-heading">
+        <div><div class="store-manager-eyebrow">YOUR OWN STOREFRONT</div><h1>My Store</h1><p class="muted">Choose products from IzzyDrop, customize what customers see, and share your store link.</p></div>
+        <a id="open-public-store" class="btn store-public-link" href="#" target="_blank" rel="noopener" hidden>View store <span aria-hidden="true">↗</span></a>
+      </div>
+      <div id="store-manager-status" class="status" role="status" aria-live="polite"></div>
+      <section class="card store-profile-card">
+        <div class="store-section-heading"><div><h2>Store details</h2><p class="muted">Your store name and address are shown to customers. Supplier identities and supplier costs are not shown on your public store.</p></div><span id="store-published-badge" class="tag">Not published</span></div>
+        <form id="store-profile-form" class="store-profile-form">
+          <label>Store name<input id="store-name" maxlength="80" minlength="2" required placeholder="Your brand name"></label>
+          <label>Store link<input id="store-slug" maxlength="48" required pattern="[a-z0-9]+(-[a-z0-9]+)*" autocomplete="off" placeholder="your-brand"><small>Lowercase letters, numbers and hyphens. This is your unique store address.</small></label>
+          <label class="store-description-field">Short description<textarea id="store-description" maxlength="800" rows="3" placeholder="What does your store sell?"></textarea></label>
+          <label class="store-publish-toggle"><input id="store-published" type="checkbox"><span><b>Publish my store</b><small>When enabled, anyone with your link can view your published products.</small></span></label>
+          <div class="store-profile-actions"><button class="btn" type="submit" id="save-store-profile">Save store details</button><button type="button" class="btn secondary" id="copy-store-link" disabled>Copy store link</button></div>
+        </form>
+        <div id="store-link-preview" class="store-link-preview" hidden><span>Public store link</span><code id="store-link-value"></code></div>
+      </section>
+      <section class="store-catalog-section">
+        <div class="store-section-heading"><div><h2>Add products from IzzyDrop</h2><p class="muted">Products are copied into your store listing. Editing your listing will not change the supplier's original product.</p></div></div>
+        <div class="store-catalog-toolbar"><input id="store-catalog-search" type="search" placeholder="Search marketplace products" aria-label="Search marketplace products"><select id="store-catalog-sort" aria-label="Sort products"><option value="newest">Newest</option><option value="price-low">Lowest suggested price</option><option value="price-high">Highest suggested price</option></select></div>
+        <div id="store-catalog-results" class="store-manager-product-grid"><div class="store-manager-empty">Loading marketplace products…</div></div>
+      </section>
+      <section class="store-listings-section">
+        <div class="store-section-heading"><div><h2>Products in your store</h2><p class="muted">Edit the title, description, photos, and price customers will see. Supplier prices remain visible here only to you.</p></div><span id="store-listing-count" class="store-listing-count">0 products</span></div>
+        <div id="store-listings" class="store-manager-product-grid"><div class="store-manager-empty">Loading your store…</div></div>
+      </section>
+    </main>
+  </div>
+  <div id="store-edit-modal" class="store-edit-modal" hidden>
+    <div class="store-edit-backdrop" data-close-editor></div>
+    <section class="store-edit-dialog" role="dialog" aria-modal="true" aria-labelledby="store-edit-title">
+      <header class="store-edit-header"><div><div class="store-manager-eyebrow">CUSTOMIZE LISTING</div><h2 id="store-edit-title">Edit product</h2><p id="store-edit-cost-note" class="muted"></p></div><button type="button" class="store-modal-close" aria-label="Close editor" data-close-editor>×</button></header>
+      <form id="store-product-edit-form" class="store-product-edit-form">
+        <label>Product title<input id="edit-product-title" maxlength="200" minlength="2" required></label>
+        <label>Product description<textarea id="edit-product-description" maxlength="5000" rows="5"></textarea></label>
+        <div class="store-edit-subheading"><div><h3>Photos</h3><p class="muted">Choose the supplier photos you want to show, or upload your own.</p></div></div>
+        <div id="edit-source-photos" class="store-photo-picker"></div>
+        <label class="store-upload-control">Add your own photos<input id="edit-upload-photos" type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple><small>Maximum 5 MB per image. Your upload is separate from the supplier's original photos.</small></label>
+        <div id="edit-custom-photos" class="store-photo-picker"></div>
+        <div class="store-edit-subheading"><div><h3>Variants and selling prices</h3><p class="muted">Set a separate price for each variant. You can use any non-negative price.</p></div></div>
+        <div id="edit-product-variants" class="store-variant-editor"></div>
+        <div id="store-product-edit-status" class="status" role="status" aria-live="polite"></div>
+        <footer class="store-edit-footer"><button type="button" class="btn secondary" data-close-editor>Cancel</button><button type="submit" class="btn" id="save-store-product">Save listing</button></footer>
+      </form>
+    </section>
+  </div>
+  <script src="store-manager.js?v=20261026-native-store1"></script>
+</body>
+</html>
