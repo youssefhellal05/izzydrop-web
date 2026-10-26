@@ -16,9 +16,9 @@ VALUES ('70000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-00000000
 INSERT INTO public.dropshipper_stores (id,dropshipper_id,slug,store_name,description,published)
 VALUES ('80000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000001','youssef-shop','Youssef Shop','A sample store',true);
 INSERT INTO public.dropshipper_store_products
- (id,store_id,product_link_id,is_published,title_override,description_override,selected_image_urls,custom_image_urls)
+ (id,store_id,product_link_id,is_published,content_reviewed_at,title_override,description_override,selected_image_urls,custom_image_urls)
 VALUES
- ('90000000-0000-0000-0000-000000000001','80000000-0000-0000-0000-000000000001','50000000-0000-0000-0000-000000000001',true,
+ ('90000000-0000-0000-0000-000000000001','80000000-0000-0000-0000-000000000001','50000000-0000-0000-0000-000000000001',true,now(),
   'My custom title','My own product copy','["https://images.example.test/selected.jpg"]','["https://images.example.test/my-photo.jpg"]');
 INSERT INTO public.dropshipper_store_product_variants (store_product_id,variant_id,retail_price,enabled)
 VALUES ('90000000-0000-0000-0000-000000000001','60000000-0000-0000-0000-000000000001',725.50,true);
@@ -42,6 +42,19 @@ BEGIN
     RAISE EXCEPTION 'Unknown store lookup should return NULL';
   END IF;
 END $$;
+
+UPDATE public.dropshipper_store_products SET content_reviewed_at = NULL
+WHERE id = '90000000-0000-0000-0000-000000000001';
+DO $
+DECLARE doc jsonb;
+BEGIN
+  doc := public.public_dropshipper_store_by_slug('youssef-shop');
+  IF jsonb_array_length(doc->'products') <> 0 THEN
+    RAISE EXCEPTION 'Unreviewed supplier-sourced content must never appear in the public store';
+  END IF;
+END $;
+UPDATE public.dropshipper_store_products SET content_reviewed_at = now()
+WHERE id = '90000000-0000-0000-0000-000000000001';
 
 UPDATE public.dropshipper_store_product_variants SET enabled = false
 WHERE store_product_id = '90000000-0000-0000-0000-000000000001';
