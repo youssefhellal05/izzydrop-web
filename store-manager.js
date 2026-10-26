@@ -52,8 +52,12 @@
     const sort = $('#store-catalog-sort').value;
     const linkByProduct = new Map(state.links.map(l => [l.supplier_product_id, l]));
     const listed = new Set(state.storeProducts.map(x => x.product_link_id));
-    let items = state.catalog.filter(p => Number(p.stock_quantity || 0) > 0 && !listed.has(linkByProduct.get(p.product_id)?.id) &&
-      (!q || titleOf(p).toLowerCase().includes(q) || descOf(p).toLowerCase().includes(q) || String(p.category_name || '').toLowerCase().includes(q)));
+    let items = state.catalog.filter(p => {
+      const existingLink = linkByProduct.get(p.product_id);
+      const readyToAdd = !existingLink || existingLink.status === 'active';
+      return Number(p.stock_quantity || 0) > 0 && readyToAdd && !listed.has(existingLink?.id) &&
+        (!q || titleOf(p).toLowerCase().includes(q) || descOf(p).toLowerCase().includes(q) || String(p.category_name || '').toLowerCase().includes(q));
+    });
     if (sort === 'price-low') items.sort((a,b) => Number(a.suggested_retail_price||0)-Number(b.suggested_retail_price||0));
     if (sort === 'price-high') items.sort((a,b) => Number(b.suggested_retail_price||0)-Number(a.suggested_retail_price||0));
     if (!items.length) { root.innerHTML = "<div class='store-manager-empty'>No matching products are available to add. Try another search.</div>"; return; }
@@ -78,7 +82,7 @@
       const photos = [...(Array.isArray(sp.selected_image_urls) ? sp.selected_image_urls : []), ...(Array.isArray(sp.custom_image_urls) ? sp.custom_image_urls : [])];
       const img = photos.map(safeUrl).find(Boolean) || p.primary_image_url;
       const enabledCount = state.storeVariants.filter(v => v.store_product_id === sp.id && v.enabled).length;
-      const available = p.available !== false && Number(p.stock_quantity || 0) > 0;
+      const available = link?.status === 'active' && p.available !== false && Number(p.stock_quantity || 0) > 0;
       return "<article class='store-manager-product'>" + imageMarkup(img,title) +
         "<div class='store-manager-product-body'><span class='store-product-status " + (sp.is_published ? "" : "off") + "'>" + (sp.is_published ? "Visible in store" : "Hidden from store") + "</span>" +
         "<h3>" + esc(title) + "</h3><p class='store-card-description'>" + esc(clean(sp.description_override) || descOf(p) || 'No description provided yet.') + "</p>" +
@@ -103,7 +107,7 @@
     if (state.dropshipper.status !== 'active') throw new Error('Your dropshipper account must be active before you can publish a store.');
     const results = await Promise.all([
       IZZY.request('/rest/v1/dropshipper_stores?select=*&dropshipper_id=eq.' + encodeURIComponent(state.dropshipper.id) + '&limit=1'),
-      IZZY.request('/rest/v1/dropshipper_product_links?select=id,dropshipper_id,supplier_product_id,retail_price,pricing_mode,status&dropshipper_id=eq.' + encodeURIComponent(state.dropshipper.id) + '&status=eq.active'),
+      IZZY.request('/rest/v1/dropshipper_product_links?select=id,dropshipper_id,supplier_product_id,retail_price,pricing_mode,status&dropshipper_id=eq.' + encodeURIComponent(state.dropshipper.id)),
       IZZY.rpc('dropshipper_linked_catalog'),
       IZZY.rpc('marketplace_catalog_v3')
     ]);
@@ -151,6 +155,7 @@
 
   async function ensureLink(p) {
     let link = state.links.find(l=>l.supplier_product_id===p.product_id);
+    if (link && link.status !== 'active') throw new Error('This product is paused in My Products. Reactivate it there before adding it to your store.');
     if (link) return link;
     try {
       const result = await IZZY.request('/rest/v1/dropshipper_product_links',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({
