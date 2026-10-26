@@ -61,3 +61,30 @@ Record results and any failures here. If connection or product sync fails, keep 
 ## Resume rule
 
 Continue from `main` and the exact next task above. Inspect the existing implementation before changing architecture; do not redesign unrelated systems or test Shopify while validating WooCommerce.
+
+
+## Parallel feature branch — Native hosted storefront MVP
+
+**Approved scope:** Build a simple native storefront for each dropshipper, with no subscriptions or custom domains in phase one. Keep current product linking, Shopify, WooCommerce, and external website connections intact.
+
+- **Feature branch:** feat/native-storefronts-phase-1
+- **Current implementation draft:** store-manager.html/js/css adds store profile and slug setup, marketplace product selection, per-variant selling prices, product title/description overrides, supplier-photo selection, custom photo uploads, and show/hide/remove controls. storefront.html/js/css renders the public product showcase.
+- **Database migration draft:** supabase/migrations/20261026_native_dropshipper_storefronts.sql creates owner-scoped store/product/variant tables, RLS policies, a public catalog RPC that omits supplier identity and supplier cost fields, and a separately scoped public image bucket.
+- **Phase boundary:** Public pages are showcase-only. Customer checkout, COD order creation, payment handling, and delivery tracking remain phase two and must use the existing secure order/fulfillment invariants rather than bypassing them.
+- **URL limitation:** The draft currently generates a working static-host URL in the form storefront.html?slug=.... The attractive /store/<slug> path and a custom main domain are not configured or verified yet; choose routing/domain behavior before launch rather than promising a path that current hosting may not serve correctly.
+- **PR:** Draft PR #37 — https://github.com/youssefhellal05/izzydrop-web/pull/37
+- **Checks passing:** Native storefront regression / isolated PostgreSQL migration privacy smoke test — https://github.com/youssefhellal05/izzydrop-web/actions/runs/40334002497; V2 preview safety — https://github.com/youssefhellal05/izzydrop-web/actions/runs/40334002487; Atlas layout isolation — https://github.com/youssefhellal05/izzydrop-web/actions/runs/40334002523. JavaScript syntax checks passed.
+- **Production status:** This feature branch has not been merged; its database migration has not been applied to production; no production storefronts have been created. No real customer storefront has been browser-tested against the new production schema.
+- **Exact next task for this branch:** Review the PR diff with the user and get explicit approval before merging, applying the migration, or deploying. After approval, execute the production steps carefully, verify RLS/bucket/function state, and smoke-test the published page. Do not disrupt the separate pending WooCommerce live-store E2E task on main.
+
+
+
+## Continuation checkpoint — hosted dropshipper storefront v1 (2026-10-26)
+
+- **Current PR/branch:** Draft PR #37 — https://github.com/youssefhellal05/izzydrop-web/pull/37; branch `feat/native-storefronts-phase-1`. Current reviewed head: `1c5f02f8df62867f809659b15838c64951292a0c`.
+- **Validation at this head:** JavaScript syntax/source checks passed; native storefront privacy and frontend regression checks passed; disposable PostgreSQL fixture + migration + privacy/presentation smoke test passed; existing Atlas layout isolation and V2 visual preview safety workflows passed. Runs: https://github.com/youssefhellal05/izzydrop-web/actions/runs/40340122796, https://github.com/youssefhellal05/izzydrop-web/actions/runs/40340123136, https://github.com/youssefhellal05/izzydrop-web/actions/runs/40340123080.
+- **Review fixes in this continuation:** Corrected three dollar-quote delimiters in the CI-only smoke SQL; removed supplier SKU fallback from public variant names; hardened the three storefront SECURITY DEFINER functions' search paths by explicitly placing `pg_catalog` first.
+- **Production status:** No merge, production database migration, function deployment, or live website deployment has been performed. Existing supplier/product/order data has not been modified.
+- **Phase boundary and URL limitation:** Phase 1 remains a product showcase only. Checkout, COD order creation, payment handling, and delivery tracking are Phase 2. The generated URL is `storefront.html?slug=...`; `/store/<slug>` and custom domains are not configured or verified.
+- **Data note:** The read-only production check found all 6 current supplier products are inactive. The storefront may therefore show no products until normal supplier/admin catalog workflows make eligible products active; do not change those product statuses as part of this feature.
+- **Exact next task:** Review PR #37 with the user. Get explicit approval for merging and applying the migration/deploying to production before doing those release steps. After release approval, merge the reviewed PR, apply the migration, verify the new tables' RLS/storage bucket/RPC, and smoke-test the public page without changing unrelated data. Keep the separate pending WooCommerce live-store E2E task on main untouched.

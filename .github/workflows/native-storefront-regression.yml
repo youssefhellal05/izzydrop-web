@@ -1,0 +1,63 @@
+name: Native storefront regression
+on:
+  pull_request:
+    paths:
+      - 'store-manager.html'
+      - 'store-manager.css'
+      - 'store-manager.js'
+      - 'storefront.html'
+      - 'storefront.css'
+      - 'storefront.js'
+      - 'app.html'
+      - 'supabase/migrations/20261026_native_dropshipper_storefronts.sql'
+      - 'qa/native-storefront-*'
+      - '.github/workflows/native-storefront-regression.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  storefront-source-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check JavaScript syntax
+        run: |
+          node --check store-manager.js
+          node --check storefront.js
+      - name: Run native storefront privacy and frontend regression checks
+        run: node --test qa/native-storefront-regression.test.cjs
+  storefront-migration-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: izzydrop_storefront_ci
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci_only_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d izzydrop_storefront_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: ci_only_password
+      PGDATABASE: izzydrop_storefront_ci
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply CI-only fixture and storefront migration
+        run: |
+          psql -v ON_ERROR_STOP=1 -f qa/native-storefront-fixture.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261026_native_dropshipper_storefronts.sql
+      - name: Verify privacy boundary and store presentation data
+        run: psql -v ON_ERROR_STOP=1 -f qa/native-storefront-smoke.sql
