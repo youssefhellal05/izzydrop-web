@@ -61,3 +61,17 @@ Record results and any failures here. If connection or product sync fails, keep 
 ## Resume rule
 
 Continue from `main` and the exact next task above. Inspect the existing implementation before changing architecture; do not redesign unrelated systems or test Shopify while validating WooCommerce.
+
+
+## Parallel feature branch — Native hosted storefront MVP
+
+**Approved scope:** Build a simple native storefront for each dropshipper, with no subscriptions or custom domains in phase one. Keep current product linking, Shopify, WooCommerce, and external website connections intact.
+
+- **Feature branch:** feat/native-storefronts-phase-1
+- **Current implementation draft:** store-manager.html/js/css adds store profile and slug setup, marketplace product selection, per-variant selling prices, product title/description overrides, supplier-photo selection, custom photo uploads, and show/hide/remove controls. storefront.html/js/css renders the public product showcase.
+- **Database migration draft:** supabase/migrations/20261026_native_dropshipper_storefronts.sql creates owner-scoped store/product/variant tables, RLS policies, a public catalog RPC that omits supplier identity and supplier cost fields, and a separately scoped public image bucket.
+- **Phase boundary:** Public pages are showcase-only. Customer checkout, COD order creation, payment handling, and delivery tracking remain phase two and must use the existing secure order/fulfillment invariants rather than bypassing them.
+- **URL limitation:** The draft currently generates a working static-host URL in the form storefront.html?slug=.... The attractive /store/<slug> path and a custom main domain are not configured or verified yet; choose routing/domain behavior before launch rather than promising a path that current hosting may not serve correctly.
+- **Production status:** This feature branch has not been merged; its database migration has not been applied to production; no production storefronts have been created. Wait for CI and review before asking for deployment approval.
+- **Exact next task for this branch:** Open a draft PR, run JavaScript/source regression checks and the isolated PostgreSQL migration/privacy smoke test, fix failures, then provide the diff and migration plan for explicit merge/production approval. Do not disrupt the separate pending WooCommerce live-store E2E task on main.
+
