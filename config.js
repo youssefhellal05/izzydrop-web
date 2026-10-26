@@ -53,3 +53,14 @@ if (/\/app\.html$/i.test(location.pathname)) {
     document.body.appendChild(script);
   }, { once: true });
 }
+
+// Add the native storefront manager to the existing dropshipper navigation without changing
+// the protected dashboard markup or touching the existing product/integration handlers.
+if (/\/app\.html$/i.test(location.pathname)) {
+  window.addEventListener('load', () => {
+    const script = document.createElement('script');
+    script.src = 'store-manager-nav.js?v=20261026-native-store1';
+    script.async = false;
+    document.body.appendChild(script);
+  }, { once: true });
+}
