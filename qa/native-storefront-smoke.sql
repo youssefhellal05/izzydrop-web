@@ -82,6 +82,35 @@ BEGIN
   END IF;
 END $storefront_rls_check$;
 
+DO $storefront_privileges_check$
+DECLARE
+  table_name text;
+BEGIN
+  FOREACH table_name IN ARRAY ARRAY[
+    'dropshipper_stores',
+    'dropshipper_store_products',
+    'dropshipper_store_product_variants'
+  ] LOOP
+    IF has_table_privilege('authenticated', 'public.' || table_name, 'TRUNCATE') THEN
+      RAISE EXCEPTION 'authenticated must not be able to TRUNCATE public.%', table_name;
+    END IF;
+    IF has_table_privilege('authenticated', 'public.' || table_name, 'REFERENCES') THEN
+      RAISE EXCEPTION 'authenticated must not have REFERENCES on public.%', table_name;
+    END IF;
+    IF has_table_privilege('authenticated', 'public.' || table_name, 'TRIGGER') THEN
+      RAISE EXCEPTION 'authenticated must not have TRIGGER on public.%', table_name;
+    END IF;
+    IF NOT (
+      has_table_privilege('authenticated', 'public.' || table_name, 'SELECT')
+      AND has_table_privilege('authenticated', 'public.' || table_name, 'INSERT')
+      AND has_table_privilege('authenticated', 'public.' || table_name, 'UPDATE')
+      AND has_table_privilege('authenticated', 'public.' || table_name, 'DELETE')
+    ) THEN
+      RAISE EXCEPTION 'authenticated is missing required CRUD privileges on public.%', table_name;
+    END IF;
+  END LOOP;
+END $storefront_privileges_check$;
+
 SET ROLE anon;
 SELECT public.public_dropshipper_store_by_slug('youssef-shop');
 RESET ROLE;
