@@ -82,7 +82,7 @@
       const photos = [...(Array.isArray(sp.selected_image_urls) ? sp.selected_image_urls : []), ...(Array.isArray(sp.custom_image_urls) ? sp.custom_image_urls : [])];
       const img = photos.map(safeUrl).find(Boolean) || p.primary_image_url;
       const enabledCount = state.storeVariants.filter(v => v.store_product_id === sp.id && v.enabled).length;
-      const available = link?.status === 'active' && p.available !== false && Number(p.stock_quantity || 0) > 0;
+      const available = link?.status === 'active' && p.available !== false && Number(p.stock_quantity || 0) > 0 && enabledCount > 0;
       return "<article class='store-manager-product'>" + imageMarkup(img,title) +
         "<div class='store-manager-product-body'><span class='store-product-status " + (sp.is_published ? "" : "off") + "'>" + (sp.is_published ? "Visible in store" : "Hidden from store") + "</span>" +
         "<h3>" + esc(title) + "</h3><p class='store-card-description'>" + esc(clean(sp.description_override) || descOf(p) || 'No description provided yet.') + "</p>" +
