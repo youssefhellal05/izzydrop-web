@@ -45,31 +45,31 @@ END $$;
 
 UPDATE public.dropshipper_store_products SET content_reviewed_at = NULL
 WHERE id = '90000000-0000-0000-0000-000000000001';
-DO $
+DO $storefront_review_check$
 DECLARE doc jsonb;
 BEGIN
   doc := public.public_dropshipper_store_by_slug('youssef-shop');
   IF jsonb_array_length(doc->'products') <> 0 THEN
     RAISE EXCEPTION 'Unreviewed supplier-sourced content must never appear in the public store';
   END IF;
-END $;
+END $storefront_review_check$;
 UPDATE public.dropshipper_store_products SET content_reviewed_at = now()
 WHERE id = '90000000-0000-0000-0000-000000000001';
 
 UPDATE public.dropshipper_store_product_variants SET enabled = false
 WHERE store_product_id = '90000000-0000-0000-0000-000000000001';
-DO $
+DO $storefront_variants_check$
 DECLARE doc jsonb;
 BEGIN
   doc := public.public_dropshipper_store_by_slug('youssef-shop');
   IF jsonb_array_length(doc->'products') <> 0 THEN
     RAISE EXCEPTION 'Product should be omitted when the seller disables every variant';
   END IF;
-END $;
+END $storefront_variants_check$;
 UPDATE public.dropshipper_store_product_variants SET enabled = true
 WHERE store_product_id = '90000000-0000-0000-0000-000000000001';
 
-DO $
+DO $storefront_rls_check$
 BEGIN
   IF has_table_privilege('anon','public.dropshipper_stores','SELECT') THEN
     RAISE EXCEPTION 'anon role can directly read the private store profile table';
@@ -80,7 +80,7 @@ BEGIN
   IF NOT (SELECT relrowsecurity FROM pg_class WHERE oid='public.dropshipper_stores'::regclass) THEN
     RAISE EXCEPTION 'Store profiles must have RLS enabled';
   END IF;
-END $$;
+END $storefront_rls_check$;
 
 SET ROLE anon;
 SELECT public.public_dropshipper_store_by_slug('youssef-shop');
