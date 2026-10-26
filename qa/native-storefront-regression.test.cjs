@@ -6,6 +6,7 @@ const path = require('node:path');
 const root = path.resolve(__dirname, '..');
 const read = name => fs.readFileSync(path.join(root, name), 'utf8');
 const migration = read('supabase/migrations/20261026_native_dropshipper_storefronts.sql');
+const hardeningMigration = read('supabase/migrations/20261026144000_harden_native_storefront_privileges.sql');
 
 test('native storefront tables are RLS-protected and owner-managed', () => {
   for (const table of ['dropshipper_stores', 'dropshipper_store_products', 'dropshipper_store_product_variants']) {
@@ -76,4 +77,12 @@ test('uploads are scoped to the signed-in user and validate image type and size'
   assert.match(js, /f\.size>5242880/);
   assert.match(js, /jpeg\|png\|webp\|avif/);
   assert.match(js, /storage\/v1\/object\/storefront-images/);
+});
+
+test('storefront hardening removes non-CRUD authenticated table privileges', () => {
+  assert.match(hardeningMigration, /revoke all privileges on table[\\s\\S]*from public, anon, authenticated/i);
+  assert.match(hardeningMigration, /grant select, insert, update, delete on table[\\s\\S]*to authenticated/i);
+  assert.match(hardeningMigration, /idx_dropshipper_store_products_product_link_id/);
+  assert.match(hardeningMigration, /idx_dropshipper_store_product_variants_variant_id/);
+  assert.doesNotMatch(hardeningMigration, /grant all privileges[^;]*to authenticated/i);
 });
