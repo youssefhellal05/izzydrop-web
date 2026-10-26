@@ -149,18 +149,20 @@ Deno.serve(async (request: Request) => {
     let settings: Record<string, unknown>[] = [];
 
     if (productIds.length) {
-      [products, suppliers] = await Promise.all([
-        selectRows("supplier_products", {
-          select: "id,supplier_id,name,name_en,name_ar,description,description_en,description_ar,currency,suggested_retail_price,status,admin_blocked",
-          id: inFilter(productIds),
-          status: "eq.active",
-          admin_blocked: "eq.false"
-        }),
-        selectRows("suppliers", {
+      products = await selectRows("supplier_products", {
+        select: "id,supplier_id,name,name_en,name_ar,description,description_en,description_ar,currency,suggested_retail_price,status,admin_blocked",
+        id: inFilter(productIds),
+        status: "eq.active",
+        admin_blocked: "eq.false"
+      });
+      const supplierIds = [...new Set(products.map(product => String(product.supplier_id || "")).filter(id => /^[0-9a-f-]{36}$/i.test(id)))];
+      if (supplierIds.length) {
+        suppliers = await selectRows("suppliers", {
           select: "id,status",
+          id: inFilter(supplierIds),
           status: "eq.approved"
-        })
-      ]);
+        });
+      }
       const approvedSuppliers = new Set(suppliers.map(supplier => String(supplier.id)));
       products = products.filter(product => approvedSuppliers.has(String(product.supplier_id)));
     }
