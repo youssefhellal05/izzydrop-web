@@ -21,7 +21,8 @@ create table if not exists public.dropshipper_store_products (
   id uuid primary key default gen_random_uuid(),
   store_id uuid not null references public.dropshipper_stores(id) on delete cascade,
   product_link_id uuid not null references public.dropshipper_product_links(id) on delete cascade,
-  is_published boolean not null default true,
+  is_published boolean not null default false,
+  content_reviewed_at timestamptz,
   title_override text check (title_override is null or length(title_override) between 2 and 200),
   description_override text check (description_override is null or length(description_override) <= 5000),
   selected_image_urls jsonb not null default '[]'::jsonb
@@ -262,7 +263,7 @@ as $function$
         jsonb_build_object(
           'id', dsp.id,
           'title', coalesce(nullif(btrim(dsp.title_override), ''), nullif(btrim(p.name_en), ''), p.name),
-          'description', coalesce(nullif(dsp.description_override, ''), p.description_en, p.description, ''),
+          'description', coalesce(dsp.description_override, ''),
           'currency', p.currency,
           'images', coalesce((
             select jsonb_agg(to_jsonb(img.url) order by img.pos)
@@ -307,6 +308,7 @@ as $function$
       join public.suppliers s on s.id = p.supplier_id
       where dsp.store_id = ds.id
         and dsp.is_published = true
+        and dsp.content_reviewed_at is not null
         and l.status = 'active'
         and p.status = 'active'
         and p.admin_blocked = false
