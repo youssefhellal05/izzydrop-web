@@ -24,7 +24,7 @@ alter table public.dropshipper_product_links
   add column if not exists custom_description text,
   add column if not exists custom_image_urls jsonb;
 
-do $$
+do $
 begin
   if not exists (
     select 1 from pg_constraint
@@ -35,7 +35,19 @@ begin
       add constraint dropshipper_product_links_custom_image_urls_array
       check (custom_image_urls is null or jsonb_typeof(custom_image_urls) = 'array');
   end if;
-end $$;
+end $;
+
+do $
+begin
+  if not exists (select 1 from pg_constraint where conname = 'dropshipper_product_links_custom_title_length' and conrelid = 'public.dropshipper_product_links'::regclass) then
+    alter table public.dropshipper_product_links add constraint dropshipper_product_links_custom_title_length
+      check (custom_title is null or char_length(custom_title) <= 160);
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'dropshipper_product_links_custom_description_length' and conrelid = 'public.dropshipper_product_links'::regclass) then
+    alter table public.dropshipper_product_links add constraint dropshipper_product_links_custom_description_length
+      check (custom_description is null or char_length(custom_description) <= 3000);
+  end if;
+end $;
 
 -- Optional per-store variant visibility and price overrides. A missing configuration
 -- means enabled supplier variants keep the existing default selection behavior.
@@ -114,7 +126,7 @@ create or replace function private.enforce_store_variant_link_match()
 returns trigger
 language plpgsql
 security definer
-set search_path = public, private
+set search_path = pg_catalog, public, private
 as $function$
 declare
   linked_product_id uuid;
