@@ -88,3 +88,13 @@ Continue from `main` and the exact next task above. Inspect the existing impleme
 - **Phase boundary and URL limitation:** Phase 1 remains a product showcase only. Checkout, COD order creation, payment handling, and delivery tracking are Phase 2. The generated URL is `storefront.html?slug=...`; `/store/<slug>` and custom domains are not configured or verified.
 - **Data note:** The read-only production check found all 6 current supplier products are inactive. The storefront may therefore show no products until normal supplier/admin catalog workflows make eligible products active; do not change those product statuses as part of this feature.
 - **Exact next task:** Real-account smoke test once a product is active in the normal catalog workflow. All 6 current supplier products are inactive, so no genuine populated public storefront could be created/tested during release. Verify store creation/edit/publish and public content privacy without altering statuses, orders, or integration settings. Checkout, COD order creation, payment, and delivery tracking remain Phase 2.
+
+
+## Production privilege hardening — 2026-10-26
+
+- **Follow-up PR:** https://github.com/youssefhellal05/izzydrop-web/pull/38 — merged as `d934a8e951799c1f8ba7c48d6c8ea8fceb5dd444`.
+- **Reason:** Post-release review detected Supabase default table grants gave `authenticated` TRUNCATE, REFERENCES, and TRIGGER privileges on the new storefront tables. The three tables had no rows at the time.
+- **Fix:** Applied production migration `harden_native_storefront_privileges` (version `20261026143929`) to revoke non-CRUD privileges from PUBLIC/anon/authenticated, re-grant only SELECT/INSERT/UPDATE/DELETE to authenticated, and add indexes for the `product_link_id` and `variant_id` foreign keys.
+- **Verification:** All three tables have RLS enabled; anon has no direct SELECT; authenticated CRUD privileges are true while TRUNCATE/REFERENCES/TRIGGER are false. Both indexes exist. The CI migration smoke test and source tests passed: https://github.com/youssefhellal05/izzydrop-web/actions/runs/40341540811.
+- **Existing data:** Still zero storefronts/store listings. All six supplier products remain inactive. No supplier statuses, order rows, or integration credentials were changed.
+- **Remaining release check:** Confirm the latest GitHub Pages deployment finishes after the security-hotfix merge/checkpoint commit. Then follow the existing next task above: a real-account storefront smoke test after an appropriate product is activated through normal admin/supplier workflow. Keep Phase 1 browse-only; checkout/COD remains Phase 2.
