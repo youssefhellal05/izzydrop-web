@@ -31,6 +31,8 @@ test('public storefront RPC exposes presentation data, not supplier identity or 
   assert.match(publicFunction, /s\.status = 'approved'/i);
   assert.match(publicFunction, /ds\.published = true/i);
   assert.match(publicFunction, /selected_variant\.enabled = true/i);
+  assert.match(publicFunction, /'in_stock', \(v\.stock_quantity > 0\)/i);
+  assert.doesNotMatch(publicFunction, /'stock_quantity',/i);
 });
 
 test('store manager supports profile, photos, descriptions, and per-variant prices', () => {
