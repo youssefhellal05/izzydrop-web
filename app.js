@@ -37,7 +37,7 @@
     const myStore=$('#dropshipper-my-store-link');
     if(myStore){
       const nav=myStore.closest('nav');
-      const storeLabels=new Set(['my store','متجري']);
+      const storeLabels=new Set(['my store','متجري','my stores','متاجري']);
       if(nav){
         [...nav.querySelectorAll('a,button')].forEach(item=>{
           if(item===myStore)return;
@@ -46,10 +46,10 @@
         });
       }
       const label=myStore.querySelector('span');
-      if(label)label.textContent=local('My Store','متجري');
+      if(label)label.textContent=local('My Stores','متاجري');
       myStore.href=ar()?'my-stores.html?lang=ar':'my-stores.html';
       myStore.setAttribute('lang',ar()?'ar':'en');
-      myStore.setAttribute('aria-label',local('My Store','متجري'));
+      myStore.setAttribute('aria-label',local('My Stores','متاجري'));
     }
     const notifications=document.querySelector('#dropshipper-mobile-nav-notifications span');
     if(notifications)notifications.textContent=local('Notifications','الإشعارات');
