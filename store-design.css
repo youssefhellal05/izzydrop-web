@@ -253,3 +253,11 @@ html[dir="rtl"] .design-preview-product span { direction:ltr; display:inline-blo
   .store-design-nav .navlinks button { white-space:nowrap; font-size:12px; }
   html[dir="rtl"] .store-design-nav .navlinks { justify-content:space-between; }
 }
+
+
+/* The Store Design Studio does not expose logout.
+   Hide the legacy control if an older cached HTML document still contains it. */
+.store-design-page .store-design-nav #design-sign-out,
+.store-design-page .store-design-nav button.store-text-button {
+  display: none !important;
+}
