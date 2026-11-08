@@ -65,6 +65,66 @@
       </form>
     </section>
   </div>
+  <script>
+  (() => {
+    const ar = new URLSearchParams(location.search).get('lang') === 'ar';
+    if (!ar) return;
+    document.documentElement.lang = 'ar';
+    document.documentElement.dir = 'rtl';
+    const t = {
+      workspace:'مساحة العمل', design:'تصميم متجري', signOut:'تسجيل الخروج',
+      storefront:'متجرك الإلكتروني', title:'متجري',
+      intro:'اختر المنتجات من IzzyDrop، وخصص ما يراه العملاء، وشارك رابط متجرك.',
+      viewStore:'عرض المتجر', details:'تفاصيل المتجر',
+      detailsHelp:'يظهر اسم متجرك وعنوانه للعملاء. لا تظهر هوية الموردين أو تكاليف الموردين في متجرك العام.',
+      notPublished:'غير منشور', published:'منشور',
+      name:'اسم المتجر', brand:'اسم علامتك التجارية',
+      link:'رابط المتجر', slug:'أحرف صغيرة، أرقام وشرطات. هذا هو عنوان متجرك الفريد.',
+      desc:'وصف مختصر', descPh:'ماذا يبيع متجرك؟',
+      publish:'نشر متجري', publishHelp:'عند التفعيل، يمكن لأي شخص لديه رابطك مشاهدة المنتجات المنشورة.',
+      save:'حفظ تفاصيل المتجر', copy:'نسخ رابط المتجر', publicLink:'رابط المتجر العام',
+      addProducts:'إضافة منتجات من IzzyDrop',
+      addHelp:'يتم نسخ المنتجات إلى قائمة متجرك. تعديل قائمتك لن يغير المنتج الأصلي للمورد.',
+      search:'البحث عن منتجات السوق', sort:'ترتيب المنتجات', newest:'الأحدث',
+      low:'أقل سعر مقترح', high:'أعلى سعر مقترح',
+      loading:'جارٍ تحميل منتجات السوق…',
+      products:'المنتجات في متجرك',
+      productsHelp:'عدّل العنوان والوصف والصور والسعر الذي سيراه العملاء. تظل أسعار الموردين ظاهرة لك فقط.',
+      customize:'تخصيص القائمة', edit:'تعديل المنتج', photos:'الصور',
+      photosHelp:'اختر صور المورد التي تريد عرضها، أو ارفع صورك الخاصة.',
+      addPhotos:'إضافة صورك الخاصة', review:'راجعت هذه القائمة قبل نشرها',
+      reviewHelp:'تحققت من العنوان والوصف والصور المختارة للتأكد من عدم ظهور أسماء الموردين أو بيانات الاتصال أو معلومات التوريد الخاصة.',
+      variants:'الخيارات والأسعار', variantsHelp:'حدد سعراً منفصلاً لكل خيار. يمكنك استخدام أي سعر غير سالب.',
+      cancel:'إلغاء', saveListing:'حفظ القائمة', close:'إغلاق المحرر',
+      titleLabel:'عنوان المنتج', description:'وصف المنتج'
+    };
+    const set=(sel,key)=>document.querySelectorAll(sel).forEach(el=>el.textContent=t[key]||el.textContent);
+    set('.store-manager-nav .navlinks a[href="app.html"]','workspace');
+    set('.store-manager-nav .navlinks a[href="store-design.html"]','design');
+    set('#store-sign-out','signOut'); set('.store-manager-eyebrow','storefront');
+    set('.store-manager-heading h1','title'); set('.store-manager-heading p.muted','intro');
+    set('#open-public-store','viewStore'); set('.store-profile-card .store-section-heading h2','details');
+    set('.store-profile-card .store-section-heading p.muted','detailsHelp'); set('#store-published-badge','notPublished');
+    [['#store-name','name'],['#store-slug','link'],['#store-description','desc']].forEach(([sel,key])=>{const el=document.querySelector(sel);if(el){const l=el.closest('label');if(l)l.firstChild.textContent=t[key]+' ';}});
+    document.querySelector('#store-name')?.setAttribute('placeholder',t.brand);
+    document.querySelector('#store-slug')?.setAttribute('placeholder','your-brand');
+    const slugHelp=document.querySelector('#store-slug')?.nextElementSibling;if(slugHelp)slugHelp.textContent=t.slug;
+    document.querySelector('#store-description')?.setAttribute('placeholder',t.descPh);
+    const pub=document.querySelector('#store-published')?.closest('span');if(pub){pub.querySelector('b').textContent=t.publish;pub.querySelector('small').textContent=t.publishHelp;}
+    set('#save-store-profile','save');set('#copy-store-link','copy');set('#store-link-preview span','publicLink');
+    set('.store-catalog-section h2','addProducts');set('.store-catalog-section p.muted','addHelp');
+    document.querySelector('#store-catalog-search')?.setAttribute('placeholder',t.search);document.querySelector('#store-catalog-search')?.setAttribute('aria-label',t.search);
+    const sort=document.querySelector('#store-catalog-sort');if(sort){sort.setAttribute('aria-label',t.sort);sort.options[0].textContent=t.newest;sort.options[1].textContent=t.low;sort.options[2].textContent=t.high;}
+    set('.store-catalog-section .store-manager-empty','loading');set('.store-listings-section h2','products');set('.store-listings-section p.muted','productsHelp');
+    set('.store-edit-header .store-manager-eyebrow','customize');set('#store-edit-title','edit');
+    const titleLabel=document.querySelector('#edit-product-title')?.closest('label');if(titleLabel)titleLabel.firstChild.textContent=t.titleLabel+' ';
+    const descLabel=document.querySelector('#edit-product-description')?.closest('label');if(descLabel)descLabel.firstChild.textContent=t.description+' ';
+    set('.store-edit-subheading:nth-of-type(1) h3','photos');set('.store-edit-subheading:nth-of-type(1) p.muted','photosHelp');
+    set('.store-upload-control small','addPhotos');set('.store-review-check b','review');set('.store-review-check small','reviewHelp');
+    set('.store-edit-subheading:nth-of-type(2) h3','variants');set('.store-edit-subheading:nth-of-type(2) p.muted','variantsHelp');
+    set('[data-close-editor]','cancel');set('#save-store-product','saveListing');document.querySelector('.store-modal-close')?.setAttribute('aria-label',t.close);
+  })();
+  </script>
   <script src="store-manager.js?v=20261026-native-store1"></script>
 </body>
 </html>
