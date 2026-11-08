@@ -160,6 +160,17 @@
     'Could not load product details.': 'تعذر تحميل تفاصيل المنتج.',
 
     'My Stores': 'متاجري',
+    'YOUR STOREFRONTS': 'متاجرك الإلكترونية',
+    'STORE OVERVIEW': 'نظرة عامة على المتجر',
+    'An active dropshipper workspace is required.': 'يلزم وجود مساحة عمل دروبشيبر نشطة.',
+    'Reactivate your store': 'إعادة تفعيل متجرك',
+    'Your store is hidden from customers. Reactivate it when you are ready to publish it again.': 'متجرك مخفي عن العملاء. أعد تفعيله عندما تكون مستعدًا لنشره مرة أخرى.',
+    'Your store is a draft. Publish it when your details, design and product listings are ready.': 'متجرك محفوظ كمسودة. انشره عندما تصبح التفاصيل والتصميم وقوائم المنتجات جاهزة.',
+    'Publish this store now? Customers will be able to visit its public link.': 'هل تريد نشر هذا المتجر الآن؟ سيتمكن العملاء من زيارة رابطه العام.',
+    'Shut down this store? Its public link will stop working, but its products and design will be kept.': 'هل تريد إيقاف هذا المتجر؟ سيتوقف رابطه العام عن العمل، مع الاحتفاظ بمنتجاته وتصميمه.',
+    'Reactivate and publish this store? Customers will be able to visit it again.': 'هل تريد إعادة تفعيل هذا المتجر ونشره؟ سيتمكن العملاء من زيارته مرة أخرى.',
+    'Updating store status…': 'جارٍ تحديث حالة المتجر…',
+
     'Loading your stores…': 'جارٍ تحميل متاجرك…',
     '← Back to My Stores': '← العودة إلى متاجري',
     'This is the name customers will see on your storefront.': 'هذا هو الاسم الذي سيظهر للعملاء في متجرك.',
