@@ -126,7 +126,6 @@
     $('#design-logo-file').addEventListener('change', event => uploadAsset(event, 'logo'));
     $('#design-banner-file').addEventListener('change', event => uploadAsset(event, 'banner'));
     $('#design-save').addEventListener('click', saveDesign);
-    $('#design-sign-out').addEventListener('click', () => { IZZY.logout(); location.href = 'login.html'; });
   }
   async function uploadAsset(event, type) {
     const file = event.target.files?.[0];
