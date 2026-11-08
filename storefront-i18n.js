@@ -406,8 +406,15 @@
   document.documentElement.dir = arabic ? 'rtl' : 'ltr';
   document.body?.classList.toggle('rtl', arabic);
 
-  const pageTitle = designPage ? 'تصميم المتجر · IzzyDrop' : 'متجري · IzzyDrop';
-  if (arabic) document.title = pageTitle;
+  const pageName = location.pathname.split('/').pop() || '';
+  const arabicPageTitles = {
+    'my-stores.html': 'متاجري · IzzyDrop',
+    'store-create.html': 'إنشاء متجر · IzzyDrop',
+    'store-dashboard.html': 'لوحة المتجر · IzzyDrop',
+    'store-manager.html': 'إدارة المتجر · IzzyDrop',
+    'store-design.html': 'تصميم المتجر · IzzyDrop'
+  };
+  if (arabic) document.title = arabicPageTitles[pageName] || 'IzzyDrop';
 
   window.IZZY_STORE_I18N = {
     language: () => language,
