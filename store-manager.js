@@ -3,7 +3,7 @@
   const $ = (s, root = document) => root.querySelector(s);
   const $$ = (s, root = document) => [...root.querySelectorAll(s)];
   const statusEl = $('#store-manager-status');
-  const state = { session: IZZY.session(), dropshipper: null, store: null, links: [], linked: [], catalog: [], storeProducts: [], storeVariants: [], editing: null };
+  const state = { session: IZZY.session(), dropshipper: null, store: null, storeId: new URLSearchParams(location.search).get('store_id'), links: [], linked: [], catalog: [], storeProducts: [], storeVariants: [], editing: null };
   const clean = v => String(v ?? '').trim();
   const esc = IZZY.esc;
   const slugify = v => clean(v).normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 48).replace(/-+$/g, '');
@@ -117,12 +117,14 @@
     if (!state.dropshipper) throw new Error('This account does not have a dropshipper workspace yet.');
     if (state.dropshipper.status !== 'active') throw new Error('Your dropshipper account must be active before you can publish a store.');
     const results = await Promise.all([
-      IZZY.request('/rest/v1/dropshipper_stores?select=*&dropshipper_id=eq.' + encodeURIComponent(state.dropshipper.id) + '&limit=1'),
+      IZZY.request('/rest/v1/dropshipper_stores?select=*&dropshipper_id=eq.' + encodeURIComponent(state.dropshipper.id) + (state.storeId ? '&id=eq.' + encodeURIComponent(state.storeId) : '') + '&order=created_at.asc&limit=1'),
       IZZY.request('/rest/v1/dropshipper_product_links?select=id,dropshipper_id,supplier_product_id,retail_price,pricing_mode,status&dropshipper_id=eq.' + encodeURIComponent(state.dropshipper.id)),
       IZZY.rpc('dropshipper_linked_catalog'),
       IZZY.rpc('marketplace_catalog_v3')
     ]);
     state.store = results[0] && results[0][0] || null;
+    if (state.store && $('#design-store-link')) { const u = new URL('store-design.html', location.href); u.searchParams.set('store_id', state.store.id); $('#design-store-link').href = u.href; }
+    if (state.store && state.storeId && state.store.id !== state.storeId) throw new Error('Store not found.');
     state.links = Array.isArray(results[1]) ? results[1] : [];
     state.linked = Array.isArray(results[2]) ? results[2] : [];
     state.catalog = Array.isArray(results[3]) ? results[3] : [];
