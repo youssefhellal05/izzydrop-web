@@ -104,3 +104,97 @@ body.store-design-page{background:#f6f7f9;color:var(--sd-ink)}
 @media(max-width:1050px){.store-design-layout{grid-template-columns:minmax(300px,390px) minmax(0,1fr)}.design-preview-shell{padding:12px}}
 @media(max-width:850px){.store-design-heading{align-items:flex-start;flex-direction:column}.store-design-layout{grid-template-columns:1fr}.design-preview-column{position:static;grid-row:1}.design-preview-shell{max-height:650px;min-height:500px}.design-preview{min-height:500px}}
 @media(max-width:600px){.store-design-main{padding:25px 0 50px}.store-design-nav .navlinks{gap:10px}.store-design-actions{width:100%}.store-design-actions .btn{flex:1;text-align:center;padding:10px 8px;font-size:11px}.design-panel{padding:15px}.design-panel-heading{flex-direction:column;gap:5px}.design-panel-heading>small{text-align:left}.design-template-grid{gap:6px}.design-template-card{padding:5px}.template-thumb{height:62px}.design-preview-shell{padding:9px;min-height:450px}.design-preview{min-height:440px}.design-preview-nav{padding:11px 13px}.design-preview-hero{padding:30px 17px 25px}.design-preview-products{padding:19px 13px}.design-preview-product-grid{gap:6px}.design-preview-product-image{height:70px}.design-save-row{align-items:flex-start;flex-direction:column}.design-save-row .btn{width:100%}}
+
+
+/* Store Design Studio readability patch.
+   Load this page layer after the shared theme so the editor remains readable
+   even when the user has selected IzzyDrop dark mode elsewhere. */
+html body.store-design-page,
+html[data-theme="dark"] body.store-design-page {
+  color-scheme: light !important;
+  background: #f6f7f9 !important;
+  color: #17191d !important;
+}
+html[data-theme="dark"] body.store-design-page :is(.nav,.store-design-main,.store-design-heading) {
+  color: #17191d !important;
+}
+html[data-theme="dark"] body.store-design-page :is(h1,h2,h3,h4) {
+  color: #17191d !important;
+}
+html[data-theme="dark"] body.store-design-page .muted {
+  color: #69727e !important;
+}
+html[data-theme="dark"] body.store-design-page .design-panel,
+html[data-theme="dark"] body.store-design-page .design-preview-toolbar,
+html[data-theme="dark"] body.store-design-page .design-save-row {
+  background: #ffffff !important;
+  border-color: #dfe3e8 !important;
+  color: #17191d !important;
+}
+html[data-theme="dark"] body.store-design-page :is(.design-panel-heading,.design-panel-heading h2,.design-panel-heading small,.design-field,.design-field small,.design-color-field,.design-save-note,.design-preview-toolbar b,.design-preview-toolbar small,.design-preview-caption) {
+  color: #17191d !important;
+}
+html[data-theme="dark"] body.store-design-page :is(.design-panel-heading small,.design-field small,.design-save-note,.design-preview-toolbar small,.design-preview-caption) {
+  color: #66707c !important;
+}
+body.store-design-page :is(.design-field input:not([type="file"]),.design-field textarea,.design-field select) {
+  background: #ffffff !important;
+  color: #17191d !important;
+  border: 1px solid #cfd5dd !important;
+  color-scheme: light !important;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.45;
+}
+body.store-design-page :is(.design-field input::placeholder,.design-field textarea::placeholder) {
+  color: #737d89 !important;
+  opacity: 1;
+}
+body.store-design-page .design-field input[type="file"] {
+  display: block;
+  width: 100%;
+  min-height: 42px;
+  padding: 7px;
+  border: 1px solid #cfd5dd;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #29313a;
+  color-scheme: light;
+  font-size: 12px;
+}
+body.store-design-page .design-field input[type="file"]::file-selector-button {
+  margin-right: 10px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: #17191d;
+  color: #ffffff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+body.store-design-page .design-color-field input[type="color"] {
+  min-height: 42px;
+  border: 1px solid #cfd5dd;
+  border-radius: 9px;
+  background: #ffffff !important;
+  color-scheme: light !important;
+}
+html[data-theme="dark"] body.store-design-page .design-template-card {
+  background: #ffffff !important;
+  border-color: #dfe3e8 !important;
+  color: #17191d !important;
+}
+html[data-theme="dark"] body.store-design-page .design-template-card small {
+  color: #66707c !important;
+}
+html[data-theme="dark"] body.store-design-page .design-device-switch {
+  background: #eef0f3 !important;
+}
+html[data-theme="dark"] body.store-design-page .design-device-switch button {
+  color: #5e6874 !important;
+}
+html[data-theme="dark"] body.store-design-page .design-device-switch button.on {
+  background: #ffffff !important;
+  color: #17191d !important;
+}
