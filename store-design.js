@@ -101,7 +101,7 @@
     root.innerHTML = announcement +
       '<header class="design-preview-nav"><div class="design-preview-brand">' + logoMarkup + '<span>' + escapeHtml(storeName) + '</span></div><div class="design-preview-navlinks">HOME　 SHOP　 CONTACT</div></header>' +
       bannerMarkup +
-      '<section class="design-preview-hero"><div class="eyebrow">WELCOME TO ' + escapeHtml(storeName.toUpperCase()) + '</div><h2>' + escapeHtml(title) + '</h2><p>' + escapeHtml(description) + '</p><span class="design-preview-cta">Explore collection</span></section>' +
+      '<section class="design-preview-hero"><div class="eyebrow">WELCOME TO ' + escapeHtml(storeName.toUpperCase()) + '</div><h2 class="design-preview-user-copy" data-i18n-skip="true">' + escapeHtml(title) + '</h2><p class="design-preview-user-copy" data-i18n-skip="true">' + escapeHtml(description) + '</p><span class="design-preview-cta">Explore collection</span></section>' +
       '<section class="design-preview-products"><h3>Featured products</h3><p>A preview of how your products will be presented</p><div class="design-preview-product-grid">' +
       ['Everyday essential', 'Customer favorite', 'New arrival'].map((name, index) =>
         '<article class="design-preview-product"><div class="design-preview-product-image"></div><div class="design-preview-product-body"><b>' + name + '</b><span>EGP ' + [450, 620, 375][index] + '</span></div></article>'
