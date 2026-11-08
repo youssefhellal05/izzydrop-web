@@ -23,6 +23,28 @@ VALUES
 INSERT INTO public.dropshipper_store_product_variants (store_product_id,variant_id,retail_price,enabled)
 VALUES ('90000000-0000-0000-0000-000000000001','60000000-0000-0000-0000-000000000001',725.50,true);
 
+INSERT INTO public.dropshipper_stores (id,dropshipper_id,slug,store_name,description,published)
+VALUES ('80000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000001','youssef-shop-2','Youssef Shop Two','A second independent store',false);
+DO $multi_store_check$
+BEGIN
+  IF (SELECT count(*) FROM public.dropshipper_stores WHERE dropshipper_id='10000000-0000-0000-0000-000000000001') <> 2 THEN
+    RAISE EXCEPTION 'A dropshipper should be able to own more than one store';
+  END IF;
+  UPDATE public.dropshipper_stores SET published=false, closed_at=now()
+  WHERE id='80000000-0000-0000-0000-000000000001';
+  IF public.public_dropshipper_store_by_slug('youssef-shop') IS NOT NULL THEN
+    RAISE EXCEPTION 'A shut-down store must not be publicly available';
+  END IF;
+  IF public.public_dropshipper_store_by_slug('youssef-shop-2') IS NOT NULL THEN
+    RAISE EXCEPTION 'An unpublished second store must not be publicly available';
+  END IF;
+  UPDATE public.dropshipper_stores SET published=true, closed_at=null
+  WHERE id='80000000-0000-0000-0000-000000000001';
+  IF public.public_dropshipper_store_by_slug('youssef-shop') IS NULL THEN
+    RAISE EXCEPTION 'A reactivated store should become publicly available again';
+  END IF;
+END $multi_store_check$;
+
 DO $$
 DECLARE doc jsonb;
 BEGIN
