@@ -9,7 +9,7 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="styles.css?v=20261011-dropshipper-mobilemenu1">
   <script src="config.js"></script>
-  <link rel="stylesheet" href="store-design.css?v=20261108-nosignout2">
+  <link rel="stylesheet" href="store-design.css?v=20261108-multistore1">
   <script src="common.js?v=20261006-sessioncheck1"></script>
 </head>
 <body class="store-design-page">
@@ -17,8 +17,8 @@
     <header class="nav store-design-nav">
       <a class="brand" href="app.html"><span class="brand-mark">IZ</span><span class="brand-word">IzzyDrop</span><span class="brand-role">Dropshipper</span></a>
       <div class="navlinks">
-        <a href="store-manager.html">My Store</a>
-        <a href="app.html">Workspace</a>
+        <a href="my-stores.html">My Stores</a>
+        <a id="design-dashboard-link" href="store-dashboard.html">Store dashboard</a>
       </div>
     </header>
 
@@ -30,7 +30,7 @@
           <p class="muted">Choose a layout, set your brand style, and preview your storefront as you customize it.</p>
         </div>
         <div class="store-design-actions">
-          <a class="btn secondary" href="store-manager.html">Back to My Store</a>
+          <a class="btn secondary" href="store-dashboard.html">Back to dashboard</a>
           <a id="design-open-store" class="btn" href="#" target="_blank" rel="noopener" hidden>View published store ↗</a>
         </div>
       </div>
@@ -101,7 +101,7 @@
           </section>
 
           <div class="design-save-row">
-            <button type="button" id="design-save" class="btn">Save design</button>
+            <div class="design-save-buttons"><button type="button" id="design-save" class="btn">Save design</button><button type="button" id="design-finish" class="btn secondary">Finish and view dashboard</button></div>
             <span id="design-save-note" class="design-save-note">Your changes are not saved yet.</span>
           </div>
         </aside>
@@ -124,7 +124,7 @@
       </div>
     </main>
   </div>
-  <script src="storefront-i18n.js?v=20261108-arabic-store2"></script>
-  <script src="store-design.js?v=20261108-nosignout2"></script>
+  <script src="storefront-i18n.js?v=20261108-multistore1"></script>
+  <script src="store-design.js?v=20261108-multistore1"></script>
 </body>
 </html>

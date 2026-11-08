@@ -159,6 +159,106 @@
     'Failed to fetch': 'تعذر الاتصال بالخادم. تحقق من اتصال الإنترنت وحاول مرة أخرى.',
     'Could not load product details.': 'تعذر تحميل تفاصيل المنتج.',
 
+    'My Stores': 'متاجري',
+    'YOUR STOREFRONTS': 'متاجرك الإلكترونية',
+    'STORE OVERVIEW': 'نظرة عامة على المتجر',
+    'An active dropshipper workspace is required.': 'يلزم وجود مساحة عمل دروبشيبر نشطة.',
+    'Reactivate your store': 'إعادة تفعيل متجرك',
+    'Your store is hidden from customers. Reactivate it when you are ready to publish it again.': 'متجرك مخفي عن العملاء. أعد تفعيله عندما تكون مستعدًا لنشره مرة أخرى.',
+    'Your store is a draft. Publish it when your details, design and product listings are ready.': 'متجرك محفوظ كمسودة. انشره عندما تصبح التفاصيل والتصميم وقوائم المنتجات جاهزة.',
+    'Publish this store now? Customers will be able to visit its public link.': 'هل تريد نشر هذا المتجر الآن؟ سيتمكن العملاء من زيارة رابطه العام.',
+    'Shut down this store? Its public link will stop working, but its products and design will be kept.': 'هل تريد إيقاف هذا المتجر؟ سيتوقف رابطه العام عن العمل، مع الاحتفاظ بمنتجاته وتصميمه.',
+    'Reactivate and publish this store? Customers will be able to visit it again.': 'هل تريد إعادة تفعيل هذا المتجر ونشره؟ سيتمكن العملاء من زيارته مرة أخرى.',
+    'Updating store status…': 'جارٍ تحديث حالة المتجر…',
+
+    'Loading your stores…': 'جارٍ تحميل متاجرك…',
+    '← Back to My Stores': '← العودة إلى متاجري',
+    'This is the name customers will see on your storefront.': 'هذا هو الاسم الذي سيظهر للعملاء في متجرك.',
+    'Use English lowercase letters, numbers, and hyphens. Your public address will be unique.': 'استخدم أحرفًا إنجليزية صغيرة وأرقامًا وشرطات. يجب أن يكون رابط متجرك فريدًا.',
+    'Describe your store in a sentence or two. You can change this later.': 'اكتب وصفًا مختصرًا لمتجرك. يمكنك تغييره لاحقًا.',
+    'Products are copied into your store listing. Editing your listing will not change the supplier\'s original product.': 'تُضاف المنتجات إلى قائمة متجرك. تعديل قائمتك لن يغيّر المنتج الأصلي لدى المورد.',
+    'View storefront ↗': 'عرض المتجر ↗',
+    'Update your storefront whenever you need.': 'حدّث متجرك متى شئت.',
+    'Store visibility': 'ظهور المتجر',
+    'You can make the storefront unavailable without deleting its content.': 'يمكنك إيقاف إتاحة المتجر للعملاء دون حذف محتواه.',
+    '＋ Create another store': '＋ إنشاء متجر آخر',
+    'Store content is kept when a storefront is shut down.': 'يتم الاحتفاظ بمحتوى المتجر عند إيقافه.',
+    'Store Design · IzzyDrop': 'تصميم المتجر · IzzyDrop',
+    'Manage Store · IzzyDrop': 'إدارة المتجر · IzzyDrop',
+    'Create a Store · IzzyDrop': 'إنشاء متجر · IzzyDrop',
+    'Store Dashboard · IzzyDrop': 'لوحة المتجر · IzzyDrop',
+    'My Stores · IzzyDrop': 'متاجري · IzzyDrop',
+    'Your store': 'متجرك',
+    'Loading your store…': 'جارٍ تحميل متجرك…',
+
+    'NEW STOREFRONT · STEP 1 OF 2': 'متجر جديد · الخطوة 1 من 2',
+    'PUBLIC STORE LINK': 'رابط المتجر العام',
+    'STORE OVERVIEW': 'نظرة عامة على المتجر',
+    'YOUR STOREFRONTS': 'متاجرك الإلكترونية',
+    'Your business, your storefronts.': 'مشروعك، ومتاجرك الإلكترونية.',
+    'You can manage several independent storefronts from the same account.': 'يمكنك إدارة عدة متاجر مستقلة من الحساب نفسه.',
+    'Products visible': 'منتجات ظاهرة',
+    'Listings published': 'قوائم منشورة',
+    'Products added': 'منتجات مضافة',
+    'View storefront': 'عرض المتجر',
+    'Copy link': 'نسخ الرابط',
+    'Edit design': 'تعديل التصميم',
+    'Back to dashboard': 'العودة إلى لوحة المتجر',
+    'Finish and view dashboard': 'إنهاء والانتقال إلى لوحة المتجر',
+    'Continue to store design →': 'المتابعة إلى تصميم المتجر ←',
+    'Creating your store…': 'جارٍ إنشاء متجرك…',
+    'Saving your store as a draft…': 'جارٍ حفظ متجرك كمسودة…',
+    'Create your store': 'أنشئ متجرك',
+    'Store link copied.': 'تم نسخ رابط المتجر.',
+    'That store link is already in use. Choose another one.': 'رابط المتجر مستخدم بالفعل. اختر رابطًا آخر.',
+    'Choose a different store link. Use lowercase English letters, numbers and hyphens.': 'اختر رابطًا آخر باستخدام أحرف إنجليزية صغيرة وأرقام وشرطات.',
+    'An active dropshipper workspace is required.': 'يلزم وجود مساحة عمل دروبشيبر نشطة.',
+    'Shut down this store? Its public link will stop working, but its products and design will be kept.': 'هل تريد إيقاف المتجر؟ سيتوقف الرابط العام عن العمل، مع الاحتفاظ بالمنتجات والتصميم.',
+    'Reactivate and publish this store? Customers will be able to visit it again.': 'هل تريد إعادة تفعيل المتجر ونشره؟ سيتمكن العملاء من زيارته مرة أخرى.',
+    'Publish this store now? Customers will be able to visit its public link.': 'هل تريد نشر المتجر الآن؟ سيتمكن العملاء من زيارة رابطه العام.',
+
+    'Create a store': 'إنشاء متجر',
+    'Create your first store': 'أنشئ متجرك الأول',
+    'Your first store starts here': 'متجرك الأول يبدأ من هنا',
+    'Your storefronts': 'متاجرك الإلكترونية',
+    'Create and manage all your online stores from one place.': 'أنشئ جميع متاجرك الإلكترونية وأدرها من مكان واحد.',
+    'Create your store': 'أنشئ متجرك',
+    'Start with your store name and link. Next, you\'ll choose a design and customize your brand.': 'ابدأ باسم متجرك ورابطه. بعد ذلك ستختار التصميم وتخصص هوية علامتك التجارية.',
+    'Back to My Stores': 'العودة إلى متاجري',
+    'Store dashboard': 'لوحة المتجر',
+    'Open store dashboard': 'افتح لوحة المتجر',
+    'Manage store': 'إدارة المتجر',
+    'STORE MANAGEMENT': 'إدارة المتجر',
+    'Update this store’s details, select products from IzzyDrop, and customize what customers see.': 'حدّث تفاصيل هذا المتجر، واختر منتجات من IzzyDrop، وخصص ما يراه العملاء.',
+    'Edit design': 'تعديل التصميم',
+    'Finish and view dashboard': 'إنهاء والانتقال إلى لوحة المتجر',
+    'Your store will be saved as a draft. It won\'t be public until you publish it.': 'سيتم حفظ متجرك كمسودة، ولن يكون متاحًا للعملاء حتى تنشره.',
+    'Continue to store design': 'المتابعة إلى تصميم المتجر',
+    'Store overview': 'نظرة عامة على المتجر',
+    'Manage your store': 'إدارة متجرك',
+    'Edit store details': 'تعديل تفاصيل المتجر',
+    'Name, link and description': 'الاسم والرابط والوصف',
+    'Edit store design': 'تعديل تصميم المتجر',
+    'Templates, colors and homepage': 'القوالب والألوان والصفحة الرئيسية',
+    'Manage products': 'إدارة المنتجات',
+    'Add, customize and hide products': 'إضافة المنتجات وتخصيصها وإخفاؤها',
+    'Products added': 'المنتجات المضافة',
+    'Products visible to customers': 'المنتجات الظاهرة للعملاء',
+    'Store design': 'تصميم المتجر',
+    'Customized': 'مخصص',
+    'Not customized': 'لم يتم تخصيصه',
+    'Shut down': 'متوقف',
+    'Shut down store': 'إيقاف المتجر',
+    'Reactivate store': 'إعادة تفعيل المتجر',
+    'Publish store': 'نشر المتجر',
+    'Store status updated.': 'تم تحديث حالة المتجر.',
+    'Created': 'تاريخ الإنشاء',
+    'Create another store': 'إنشاء متجر آخر',
+    'Your business, your storefronts.': 'مشروعك، ومتاجرك الإلكترونية.',
+    'Choose a store name and unique link.': 'اختر اسمًا للمتجر ورابطًا فريدًا.',
+    'You can run multiple independent stores from this same account.': 'يمكنك إدارة عدة متاجر مستقلة من الحساب نفسه.',
+    'Your store is a draft.': 'متجرك محفوظ كمسودة.',
+    'Public store link': 'رابط المتجر العام',
     'STORE BUILDER · DESIGN STUDIO': 'منشئ المتجر · استوديو التصميم',
     'Make it look like your brand.': 'اجعل متجرك يعكس هوية علامتك التجارية.',
     'Choose a layout, set your brand style, and preview your storefront as you customize it.': 'اختر قالبًا، وحدد هوية متجرك، وشاهد التعديلات مباشرة أثناء تخصيصه.',
@@ -314,7 +414,7 @@
     while (walker.nextNode()) {
       const node = walker.currentNode;
       const parent = node.parentElement;
-      if (parent?.closest('input, textarea, script, style, [translate="no"], [data-i18n-skip="true"]')) continue;
+      if (parent?.closest('input, textarea, script, style, [translate="no"], [data-i18n-skip="true"], .store-hub-card-name, #dashboard-store-name, .store-manager-product-body h3, .store-card-description, #store-name, #store-slug, #store-description, #edit-product-title, #edit-product-description, .design-preview-user-copy')) continue;
       node.nodeValue = translateValue(node.nodeValue);
     }
     if (root.querySelectorAll) {
@@ -327,7 +427,7 @@
 
   function preserveArabicRoutes() {
     if (!arabic) return;
-    document.querySelectorAll('a[href="app.html"], a[href="store-manager.html"], a[href="store-design.html"]').forEach(link => {
+    document.querySelectorAll('a[href="app.html"], a[href="store-manager.html"], a[href="store-design.html"], a[href="my-stores.html"], a[href="store-create.html"], a[href="store-dashboard.html"]').forEach(link => {
       const target = new URL(link.getAttribute('href'), location.href);
       target.searchParams.set('lang', 'ar');
       link.href = target.href;
@@ -338,8 +438,15 @@
   document.documentElement.dir = arabic ? 'rtl' : 'ltr';
   document.body?.classList.toggle('rtl', arabic);
 
-  const pageTitle = designPage ? 'تصميم المتجر · IzzyDrop' : 'متجري · IzzyDrop';
-  if (arabic) document.title = pageTitle;
+  const pageName = location.pathname.split('/').pop() || '';
+  const arabicPageTitles = {
+    'my-stores.html': 'متاجري · IzzyDrop',
+    'store-create.html': 'إنشاء متجر · IzzyDrop',
+    'store-dashboard.html': 'لوحة المتجر · IzzyDrop',
+    'store-manager.html': 'إدارة المتجر · IzzyDrop',
+    'store-design.html': 'تصميم المتجر · IzzyDrop'
+  };
+  if (arabic) document.title = arabicPageTitles[pageName] || 'IzzyDrop';
 
   window.IZZY_STORE_I18N = {
     language: () => language,

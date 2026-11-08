@@ -86,3 +86,31 @@ test('storefront hardening removes non-CRUD authenticated table privileges', () 
   assert.match(hardeningMigration, /idx_dropshipper_store_product_variants_variant_id/);
   assert.doesNotMatch(hardeningMigration, /grant all privileges[^;]*to authenticated/i);
 });
+
+test('per-store design settings have owner-only writes and published-store public reads', () => {
+  const migration = read('supabase/migrations/20261108181000_create_dropshipper_store_designs.sql');
+  assert.match(migration, /create table if not exists public\.dropshipper_store_designs/i);
+  assert.match(migration, /alter table public\.dropshipper_store_designs enable row level security/i);
+  assert.match(migration, /dropshippers manage their own store design/i);
+  assert.match(migration, /public can read published store design/i);
+  assert.match(migration, /grant select on public\.dropshipper_store_designs to anon/i);
+});
+
+test('a dropshipper can own multiple isolated stores with reversible shutdown', () => {
+  const migration = read('supabase/migrations/20261108182000_enable_multiple_dropshipper_stores.sql');
+  assert.match(migration, /drop constraint if exists dropshipper_stores_dropshipper_id_key/i);
+  assert.match(migration, /add column if not exists closed_at timestamptz/i);
+  assert.match(migration, /closed_at is null or published is false/i);
+  assert.match(migration, /ds\.closed_at is null/i);
+  const manager = read('store-manager.js');
+  const design = read('store-design.js');
+  assert.ok(manager.includes("encodeURIComponent(storeId || '')"));
+  assert.ok(design.includes("encodeURIComponent(storeId)"));
+  assert.ok(read('my-stores.html').includes('my-stores.js'));
+  assert.ok(read('store-create.html').includes('store-create.js'));
+  assert.ok(read('store-dashboard.html').includes('store-dashboard.js'));
+  assert.match(read('app.html'), /id="dropshipper-my-store-link"/);
+  assert.match(read('app.js'), /myStore\.href=ar\(\)\?'my-stores\.html\?lang=ar':'my-stores\.html'/);
+  assert.match(read('store-dashboard.js'), /closed_at:new Date\(\)\.toISOString\(\)/);
+  assert.match(read('store-dashboard.js'), /closed_at:null/);
+});

@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#111318">
+  <title>Create a Store · IzzyDrop</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css?v=20261011-dropshipper-mobilemenu1">
+  <link rel="stylesheet" href="store-hub.css?v=20261108-multistore1">
+  <link rel="stylesheet" href="store-create.css?v=20261108-multistore1">
+  <script src="config.js"></script>
+  <script src="common.js?v=20261006-sessioncheck1"></script>
+</head>
+<body class="store-hub-page store-create-page">
+  <div class="wrap store-hub-wrap">
+    <header class="nav store-hub-nav">
+      <a class="brand" href="my-stores.html"><span class="brand-mark">IZ</span><span class="brand-word">IzzyDrop</span><span class="brand-role">Dropshipper</span></a>
+      <div class="navlinks"><a id="back-to-stores" href="my-stores.html">My Stores</a></div>
+    </header>
+    <main class="store-create-main">
+      <a id="create-back-link" class="store-create-back" href="my-stores.html">← Back to My Stores</a>
+      <div class="store-create-heading">
+        <div class="store-hub-eyebrow">NEW STOREFRONT · STEP 1 OF 2</div>
+        <h1>Create your store</h1>
+        <p class="muted">Start with your store name and link. Next, you'll choose a design and customize your brand.</p>
+      </div>
+      <div id="create-store-status" class="status" role="status" aria-live="polite"></div>
+      <form id="create-store-form" class="store-create-form">
+        <label class="store-create-field">Store name
+          <input id="new-store-name" type="text" minlength="2" maxlength="80" required placeholder="Your brand name" autocomplete="organization">
+          <small>This is the name customers will see on your storefront.</small>
+        </label>
+        <label class="store-create-field">Store link
+          <div class="store-create-slug-wrap"><span class="store-create-domain">/</span><input id="new-store-slug" type="text" minlength="2" maxlength="48" required pattern="[a-z0-9]+(-[a-z0-9]+)*" placeholder="your-brand" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+          <small>Use English lowercase letters, numbers, and hyphens. Your public address will be unique.</small>
+        </label>
+        <label class="store-create-field">Short description <span class="store-create-optional">Optional</span>
+          <textarea id="new-store-description" rows="4" maxlength="800" placeholder="What does your store sell?"></textarea>
+          <small>Describe your store in a sentence or two. You can change this later.</small>
+        </label>
+        <div class="store-create-actions">
+          <button type="submit" id="create-store-submit" class="btn">Continue to store design <span aria-hidden="true">→</span></button>
+          <span class="store-create-note">Your store will be saved as a draft. It won't be public until you publish it.</span>
+        </div>
+      </form>
+    </main>
+  </div>
+  <script src="storefront-i18n.js?v=20261108-multistore1"></script>
+  <script src="store-create.js?v=20261108-multistore1"></script>
+</body>
+</html>

@@ -24,6 +24,8 @@
     announcement: ''
   };
   const state = { session: IZZY.session(), user: null, dropshipper: null, store: null, settings: {...defaults}, dirty: false };
+  const storeId = new URLSearchParams(location.search).get('store_id');
+  const route = (file,extra={}) => { const url=new URL(file,location.href); Object.entries(extra).forEach(([key,value])=>url.searchParams.set(key,value)); if (isArabic()) url.searchParams.set('lang','ar'); return url.href; };
   const status = $('#store-design-status');
 
   function setStatus(message, bad = false) {
@@ -86,7 +88,7 @@
     const title = s.hero_title || storeName;
     const description = s.hero_description || state.store?.description || 'A short introduction to your store.';
     const announcement = s.announcement
-      ? '<div class="design-preview-announcement">' + escapeHtml(s.announcement) + '</div>' : '';
+      ? '<div class="design-preview-announcement design-preview-user-copy" data-i18n-skip="true">' + escapeHtml(s.announcement) + '</div>' : '';
     const bannerMarkup = banner
       ? '<div class="design-preview-banner" style="background-image:url(&quot;' + escapeHtml(banner) + '&quot;)"></div>' : '';
     const logoMarkup = logo
@@ -99,7 +101,7 @@
     root.innerHTML = announcement +
       '<header class="design-preview-nav"><div class="design-preview-brand">' + logoMarkup + '<span>' + escapeHtml(storeName) + '</span></div><div class="design-preview-navlinks">HOME　 SHOP　 CONTACT</div></header>' +
       bannerMarkup +
-      '<section class="design-preview-hero"><div class="eyebrow">WELCOME TO ' + escapeHtml(storeName.toUpperCase()) + '</div><h2>' + escapeHtml(title) + '</h2><p>' + escapeHtml(description) + '</p><span class="design-preview-cta">Explore collection</span></section>' +
+      '<section class="design-preview-hero"><div class="eyebrow">WELCOME TO ' + escapeHtml(storeName.toUpperCase()) + '</div><h2 class="design-preview-user-copy" data-i18n-skip="true">' + escapeHtml(title) + '</h2><p class="design-preview-user-copy" data-i18n-skip="true">' + escapeHtml(description) + '</p><span class="design-preview-cta">Explore collection</span></section>' +
       '<section class="design-preview-products"><h3>Featured products</h3><p>A preview of how your products will be presented</p><div class="design-preview-product-grid">' +
       ['Everyday essential', 'Customer favorite', 'New arrival'].map((name, index) =>
         '<article class="design-preview-product"><div class="design-preview-product-image"></div><div class="design-preview-product-body"><b>' + name + '</b><span>EGP ' + [450, 620, 375][index] + '</span></div></article>'
@@ -126,6 +128,11 @@
     $('#design-logo-file').addEventListener('change', event => uploadAsset(event, 'logo'));
     $('#design-banner-file').addEventListener('change', event => uploadAsset(event, 'banner'));
     $('#design-save').addEventListener('click', saveDesign);
+    $('#design-finish').addEventListener('click', async () => {
+      if (state.dirty && !(await saveDesign())) return;
+      if (!state.store?.id) return;
+      location.assign(route('store-dashboard.html',{store_id:state.store.id}));
+    });
   }
   async function uploadAsset(event, type) {
     const file = event.target.files?.[0];
@@ -163,9 +170,9 @@
     const s = state.settings;
     const validColor = value => /^#[0-9a-f]{6}$/i.test(value);
     if (![s.accent_color, s.background_color, s.text_color].every(validColor)) {
-      return setStatus('Choose valid colors before saving.', true);
+      { setStatus('Choose valid colors before saving.', true); return false; }
     }
-    if (!state.store?.id) return setStatus('Create your store details first in My Store.', true);
+    if (!state.store?.id) { setStatus('Create your store details first in My Store.', true); return false; }
     const button = $('#design-save');
     button.disabled = true;
     setStatus('Saving your store design…');
@@ -177,8 +184,10 @@
       });
       setDirty(false);
       setStatus('Design saved. Your public storefront will use these settings.');
+      return true;
     } catch (error) {
       setStatus(userError(error,'Could not save your design.','تعذر حفظ التصميم. حاول مرة أخرى.'), true);
+      return false;
     } finally {
       button.disabled = false;
     }
@@ -192,14 +201,16 @@
     state.dropshipper = dropshippers?.[0] || null;
     if (!state.dropshipper) throw new Error('This account does not have a dropshipper workspace.');
     if (state.dropshipper.status !== 'active') throw new Error('Your dropshipper account must be active before using the store builder.');
-    const stores = await IZZY.request('/rest/v1/dropshipper_stores?select=*&dropshipper_id=eq.' + encodeURIComponent(state.dropshipper.id) + '&limit=1');
+    if (!storeId) { location.replace(route('my-stores.html')); return; }
+    const stores = await IZZY.request('/rest/v1/dropshipper_stores?select=*&id=eq.' + encodeURIComponent(storeId) + '&dropshipper_id=eq.' + encodeURIComponent(state.dropshipper.id) + '&limit=1');
     state.store = stores?.[0] || null;
-    if (!state.store) {
-      setStatus('Create your store name and link in My Store first, then return here.');
-      $('#design-preview').innerHTML = '<div class="design-preview-placeholder">Your store preview will appear here after you create your store details.</div>';
-      $('#design-save').disabled = true;
-      return;
-    }
+    if (!state.store) throw new Error('This store could not be found in your account.');
+    const myStoresLink = $('.store-design-nav .navlinks a[href="my-stores.html"]');
+    if (myStoresLink) { myStoresLink.href = route('my-stores.html'); myStoresLink.textContent = isArabic() ? 'متاجري' : 'My Stores'; }
+    const dashboardLink = $('#design-dashboard-link');
+    if (dashboardLink) dashboardLink.href = route('store-dashboard.html',{store_id:state.store.id});
+    const backLink = $('.store-design-actions a[href="store-manager.html"]');
+    if (backLink) { backLink.href = route('store-dashboard.html',{store_id:state.store.id}); backLink.textContent = isArabic() ? 'العودة إلى لوحة المتجر' : 'Back to dashboard'; }
     const rows = await IZZY.request('/rest/v1/dropshipper_store_designs?select=settings&store_id=eq.' + encodeURIComponent(state.store.id) + '&limit=1');
     state.settings = {...defaults, ...(rows?.[0]?.settings || {})};
     fillControls();
