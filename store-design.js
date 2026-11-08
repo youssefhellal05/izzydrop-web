@@ -8,11 +8,13 @@
     catch { return ''; }
   };
   const escapeHtml = IZZY.esc;
+  const isArabic = () => window.IZZY_STORE_I18N?.isArabic?.() === true;
   const defaults = {
     version: 1, template: 'clean', accent_color: '#c9f36a',
     background_color: '#fbfbfc', text_color: '#15171b', font: 'modern',
-    logo_url: '', banner_url: '', hero_title: 'Discover your next favorite thing',
-    hero_description: 'Explore a handpicked collection of products selected for you.',
+    logo_url: '', banner_url: '',
+    hero_title: isArabic() ? 'اكتشف منتجاتك المفضلة التالية' : 'Discover your next favorite thing',
+    hero_description: isArabic() ? 'تصفح مجموعة مختارة بعناية من المنتجات.' : 'Explore a handpicked collection of products selected for you.',
     announcement: ''
   };
   const state = { session: IZZY.session(), user: null, dropshipper: null, store: null, settings: {...defaults}, dirty: false };
