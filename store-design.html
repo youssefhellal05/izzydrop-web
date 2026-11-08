@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#111318">
+  <title>Store Design · IzzyDrop</title>
+  <meta name="description" content="Customize the look and feel of your EasyDrop-style storefront.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css?v=20261011-dropshipper-mobilemenu1">
+  <link rel="stylesheet" href="store-design.css?v=20261108-builder1">
+  <script src="config.js"></script>
+  <script src="common.js?v=20261006-sessioncheck1"></script>
+</head>
+<body class="store-design-page">
+  <div class="wrap store-design-wrap">
+    <header class="nav store-design-nav">
+      <a class="brand" href="app.html"><span class="brand-mark">IZ</span><span class="brand-word">IzzyDrop</span><span class="brand-role">Dropshipper</span></a>
+      <div class="navlinks">
+        <a href="store-manager.html">My Store</a>
+        <a href="app.html">Workspace</a>
+        <button type="button" id="design-sign-out" class="store-text-button">Sign out</button>
+      </div>
+    </header>
+
+    <main class="store-design-main">
+      <div class="store-design-heading">
+        <div>
+          <div class="store-design-eyebrow">STORE BUILDER · DESIGN STUDIO</div>
+          <h1>Make it look like your brand.</h1>
+          <p class="muted">Choose a layout, set your brand style, and preview your storefront as you customize it.</p>
+        </div>
+        <div class="store-design-actions">
+          <a class="btn secondary" href="store-manager.html">Back to My Store</a>
+          <a id="design-open-store" class="btn" href="#" target="_blank" rel="noopener" hidden>View published store ↗</a>
+        </div>
+      </div>
+
+      <div id="store-design-status" class="status" role="status" aria-live="polite"></div>
+
+      <div class="store-design-layout">
+        <aside class="design-controls">
+          <section class="design-panel">
+            <div class="design-panel-heading"><div><span class="design-step">01</span><h2>Choose a layout</h2></div><small>Change the structure of your storefront</small></div>
+            <div class="design-template-grid">
+              <button type="button" class="design-template-card" data-template="clean" aria-pressed="true">
+                <span class="template-thumb template-thumb-clean"><i></i><b></b><em></em><em></em><em></em></span>
+                <span><b>Clean</b><small>Simple and product-first</small></span>
+              </button>
+              <button type="button" class="design-template-card" data-template="editorial" aria-pressed="false">
+                <span class="template-thumb template-thumb-editorial"><i></i><b></b><em></em><em></em></span>
+                <span><b>Editorial</b><small>Big visuals and storytelling</small></span>
+              </button>
+              <button type="button" class="design-template-card" data-template="bold" aria-pressed="false">
+                <span class="template-thumb template-thumb-bold"><i></i><b></b><em></em><em></em><em></em></span>
+                <span><b>Bold</b><small>Strong color and statement style</small></span>
+              </button>
+            </div>
+          </section>
+
+          <section class="design-panel">
+            <div class="design-panel-heading"><div><span class="design-step">02</span><h2>Brand identity</h2></div><small>Make the store yours</small></div>
+            <label class="design-field">Store logo
+              <input id="design-logo-file" type="file" accept="image/jpeg,image/png,image/webp,image/avif">
+              <small>JPG, PNG, WebP or AVIF · Maximum 5 MB</small>
+            </label>
+            <div id="design-logo-preview" class="design-asset-preview" hidden></div>
+            <label class="design-field">Cover image / banner
+              <input id="design-banner-file" type="file" accept="image/jpeg,image/png,image/webp,image/avif">
+              <small>Wide images work best · Maximum 5 MB</small>
+            </label>
+            <div id="design-banner-preview" class="design-asset-preview banner-asset-preview" hidden></div>
+          </section>
+
+          <section class="design-panel">
+            <div class="design-panel-heading"><div><span class="design-step">03</span><h2>Colors and typography</h2></div><small>Set your visual style</small></div>
+            <div class="design-color-grid">
+              <label class="design-color-field"><span>Accent color</span><input id="design-accent-color" type="color" value="#c9f36a"></label>
+              <label class="design-color-field"><span>Page background</span><input id="design-background-color" type="color" value="#fbfbfc"></label>
+              <label class="design-color-field"><span>Text color</span><input id="design-text-color" type="color" value="#15171b"></label>
+            </div>
+            <label class="design-field">Font style
+              <select id="design-font">
+                <option value="modern">Modern · clean</option>
+                <option value="classic">Classic · editorial</option>
+                <option value="rounded">Rounded · friendly</option>
+              </select>
+            </label>
+          </section>
+
+          <section class="design-panel">
+            <div class="design-panel-heading"><div><span class="design-step">04</span><h2>Homepage content</h2></div><small>What customers see first</small></div>
+            <label class="design-field">Main headline
+              <input id="design-hero-title" type="text" maxlength="100" placeholder="Discover your next favorite thing">
+            </label>
+            <label class="design-field">Short introduction
+              <textarea id="design-hero-description" rows="3" maxlength="280" placeholder="A short introduction to your store."></textarea>
+            </label>
+            <label class="design-field">Announcement bar <span class="design-optional">Optional</span>
+              <input id="design-announcement" type="text" maxlength="120" placeholder="Example: New arrivals just landed">
+            </label>
+          </section>
+
+          <div class="design-save-row">
+            <button type="button" id="design-save" class="btn">Save design</button>
+            <span id="design-save-note" class="design-save-note">Your changes are not saved yet.</span>
+          </div>
+        </aside>
+
+        <section class="design-preview-column" aria-label="Live storefront preview">
+          <div class="design-preview-toolbar">
+            <div><b>Live preview</b><small>Updates as you edit</small></div>
+            <div class="design-device-switch" role="group" aria-label="Preview size">
+              <button type="button" data-preview-size="desktop" class="on" aria-pressed="true" title="Desktop preview">Desktop</button>
+              <button type="button" data-preview-size="mobile" aria-pressed="false" title="Mobile preview">Mobile</button>
+            </div>
+          </div>
+          <div id="design-preview-shell" class="design-preview-shell">
+            <div id="design-preview" class="design-preview">
+              <div class="design-preview-placeholder">Loading your store preview…</div>
+            </div>
+          </div>
+          <p class="design-preview-caption">This is a preview of the storefront design. Your actual products and stock availability are managed separately in My Store.</p>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script src="store-design.js?v=20261108-builder1"></script>
+</body>
+</html>

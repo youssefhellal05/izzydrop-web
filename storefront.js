@@ -56,11 +56,37 @@
       const result=await IZZY.rpc('public_dropshipper_store_by_slug',{_slug:slug},false);
       if(!result||!result.store){errorPage('This store is not available','The link may be incorrect, or the store has not been published.');return;}
       const store=result.store,products=Array.isArray(result.products)?result.products:[];
-      document.title=(store.store_name||'Store')+' · IzzyDrop';
-      const logo=safeUrl(store.logo_url);
-      root.innerHTML="<section class='storefront-store-hero'><div class='storefront-store-identity'>"+
-        (logo?"<img class='storefront-logo' src='"+esc(logo)+"' alt='"+esc(store.store_name)+"'>":"<div class='storefront-logo-fallback' aria-hidden='true'>"+esc((store.store_name||'S').slice(0,2).toUpperCase())+"</div>")+
-        "<div><div class='storefront-eyebrow'>INDEPENDENT STORE</div><h1>"+esc(store.store_name||'Store')+"</h1><p class='storefront-store-description'>"+esc(store.description||'')+"</p></div></div>"+
+      const designResponse=await fetch(IZZY.config.supabaseUrl+'/rest/v1/dropshipper_store_designs?select=settings&store_id=eq.'+encodeURIComponent(store.id),{headers:{apikey:IZZY.config.supabaseKey}}).catch(()=>null);
+      const designRows=designResponse?.ok?await designResponse.json().catch(()=>[]):[];
+      const rawDesign=Array.isArray(designRows)?designRows[0]?.settings:null;
+      const design=rawDesign&&typeof rawDesign==='object'?rawDesign:{};
+      const allowedTemplates=['clean','editorial','bold'];
+      const template=allowedTemplates.includes(design.template)?design.template:'clean';
+      const colors=['accent_color','background_color','text_color'];
+      const validColor=value=>typeof value==='string'&&/^#[0-9a-f]{6}$/i.test(value);
+      const palette={
+        accent_color:validColor(design.accent_color)?design.accent_color:'#c9f36a',
+        background_color:validColor(design.background_color)?design.background_color:'#fbfbfc',
+        text_color:validColor(design.text_color)?design.text_color:'#15171b'
+      };
+      const fonts={modern:'Arial,Helvetica,sans-serif',classic:'Georgia,serif',rounded:'Trebuchet MS,Arial,sans-serif'};
+      document.body.classList.add('store-template-'+template);
+      document.documentElement.style.setProperty('--store-accent',palette.accent_color);
+      document.documentElement.style.setProperty('--store-page-background',palette.background_color);
+      document.documentElement.style.setProperty('--store-ink',palette.text_color);
+      document.documentElement.style.setProperty('--store-font',fonts[design.font]||fonts.modern);
+      const logo=safeUrl(design.logo_url)||safeUrl(store.logo_url);
+      const banner=safeUrl(design.banner_url);
+      const storeName=store.store_name||'Store';
+      const heroTitle=String(design.hero_title||'').trim()||storeName;
+      const heroDescription=String(design.hero_description||'').trim()||store.description||'';
+      document.title=storeName+' · IzzyDrop';
+      const announcement=String(design.announcement||'').trim();
+      root.innerHTML=(announcement?"<div class='storefront-announcement'>"+esc(announcement)+"</div>":"")+
+        (banner?"<div class='storefront-banner' role='img' aria-label='Store cover image' style=\"background-image:url('"+esc(banner)+"')\"></div>":"")+
+        "<section class='storefront-store-hero'><div class='storefront-store-identity'>"+
+        (logo?"<img class='storefront-logo' src='"+esc(logo)+"' alt='"+esc(storeName)+"'>":"<div class='storefront-logo-fallback' aria-hidden='true'>"+esc(storeName.slice(0,2).toUpperCase())+"</div>")+
+        "<div><div class='storefront-eyebrow'>INDEPENDENT STORE</div><h1>"+esc(heroTitle)+"</h1><p class='storefront-store-description'>"+esc(heroDescription)+"</p></div></div>"+
         "<div class='storefront-count'>"+products.length+" product"+(products.length===1?'':'s')+"</div></section>"+
         "<section class='storefront-products-section'><header class='storefront-products-head'><div><h2>Shop the collection</h2><p>Products selected and presented by this independent seller.</p></div></header>"+
         "<div class='storefront-product-grid'>"+(products.length?products.map(renderProduct).join(''):"<div class='storefront-empty-products'><b>No products published yet</b><p>This store is being prepared. Please check back soon.</p></div>")+"</div></section>";
