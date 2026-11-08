@@ -1,0 +1,25 @@
+.store-create-main{max-width:760px;margin:0 auto;padding:34px 0 72px}
+.store-create-back{display:inline-block;margin-bottom:26px;color:#69727e;text-decoration:none;font-size:12px;font-weight:700}
+.store-create-heading{margin-bottom:22px}
+.store-create-heading h1{font-size:clamp(32px,4vw,44px);letter-spacing:-.055em;margin:8px 0}
+.store-create-heading p{font-size:14px;line-height:1.6}
+.store-create-form{background:#fff;border:1px solid #e1e5ea;border-radius:18px;padding:25px;box-shadow:0 8px 24px #15202a08;display:grid;gap:20px}
+.store-create-field{display:flex;flex-direction:column;gap:8px;font-size:12px;font-weight:800;color:#272d35}
+.store-create-field input,.store-create-field textarea{box-sizing:border-box;width:100%;border:1px solid #d7dde4;border-radius:10px;padding:13px 14px;background:#fff;color:#17191d;font:inherit;font-size:14px;font-weight:450;line-height:1.5;outline:none}
+.store-create-field input:focus,.store-create-field textarea:focus{border-color:#9eb56f;box-shadow:0 0 0 3px #c9f36a38}
+.store-create-field small{font-size:10px;line-height:1.5;font-weight:450;color:#74808d}
+.store-create-domain{padding:12px 14px;background:#f0f2f5;border:1px solid #d7dde4;border-right:0;border-radius:10px 0 0 10px;color:#77818d;font-size:13px}
+.store-create-slug-wrap{display:flex}
+.store-create-slug-wrap input{border-radius:0 10px 10px 0}
+.store-create-optional{font-weight:500;color:#8a929c;font-size:10px;margin-inline-start:4px}
+.store-create-actions{display:flex;align-items:center;gap:15px;padding-top:3px}
+.store-create-actions .btn{white-space:nowrap}
+.store-create-note{color:#79838e;font-size:10px;line-height:1.5}
+html[dir=rtl] .store-create-main{direction:rtl;text-align:right}
+html[dir=rtl] .store-create-form{direction:rtl}
+html[dir=rtl] .store-create-field input,html[dir=rtl] .store-create-field textarea{direction:rtl;text-align:right}
+html[dir=rtl] .store-create-slug-wrap{direction:ltr}
+html[dir=rtl] .store-create-slug-wrap input{text-align:left;direction:ltr}
+html[dir=rtl] .store-create-domain{border-left:0;border-right:1px solid #d7dde4;border-radius:0 10px 10px 0}
+html[dir=rtl] .store-create-slug-wrap input{border-radius:10px 0 0 10px}
+@media(max-width:600px){.store-create-main{padding:25px 0 52px}.store-create-form{padding:17px}.store-create-actions{align-items:stretch;flex-direction:column}.store-create-actions .btn{width:100%}}
