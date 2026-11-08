@@ -49,20 +49,28 @@ BEGIN
   IF public.public_dropshipper_store_by_slug('youssef-shop') IS NOT NULL THEN
     RAISE EXCEPTION 'A shut-down store must not be publicly available';
   END IF;
-  SET ROLE anon;
-  IF (SELECT count(*) FROM public.dropshipper_store_designs) <> 0 THEN
-    RAISE EXCEPTION 'Anonymous visitors should not read a shut-down store design';
-  END IF;
-  RESET ROLE;
   IF public.public_dropshipper_store_by_slug('youssef-shop-2') IS NOT NULL THEN
     RAISE EXCEPTION 'An unpublished second store must not be publicly available';
   END IF;
-  UPDATE public.dropshipper_stores SET published=true, closed_at=null
-  WHERE id='80000000-0000-0000-0000-000000000001';
+END $multi_store_check$;
+
+SET ROLE anon;
+DO $closed_store_design_read_check$
+BEGIN
+  IF (SELECT count(*) FROM public.dropshipper_store_designs) <> 0 THEN
+    RAISE EXCEPTION 'Anonymous visitors should not read a shut-down store design';
+  END IF;
+END $closed_store_design_read_check$;
+RESET ROLE;
+
+UPDATE public.dropshipper_stores SET published=true, closed_at=null
+WHERE id='80000000-0000-0000-0000-000000000001';
+DO $reactivate_store_check$
+BEGIN
   IF public.public_dropshipper_store_by_slug('youssef-shop') IS NULL THEN
     RAISE EXCEPTION 'A reactivated store should become publicly available again';
   END IF;
-END $multi_store_check$;
+END $reactivate_store_check$;
 
 DO $$
 DECLARE doc jsonb;
