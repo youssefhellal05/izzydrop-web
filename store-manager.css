@@ -170,3 +170,10 @@ html[dir="rtl"] .store-modal-close { margin-right:auto; margin-left:0; }
   html[dir="rtl"] .store-section-heading { align-items:flex-start; }
   html[dir="rtl"] .store-manager-product-actions { justify-content:flex-start; }
 }
+
+
+/* Safety net: My Store has no sign-out action in its page header.
+   Hide the legacy control if a stale HTML response still contains it. */
+body.store-manager-page .store-manager-nav .navlinks #store-sign-out {
+  display: none !important;
+}
