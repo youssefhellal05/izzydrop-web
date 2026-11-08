@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#111318">
+  <title>Store Dashboard · IzzyDrop</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css?v=20261011-dropshipper-mobilemenu1">
+  <link rel="stylesheet" href="store-dashboard.css?v=20261108-multistore1">
+  <script src="config.js"></script>
+  <script src="common.js?v=20261006-sessioncheck1"></script>
+</head>
+<body class="store-dashboard-page">
+  <div class="wrap store-dashboard-wrap">
+    <header class="nav store-dashboard-nav">
+      <a class="brand" href="app.html"><span class="brand-mark">IZ</span><span class="brand-word">IzzyDrop</span><span class="brand-role">Dropshipper</span></a>
+      <div class="navlinks">
+        <a id="dashboard-my-stores" href="my-stores.html">My Stores</a>
+        <a href="app.html">Workspace</a>
+      </div>
+    </header>
+    <main class="store-dashboard-main">
+      <a id="dashboard-back" class="store-dashboard-back" href="my-stores.html">← Back to My Stores</a>
+      <div id="store-dashboard-status-message" class="status" role="status" aria-live="polite"></div>
+      <section id="store-dashboard-content" hidden>
+        <div class="store-dashboard-heading">
+          <div>
+            <div class="store-dashboard-eyebrow">STORE OVERVIEW</div>
+            <div class="store-dashboard-title-row"><h1 id="dashboard-store-name">Your store</h1><span id="dashboard-store-status" class="store-dashboard-status"></span></div>
+            <p id="dashboard-store-description" class="muted"></p>
+          </div>
+          <a id="dashboard-view-store" class="btn" href="#" target="_blank" rel="noopener" hidden>View storefront ↗</a>
+        </div>
+        <section class="store-dashboard-info">
+          <div class="store-dashboard-info-main">
+            <span class="store-dashboard-label">PUBLIC STORE LINK</span>
+            <strong id="dashboard-store-url"></strong>
+            <div class="store-dashboard-info-actions">
+              <button type="button" class="btn secondary" id="dashboard-copy-link">Copy link</button>
+              <span id="dashboard-created-date" class="store-dashboard-date"></span>
+            </div>
+          </div>
+          <div class="store-dashboard-store-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10h18l-2-6H5zM5 10v10h14V10M9 20v-6h6v6"/></svg></div>
+        </section>
+        <section class="store-dashboard-stats">
+          <article class="store-dashboard-stat"><span id="dashboard-product-count">0</span><small>Products added</small></article>
+          <article class="store-dashboard-stat"><span id="dashboard-live-count">0</span><small>Products visible to customers</small></article>
+          <article class="store-dashboard-stat"><span id="dashboard-design-status">—</span><small>Store design</small></article>
+        </section>
+        <section class="store-dashboard-section">
+          <div class="store-dashboard-section-heading"><div><h2>Manage your store</h2><p>Update your storefront whenever you need.</p></div></div>
+          <div class="store-dashboard-actions-grid">
+            <a id="dashboard-edit-details" class="store-dashboard-action" href="#"><span class="store-dashboard-action-icon"><svg viewBox="0 0 24 24"><path d="M4 20h4l11-11-4-4L4 16zM13.5 6.5l4 4"/></svg></span><span><b>Edit store details</b><small>Name, link and description</small></span><span class="store-dashboard-chevron">›</span></a>
+            <a id="dashboard-edit-design" class="store-dashboard-action" href="#"><span class="store-dashboard-action-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4zM4 9h16M9 5v4"/></svg></span><span><b>Edit store design</b><small>Templates, colors and homepage</small></span><span class="store-dashboard-chevron">›</span></a>
+            <a id="dashboard-manage-products" class="store-dashboard-action" href="#"><span class="store-dashboard-action-icon"><svg viewBox="0 0 24 24"><path d="M4 7h16v13H4zM8 7V4h8v3M8 12h8M8 16h5"/></svg></span><span><b>Manage products</b><small>Add, customize and hide products</small></span><span class="store-dashboard-chevron">›</span></a>
+          </div>
+        </section>
+        <section class="store-dashboard-shutdown">
+          <div><h2 id="dashboard-lifecycle-title">Store visibility</h2><p id="dashboard-lifecycle-copy">You can make the storefront unavailable without deleting its content.</p></div>
+          <button type="button" class="btn danger" id="dashboard-lifecycle-action">Shut down store</button>
+        </section>
+        <div id="dashboard-action-status" class="status" role="status" aria-live="polite"></div>
+        <div class="store-dashboard-bottom">
+          <a id="dashboard-create-another" href="store-create.html">＋ Create another store</a>
+          <span>Store content is kept when a storefront is shut down.</span>
+        </div>
+      </section>
+      <div id="store-dashboard-loading" class="store-dashboard-loading">Loading your store…</div>
+    </main>
+  </div>
+  <script src="storefront-i18n.js?v=20261108-arabic-store2"></script>
+  <script src="store-dashboard.js?v=20261108-multistore1"></script>
+</body>
+</html>
