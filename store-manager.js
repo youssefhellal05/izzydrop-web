@@ -9,8 +9,13 @@
   const slugify = v => clean(v).normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 48).replace(/-+$/g, '');
   const safeUrl = v => { try { const u = new URL(String(v || '')); return u.protocol === 'https:' ? u.href : ''; } catch { return ''; } };
   const money = (v, c) => IZZY.money(Number(v || 0), c || 'EGP');
-  const titleOf = p => clean(p && (p.name_en || p.name || p.title)) || 'Product';
-  const descOf = p => clean(p && (p.description_en || p.description)) || '';
+  const isArabic = () => window.IZZY_STORE_I18N?.isArabic?.() === true;
+  const titleOf = p => clean(p && (isArabic()
+    ? (p.name_ar || p.name_en || p.name || p.title)
+    : (p.name_en || p.name_ar || p.name || p.title))) || 'Product';
+  const descOf = p => clean(p && (isArabic()
+    ? (p.description_ar || p.description_en || p.description)
+    : (p.description_en || p.description_ar || p.description))) || '';
   const setStatus = (m, bad = false) => { statusEl.textContent = m || ''; statusEl.className = 'status' + (bad ? ' bad' : ''); };
   const setEditStatus = (m, bad = false) => { const e = $('#store-product-edit-status'); if (e) { e.textContent = m || ''; e.className = 'status' + (bad ? ' bad' : ''); } };
   const storeUrl = slug => { if (!slug) return ''; const u = new URL('storefront.html', location.href); u.searchParams.set('slug', slug); return u.href; };
@@ -304,7 +309,10 @@
     catch(error){setStatus(error.message||'Could not update product visibility.',true);}
   }
   async function removeProduct(id) {
-    if(!confirm('Remove this product from your store? It will remain in My Products.'))return;
+    const confirmMessage=isArabic()
+      ? 'هل تريد إزالة هذا المنتج من متجرك؟ سيظل موجودًا في قائمة «منتجاتي».'
+      : 'Remove this product from your store? It will remain in My Products.';
+    if(!confirm(confirmMessage))return;
     try {await IZZY.request('/rest/v1/dropshipper_store_products?id=eq.'+encodeURIComponent(id),{method:'DELETE'});await loadData();setStatus('Product removed from your store. It remains in My Products.');}
     catch(error){setStatus(error.message||'Could not remove this listing.',true);}
   }
