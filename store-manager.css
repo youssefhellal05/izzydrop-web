@@ -92,3 +92,20 @@ body.store-manager-page{background:#f7f8fa;color:var(--sm-ink)}
 .store-review-check input{width:18px;height:18px;margin-top:1px;flex-shrink:0;accent-color:#35451e}
 .store-review-check span{display:flex;flex-direction:column;gap:5px}
 .store-review-check small{font-weight:450;line-height:1.5;color:var(--sm-muted)}
+
+
+/* Arabic My Store layout */
+html[dir="rtl"] body.store-manager-page { direction: rtl; text-align: right; }
+html[dir="rtl"] .store-manager-nav { direction: rtl; }
+html[dir="rtl"] .store-manager-nav .navlinks { flex-direction: row-reverse; }
+html[dir="rtl"] .store-manager-heading,
+html[dir="rtl"] .store-section-heading,
+html[dir="rtl"] .store-profile-actions,
+html[dir="rtl"] .store-edit-header,
+html[dir="rtl"] .store-edit-footer { direction: rtl; }
+html[dir="rtl"] .store-catalog-toolbar { direction: rtl; }
+html[dir="rtl"] .store-catalog-toolbar input,
+html[dir="rtl"] .store-catalog-toolbar select,
+html[dir="rtl"] .store-profile-form input,
+html[dir="rtl"] .store-profile-form textarea { text-align: right; }
+html[dir="rtl"] .store-manager-eyebrow { letter-spacing: .08em; }
