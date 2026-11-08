@@ -205,7 +205,7 @@
     const stores = await IZZY.request('/rest/v1/dropshipper_stores?select=*&id=eq.' + encodeURIComponent(storeId) + '&dropshipper_id=eq.' + encodeURIComponent(state.dropshipper.id) + '&limit=1');
     state.store = stores?.[0] || null;
     if (!state.store) throw new Error('This store could not be found in your account.');
-    const myStoresLink = $('.store-design-nav .navlinks a[href="store-manager.html"]');
+    const myStoresLink = $('.store-design-nav .navlinks a[href="my-stores.html"]');
     if (myStoresLink) { myStoresLink.href = route('my-stores.html'); myStoresLink.textContent = isArabic() ? 'متاجري' : 'My Stores'; }
     const dashboardLink = $('#design-dashboard-link');
     if (dashboardLink) dashboardLink.href = route('store-dashboard.html',{store_id:state.store.id});
