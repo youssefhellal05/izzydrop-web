@@ -32,7 +32,7 @@
       const products=state.products.filter(p=>p.store_id===s.id);
       const live=products.filter(p=>p.is_published).length;
       return "<article class='store-hub-card'>"+
-        "<div class='store-hub-card-top'><div class='store-hub-card-identity'><div class='store-hub-icon'><svg viewBox='0 0 24 24'><path d='M3 10h18l-2-6H5zM5 10v10h14V10M9 20v-6h6v6'/></svg></div><div><h2>"+esc(s.store_name)+"</h2><div class='store-hub-slug'>"+esc(s.slug)+"</div></div></div><span class='store-hub-status "+storeStatusClass(s)+"'>"+storeStatus(s)+"</span></div>"+
+        "<div class='store-hub-card-top'><div class='store-hub-card-identity'><div class='store-hub-icon'><svg viewBox='0 0 24 24'><path d='M3 10h18l-2-6H5zM5 10v10h14V10M9 20v-6h6v6'/></svg></div><div><h2 class='store-hub-card-name' data-i18n-skip='true'>"+esc(s.store_name)+"</h2><div class='store-hub-slug'>"+esc(s.slug)+"</div></div></div><span class='store-hub-status "+storeStatusClass(s)+"'>"+storeStatus(s)+"</span></div>"+
         "<p class='store-hub-description'>"+esc(s.description||local('No store description yet.','لا يوجد وصف للمتجر بعد.'))+"</p>"+
         "<div class='store-hub-stats'><div class='store-hub-stat'><strong>"+products.length+"</strong><span>"+local('Products added','منتجات مضافة')+"</span></div><div class='store-hub-stat'><strong>"+live+"</strong><span>"+local('Listings published','قوائم منشورة')+"</span></div></div>"+
         "<div class='store-hub-card-actions'><a class='btn' href='"+esc(route('store-dashboard.html',{store_id:s.id}))+"'>"+local('Open store dashboard','افتح لوحة المتجر')+"</a><span class='store-hub-card-date'>"+local('Created','تاريخ الإنشاء')+" · "+dateLabel(s.created_at)+"</span></div>"+
