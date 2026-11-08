@@ -86,3 +86,21 @@ test('storefront hardening removes non-CRUD authenticated table privileges', () 
   assert.match(hardeningMigration, /idx_dropshipper_store_product_variants_variant_id/);
   assert.doesNotMatch(hardeningMigration, /grant all privileges[^;]*to authenticated/i);
 });
+
+test('a dropshipper can own multiple isolated stores with reversible shutdown', () => {
+  const migration = read('supabase/migrations/20261108182000_enable_multiple_dropshipper_stores.sql');
+  assert.match(migration, /drop constraint if exists dropshipper_stores_dropshipper_id_key/i);
+  assert.match(migration, /add column if not exists closed_at timestamptz/i);
+  assert.match(migration, /closed_at is null or published is false/i);
+  assert.match(migration, /ds\.closed_at is null/i);
+  const manager = read('store-manager.js');
+  const design = read('store-design.js');
+  assert.match(manager, /id=eq\.['"]? \+ encodeURIComponent\(storeId/);
+  assert.match(design, /id=eq\.['"]? \+ encodeURIComponent\(storeId/);
+  assert.ok(read('my-stores.html').includes('my-stores.js'));
+  assert.ok(read('store-create.html').includes('store-create.js'));
+  assert.ok(read('store-dashboard.html').includes('store-dashboard.js'));
+  assert.match(read('app.html'), /href="my-stores\.html"/);
+  assert.match(read('store-dashboard.js'), /closed_at:new Date\(\)\.toISOString\(\)/);
+  assert.match(read('store-dashboard.js'), /closed_at:null/);
+});
