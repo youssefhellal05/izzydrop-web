@@ -261,3 +261,7 @@ html[dir="rtl"] .design-preview-product span { direction:ltr; display:inline-blo
 .store-design-page .store-design-nav button.store-text-button {
   display: none !important;
 }
+
+.design-save-buttons{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.design-save-buttons .btn{white-space:nowrap}
+@media(max-width:600px){.design-save-buttons{width:100%;flex-direction:column}.design-save-buttons .btn{width:100%}}
