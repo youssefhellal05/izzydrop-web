@@ -34,6 +34,7 @@
     'Money':'الأموال',
     'Payouts':'المدفوعات',
     'My products':'منتجاتي',
+    'My Store':'متجري',
     'Orders':'الطلبات',
     'Settings':'الإعدادات',
     'Overview':'نظرة عامة',
