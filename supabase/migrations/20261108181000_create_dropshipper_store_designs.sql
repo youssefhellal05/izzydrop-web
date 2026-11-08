@@ -7,6 +7,7 @@ create table if not exists public.dropshipper_store_designs (
 
 alter table public.dropshipper_store_designs enable row level security;
 
+revoke all privileges on table public.dropshipper_store_designs from public, anon, authenticated;
 grant select, insert, update, delete on public.dropshipper_store_designs to authenticated;
 grant select on public.dropshipper_store_designs to anon;
 
