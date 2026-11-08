@@ -35,7 +35,22 @@
       document.querySelectorAll('[data-view="'+view+'"] span').forEach(el=>el.textContent=label);
     });
     const myStore=$('#dropshipper-my-store-link');
-    if(myStore){myStore.querySelector('span').textContent=local('My Store','متجري');myStore.href=ar()?'store-manager.html?lang=ar':'store-manager.html';}
+    if(myStore){
+      const nav=myStore.closest('nav');
+      const storeLabels=new Set(['my store','متجري']);
+      if(nav){
+        [...nav.querySelectorAll('a,button')].forEach(item=>{
+          if(item===myStore)return;
+          const label=(item.querySelector('span')?.textContent||item.textContent||'').trim().toLowerCase();
+          if(storeLabels.has(label))item.remove();
+        });
+      }
+      const label=myStore.querySelector('span');
+      if(label)label.textContent=local('My Store','متجري');
+      myStore.href=ar()?'store-manager.html?lang=ar':'store-manager.html';
+      myStore.setAttribute('lang',ar()?'ar':'en');
+      myStore.setAttribute('aria-label',local('My Store','متجري'));
+    }
     const notifications=document.querySelector('#dropshipper-mobile-nav-notifications span');
     if(notifications)notifications.textContent=local('Notifications','الإشعارات');
     const more=document.querySelector('.dropshipper-more summary span');
