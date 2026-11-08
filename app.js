@@ -22,6 +22,24 @@
   const localizeStaticDropshipperFields=()=>{
     const productSearch=$('#product-search');
     if(productSearch)productSearch.placeholder=local('Search products','ابحث عن المنتجات');
+    const labels={
+      products:local('Products','المنتجات'),
+      linked:local('My products','منتجاتي'),
+      orders:local('Orders','الطلبات'),
+      money:local('Money','الأموال'),
+      requests:local('Sourcing requests','طلبات التوريد'),
+      sourced:local('Sourced products','المنتجات الموردة'),
+      settings:local('Settings','الإعدادات')
+    };
+    Object.entries(labels).forEach(([view,label])=>{
+      document.querySelectorAll('[data-view="'+view+'"] span').forEach(el=>el.textContent=label);
+    });
+    const myStore=$('#dropshipper-my-store-link');
+    if(myStore){myStore.querySelector('span').textContent=local('My Store','متجري');myStore.href=ar()?'store-manager.html?lang=ar':'store-manager.html';}
+    const notifications=document.querySelector('#dropshipper-mobile-nav-notifications span');
+    if(notifications)notifications.textContent=local('Notifications','الإشعارات');
+    const more=document.querySelector('.dropshipper-more summary span');
+    if(more)more.textContent=local('More','المزيد');
   };
   localizeStaticDropshipperFields();
   const publicSupplierName=name=>{
