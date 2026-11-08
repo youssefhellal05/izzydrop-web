@@ -109,3 +109,64 @@ html[dir="rtl"] .store-catalog-toolbar select,
 html[dir="rtl"] .store-profile-form input,
 html[dir="rtl"] .store-profile-form textarea { text-align: right; }
 html[dir="rtl"] .store-manager-eyebrow { letter-spacing: .08em; }
+
+
+/* Complete Arabic My Store layout: consistent RTL form, navigation and editor. */
+html[dir="rtl"] body.store-manager-page { direction:rtl; text-align:right; }
+html[dir="rtl"] .store-manager-nav { direction:rtl; flex-wrap:wrap; }
+html[dir="rtl"] .store-manager-nav .navlinks {
+  direction:rtl; flex-direction:row; flex-wrap:wrap; justify-content:flex-start;
+}
+html[dir="rtl"] .store-manager-nav .brand,
+html[dir="rtl"] .store-manager-nav .navlinks,
+html[dir="rtl"] .store-manager-heading,
+html[dir="rtl"] .store-section-heading,
+html[dir="rtl"] .store-profile-form,
+html[dir="rtl"] .store-profile-actions,
+html[dir="rtl"] .store-link-preview,
+html[dir="rtl"] .store-catalog-toolbar,
+html[dir="rtl"] .store-edit-header,
+html[dir="rtl"] .store-edit-footer,
+html[dir="rtl"] .store-product-edit-form { direction:rtl; }
+html[dir="rtl"] .store-manager-heading,
+html[dir="rtl"] .store-section-heading { text-align:right; }
+html[dir="rtl"] .store-profile-form label,
+html[dir="rtl"] .store-product-edit-form>label { text-align:right; align-items:stretch; }
+html[dir="rtl"] .store-profile-form input,
+html[dir="rtl"] .store-profile-form textarea,
+html[dir="rtl"] .store-catalog-toolbar input,
+html[dir="rtl"] .store-catalog-toolbar select,
+html[dir="rtl"] .store-product-edit-form input:not([type=checkbox]):not([type=file]),
+html[dir="rtl"] .store-product-edit-form textarea { direction:rtl; text-align:right; }
+html[dir="rtl"] #store-slug { direction:ltr; text-align:left; }
+html[dir="rtl"] .store-link-preview code { direction:ltr; text-align:left; unicode-bidi:plaintext; }
+html[dir="rtl"] .store-publish-toggle { direction:rtl; }
+html[dir="rtl"] .store-publish-toggle span { text-align:right; }
+html[dir="rtl"] .store-profile-actions { justify-content:flex-start; }
+html[dir="rtl"] .store-manager-product-body,
+html[dir="rtl"] .store-manager-product h3,
+html[dir="rtl"] .store-card-description,
+html[dir="rtl"] .store-manager-price-details,
+html[dir="rtl"] .store-manager-empty { direction:rtl; text-align:right; }
+html[dir="rtl"] .store-manager-price-details b { direction:ltr; text-align:right; unicode-bidi:plaintext; }
+html[dir="rtl"] .store-product-status { align-self:flex-start; }
+html[dir="rtl"] .store-manager-product-actions { direction:rtl; }
+html[dir="rtl"] .store-photo-choice input { left:auto; right:8px; }
+html[dir="rtl"] .store-custom-photo .store-remove-photo { right:auto; left:6px; }
+html[dir="rtl"] .store-variant-row { direction:rtl; text-align:right; }
+html[dir="rtl"] .store-variant-details,
+html[dir="rtl"] .store-variant-price,
+html[dir="rtl"] .store-variant-enable { direction:rtl; text-align:right; }
+html[dir="rtl"] .store-edit-dialog { direction:rtl; text-align:right; }
+html[dir="rtl"] .store-edit-footer { justify-content:flex-start; }
+html[dir="rtl"] .store-modal-close { margin-right:auto; margin-left:0; }
+@media(max-width:600px){
+  .store-manager-nav { align-items:stretch; flex-direction:column; gap:12px; }
+  .store-manager-nav .brand { align-self:flex-start; }
+  .store-manager-nav .navlinks { width:100%; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .store-manager-nav .navlinks a,
+  .store-manager-nav .navlinks button { white-space:nowrap; font-size:12px; }
+  html[dir="rtl"] .store-manager-nav .navlinks { justify-content:space-between; }
+  html[dir="rtl"] .store-section-heading { align-items:flex-start; }
+  html[dir="rtl"] .store-manager-product-actions { justify-content:flex-start; }
+}
