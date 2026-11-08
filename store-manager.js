@@ -360,7 +360,7 @@
       return u.href;
     };
     const current = {store_id:storeId};
-    const myStores = $('.store-manager-nav .navlinks a[href="app.html"]');
+    const myStores = $('.store-manager-nav .navlinks a[href="my-stores.html"]');
     if (myStores) { myStores.href = route('my-stores.html'); myStores.textContent = localNav('My Stores','متاجري'); }
     const design = $('.store-manager-nav .navlinks a[href="store-design.html"]');
     if (design) { design.href = route('store-design.html',current); design.textContent = localNav('Edit design','تعديل التصميم'); }
