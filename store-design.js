@@ -208,6 +208,8 @@
     if (state.store.published && link) {
       $('#design-open-store').href = link;
       $('#design-open-store').hidden = false;
+      const finish = $('#design-finish');
+      if (finish) { const u = new URL('store-dashboard.html', location.href); u.searchParams.set('store_id', state.store.id); finish.href = u.href; finish.hidden = false; }
     }
     setDirty(false);
     setStatus('');
