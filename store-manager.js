@@ -48,13 +48,13 @@
     $('#store-slug').value = state.store.slug || '';
     $('#store-description').value = state.store.description || '';
     $('#store-published').checked = state.store.published === true;
-    $('#store-published-badge').textContent = state.store.published ? 'Published' : 'Not published';
-    $('#store-published-badge').className = state.store.published ? 'tag ok' : 'tag';
+    $('#store-published-badge').textContent = state.store.closed_at ? 'Shut down' : (state.store.published ? 'Published' : 'Not published');
+    $('#store-published-badge').className = state.store.closed_at ? 'tag bad' : (state.store.published ? 'tag ok' : 'tag');
     const url = storeUrl(state.store.slug);
     $('#store-link-value').textContent = url;
     $('#store-link-preview').hidden = !url;
     $('#open-public-store').href = url || '#';
-    $('#open-public-store').hidden = !url;
+    $('#open-public-store').hidden = !url || state.store.published !== true || !!state.store.closed_at;
     $('#copy-store-link').disabled = !url;
   }
 
@@ -152,7 +152,7 @@
     if (slug.length < 2 || reserved.test(slug)) return setStatus('Choose a different store link. Use lowercase letters, numbers and hyphens.',true);
     $('#save-store-profile').disabled = true;
     setStatus('Saving store details…');
-    const payload = { dropshipper_id: state.dropshipper.id, store_name: name, slug, description, published };
+    const payload = { dropshipper_id: state.dropshipper.id, store_name: name, slug, description, published, closed_at: published ? null : (state.store?.closed_at || null) };
     try {
       const result = await IZZY.request('/rest/v1/dropshipper_stores?id=eq.' + encodeURIComponent(state.store.id) + '&dropshipper_id=eq.' + encodeURIComponent(state.dropshipper.id),{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify(payload)});
       state.store = Array.isArray(result) ? result[0] : result;
