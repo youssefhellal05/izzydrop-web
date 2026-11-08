@@ -9,8 +9,19 @@
   const slugify = v => clean(v).normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 48).replace(/-+$/g, '');
   const safeUrl = v => { try { const u = new URL(String(v || '')); return u.protocol === 'https:' ? u.href : ''; } catch { return ''; } };
   const money = (v, c) => IZZY.money(Number(v || 0), c || 'EGP');
-  const titleOf = p => clean(p && (p.name_en || p.name || p.title)) || 'Product';
-  const descOf = p => clean(p && (p.description_en || p.description)) || '';
+  const isArabic = () => window.IZZY_STORE_I18N?.isArabic?.() === true;
+  const userError = (error, fallbackEn, fallbackAr) => {
+    const raw = clean(error && error.message) || fallbackEn;
+    if (!isArabic()) return raw;
+    const translated = window.IZZY_STORE_I18N?.t?.(raw);
+    return translated && translated !== raw ? translated : fallbackAr;
+  };
+  const titleOf = p => clean(p && (isArabic()
+    ? (p.name_ar || p.name_en || p.name || p.title)
+    : (p.name_en || p.name_ar || p.name || p.title))) || 'Product';
+  const descOf = p => clean(p && (isArabic()
+    ? (p.description_ar || p.description_en || p.description)
+    : (p.description_en || p.description_ar || p.description))) || '';
   const setStatus = (m, bad = false) => { statusEl.textContent = m || ''; statusEl.className = 'status' + (bad ? ' bad' : ''); };
   const setEditStatus = (m, bad = false) => { const e = $('#store-product-edit-status'); if (e) { e.textContent = m || ''; e.className = 'status' + (bad ? ' bad' : ''); } };
   const storeUrl = slug => { if (!slug) return ''; const u = new URL('storefront.html', location.href); u.searchParams.set('slug', slug); return u.href; };
@@ -149,7 +160,7 @@
         state.store = rows && rows[0] || null;
       }
       renderProfile(); renderCatalog(); setStatus('Store details saved.');
-    } catch (error) { setStatus(error.message || 'Could not save your store details.',true); }
+    } catch (error) { setStatus(userError(error,'Could not save your store details.','تعذر حفظ تفاصيل المتجر. تحقق من البيانات وحاول مرة أخرى.'),true); }
     finally { $('#save-store-profile').disabled = false; }
   }
 
@@ -211,7 +222,7 @@
       await loadData();
     } catch(error) {
       if(createdId) await IZZY.request('/rest/v1/dropshipper_store_products?id=eq.'+encodeURIComponent(createdId),{method:'DELETE'}).catch(()=>{});
-      setStatus(error.message||'Could not add this product.',true);
+      setStatus(userError(error,'Could not add this product.','تعذرت إضافة المنتج. تحقق من توفره وحاول مرة أخرى.'),true);
       if(button){button.disabled=false;button.textContent='Add to my store';}
     }
   }
@@ -252,7 +263,7 @@
       state.editing.settings=Array.isArray(result[2])?result[2]:[];
       state.editing.selected=new Set(Array.isArray(c.sp.selected_image_urls)&&c.sp.selected_image_urls.length?c.sp.selected_image_urls:unique);
       renderPhotos();renderVariants();
-    } catch(error) {setEditStatus(error.message||'Could not load product details.',true);}
+    } catch(error) {setEditStatus(userError(error,'Could not load product details.','تعذر تحميل تفاصيل المنتج. حاول مرة أخرى.'),true);}
   }
 
   function renderPhotos() {
@@ -295,18 +306,21 @@
       })});
       await IZZY.request('/rest/v1/dropshipper_store_product_variants?on_conflict=store_product_id,variant_id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify(variants)});
       $('#store-edit-modal').hidden=true;state.editing=null;setStatus('Listing saved. The supplier’s original product remains unchanged.');await loadData();
-    } catch(error) {setEditStatus(error.message||'Could not save your listing.',true);}
+    } catch(error) {setEditStatus(userError(error,'Could not save your listing.','تعذر حفظ المنتج. تحقق من البيانات وحاول مرة أخرى.'),true);}
     finally {$('#save-store-product').disabled=false;}
   }
 
   async function toggleProduct(id,published) {
     try {await IZZY.request('/rest/v1/dropshipper_store_products?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({is_published:published})});await loadData();setStatus(published?'Product is now visible in your store.':'Product is hidden from your store.');}
-    catch(error){setStatus(error.message||'Could not update product visibility.',true);}
+    catch(error){setStatus(userError(error,'Could not update product visibility.','تعذر تحديث حالة ظهور المنتج. حاول مرة أخرى.'),true);}
   }
   async function removeProduct(id) {
-    if(!confirm('Remove this product from your store? It will remain in My Products.'))return;
+    const confirmMessage=isArabic()
+      ? 'هل تريد إزالة هذا المنتج من متجرك؟ سيظل موجودًا في قائمة «منتجاتي».'
+      : 'Remove this product from your store? It will remain in My Products.';
+    if(!confirm(confirmMessage))return;
     try {await IZZY.request('/rest/v1/dropshipper_store_products?id=eq.'+encodeURIComponent(id),{method:'DELETE'});await loadData();setStatus('Product removed from your store. It remains in My Products.');}
-    catch(error){setStatus(error.message||'Could not remove this listing.',true);}
+    catch(error){setStatus(userError(error,'Could not remove this listing.','تعذر إزالة المنتج من متجرك. حاول مرة أخرى.'),true);}
   }
 
   async function uploadPhotos(event) {
@@ -325,7 +339,7 @@
         e.custom.push(IZZY.config.supabaseUrl+'/storage/v1/object/public/storefront-images/'+encoded);
       }
       renderPhotos();setEditStatus('Photos uploaded. Save the listing to publish them.');
-    } catch(error){setEditStatus(error.message||'Could not upload a photo.',true);}
+    } catch(error){setEditStatus(userError(error,'Could not upload a photo.','تعذر رفع الصورة. حاول مرة أخرى.'),true);}
     finally{$('#edit-upload-photos').disabled=false;}
   }
 
@@ -352,7 +366,7 @@
     if(!state.session||!state.session.access_token){location.replace('login.html');return;}
     wire();
     try{await loadData();}
-    catch(error){setStatus(error.message||'Could not open My Store.',true);$('#store-catalog-results').innerHTML="<div class='store-manager-empty'>My Store could not load. Sign in with an active dropshipper account, then refresh.</div>";$('#store-listings').innerHTML='';}
+    catch(error){setStatus(userError(error,'Could not open My Store.','تعذر فتح متجري. حاول تسجيل الدخول مرة أخرى.'),true);$('#store-catalog-results').innerHTML="<div class='store-manager-empty'>My Store could not load. Sign in with an active dropshipper account, then refresh.</div>";$('#store-listings').innerHTML='';}
   }
   init();
 })();

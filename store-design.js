@@ -8,11 +8,19 @@
     catch { return ''; }
   };
   const escapeHtml = IZZY.esc;
+  const isArabic = () => window.IZZY_STORE_I18N?.isArabic?.() === true;
+  const userError = (error, fallbackEn, fallbackAr) => {
+    const raw = clean(error && error.message) || fallbackEn;
+    if (!isArabic()) return raw;
+    const translated = window.IZZY_STORE_I18N?.t?.(raw);
+    return translated && translated !== raw ? translated : fallbackAr;
+  };
   const defaults = {
     version: 1, template: 'clean', accent_color: '#c9f36a',
     background_color: '#fbfbfc', text_color: '#15171b', font: 'modern',
-    logo_url: '', banner_url: '', hero_title: 'Discover your next favorite thing',
-    hero_description: 'Explore a handpicked collection of products selected for you.',
+    logo_url: '', banner_url: '',
+    hero_title: isArabic() ? 'اكتشف منتجاتك المفضلة التالية' : 'Discover your next favorite thing',
+    hero_description: isArabic() ? 'تصفح مجموعة مختارة بعناية من المنتجات.' : 'Explore a handpicked collection of products selected for you.',
     announcement: ''
   };
   const state = { session: IZZY.session(), user: null, dropshipper: null, store: null, settings: {...defaults}, dirty: false };
@@ -146,7 +154,7 @@
       setDirty();
       setStatus((type === 'logo' ? 'Logo' : 'Cover image') + ' uploaded. Save your design to apply it.');
     } catch (error) {
-      setStatus(error.message || 'Could not upload the image.', true);
+      setStatus(userError(error,'Could not upload the image.','تعذر رفع الصورة. تحقق من نوع الملف وحجمه ثم حاول مرة أخرى.'), true);
     } finally {
       button.disabled = false;
     }
@@ -171,7 +179,7 @@
       setDirty(false);
       setStatus('Design saved. Your public storefront will use these settings.');
     } catch (error) {
-      setStatus(error.message || 'Could not save your design.', true);
+      setStatus(userError(error,'Could not save your design.','تعذر حفظ التصميم. حاول مرة أخرى.'), true);
     } finally {
       button.disabled = false;
     }
@@ -207,7 +215,7 @@
   }
   function init() {
     wireControls();
-    load().catch(error => setStatus(error.message || 'Could not load the store design studio.', true));
+    load().catch(error => setStatus(userError(error,'Could not load the store design studio.','تعذر تحميل استوديو تصميم المتجر. حاول تحديث الصفحة.'), true));
   }
   init();
 })();
