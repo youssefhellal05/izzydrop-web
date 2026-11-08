@@ -4,12 +4,14 @@
   const $$ = (s, root = document) => [...root.querySelectorAll(s)];
   const statusEl = $('#store-manager-status');
   const state = { session: IZZY.session(), dropshipper: null, store: null, links: [], linked: [], catalog: [], storeProducts: [], storeVariants: [], editing: null };
+  const storeId = new URLSearchParams(location.search).get('store_id');
   const clean = v => String(v ?? '').trim();
   const esc = IZZY.esc;
   const slugify = v => clean(v).normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 48).replace(/-+$/g, '');
   const safeUrl = v => { try { const u = new URL(String(v || '')); return u.protocol === 'https:' ? u.href : ''; } catch { return ''; } };
   const money = (v, c) => IZZY.money(Number(v || 0), c || 'EGP');
   const isArabic = () => window.IZZY_STORE_I18N?.isArabic?.() === true;
+  const localNav = (en,ar) => isArabic() ? ar : en;
   const userError = (error, fallbackEn, fallbackAr) => {
     const raw = clean(error && error.message) || fallbackEn;
     if (!isArabic()) return raw;
@@ -117,12 +119,13 @@
     if (!state.dropshipper) throw new Error('This account does not have a dropshipper workspace yet.');
     if (state.dropshipper.status !== 'active') throw new Error('Your dropshipper account must be active before you can publish a store.');
     const results = await Promise.all([
-      IZZY.request('/rest/v1/dropshipper_stores?select=*&dropshipper_id=eq.' + encodeURIComponent(state.dropshipper.id) + '&limit=1'),
+      IZZY.request('/rest/v1/dropshipper_stores?select=*&id=eq.' + encodeURIComponent(storeId || '') + '&dropshipper_id=eq.' + encodeURIComponent(state.dropshipper.id) + '&limit=1'),
       IZZY.request('/rest/v1/dropshipper_product_links?select=id,dropshipper_id,supplier_product_id,retail_price,pricing_mode,status&dropshipper_id=eq.' + encodeURIComponent(state.dropshipper.id)),
       IZZY.rpc('dropshipper_linked_catalog'),
       IZZY.rpc('marketplace_catalog_v3')
     ]);
     state.store = results[0] && results[0][0] || null;
+    if (!storeId || !state.store) throw new Error('This store could not be found. Return to My Stores and open a store from your list.');
     state.links = Array.isArray(results[1]) ? results[1] : [];
     state.linked = Array.isArray(results[2]) ? results[2] : [];
     state.catalog = Array.isArray(results[3]) ? results[3] : [];
@@ -151,12 +154,10 @@
     setStatus('Saving store details…');
     const payload = { dropshipper_id: state.dropshipper.id, store_name: name, slug, description, published };
     try {
-      const result = state.store
-        ? await IZZY.request('/rest/v1/dropshipper_stores?id=eq.' + encodeURIComponent(state.store.id),{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify(payload)})
-        : await IZZY.request('/rest/v1/dropshipper_stores',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(payload)});
+      const result = await IZZY.request('/rest/v1/dropshipper_stores?id=eq.' + encodeURIComponent(state.store.id) + '&dropshipper_id=eq.' + encodeURIComponent(state.dropshipper.id),{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify(payload)});
       state.store = Array.isArray(result) ? result[0] : result;
       if (!state.store || !state.store.id) {
-        const rows = await IZZY.request('/rest/v1/dropshipper_stores?select=*&dropshipper_id=eq.' + encodeURIComponent(state.dropshipper.id) + '&limit=1');
+        const rows = await IZZY.request('/rest/v1/dropshipper_stores?select=*&id=eq.' + encodeURIComponent(storeId) + '&dropshipper_id=eq.' + encodeURIComponent(state.dropshipper.id) + '&limit=1');
         state.store = rows && rows[0] || null;
       }
       renderProfile(); renderCatalog(); setStatus('Store details saved.');
@@ -350,6 +351,27 @@
   }
   function closeEditor(){ $('#store-edit-modal').hidden=true;state.editing=null; }
   function wire() {
+    const params = new URLSearchParams(location.search);
+    const lang = params.get('lang');
+    const route = (file,extra={}) => {
+      const u = new URL(file,location.href);
+      Object.entries(extra).forEach(([key,value])=>u.searchParams.set(key,value));
+      if (lang === 'ar' || isArabic()) u.searchParams.set('lang','ar');
+      return u.href;
+    };
+    const current = {store_id:storeId};
+    const myStores = $('.store-manager-nav .navlinks a[href="app.html"]');
+    if (myStores) { myStores.href = route('my-stores.html'); myStores.textContent = localNav('My Stores','متاجري'); }
+    const design = $('.store-manager-nav .navlinks a[href="store-design.html"]');
+    if (design) { design.href = route('store-design.html',current); design.textContent = localNav('Edit design','تعديل التصميم'); }
+    const nav = $('.store-manager-nav .navlinks');
+    if (nav && !$('#store-manager-dashboard-link')) {
+      const dashboard = document.createElement('a');
+      dashboard.id = 'store-manager-dashboard-link';
+      dashboard.href = route('store-dashboard.html',current);
+      dashboard.textContent = localNav('Store dashboard','لوحة المتجر');
+      nav.insertBefore(dashboard, design || null);
+    }
     $('#store-profile-form').addEventListener('submit',saveProfile);
     $('#store-catalog-search').addEventListener('input',renderCatalog);
     $('#store-catalog-sort').addEventListener('change',renderCatalog);
@@ -363,6 +385,12 @@
   }
   async function init() {
     if(!state.session||!state.session.access_token){location.replace('login.html');return;}
+    if(!storeId){
+      const u=new URL('my-stores.html',location.href);
+      if(isArabic())u.searchParams.set('lang','ar');
+      location.replace(u.href);
+      return;
+    }
     wire();
     try{await loadData();}
     catch(error){setStatus(userError(error,'Could not open My Store.','تعذر فتح متجري. حاول تسجيل الدخول مرة أخرى.'),true);$('#store-catalog-results').innerHTML="<div class='store-manager-empty'>My Store could not load. Sign in with an active dropshipper account, then refresh.</div>";$('#store-listings').innerHTML='';}
