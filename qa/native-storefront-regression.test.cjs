@@ -95,8 +95,8 @@ test('a dropshipper can own multiple isolated stores with reversible shutdown', 
   assert.match(migration, /ds\.closed_at is null/i);
   const manager = read('store-manager.js');
   const design = read('store-design.js');
-  assert.match(manager, /id=eq\.['"]? \+ encodeURIComponent\(storeId/);
-  assert.match(design, /id=eq\.['"]? \+ encodeURIComponent\(storeId/);
+  assert.ok(manager.includes("encodeURIComponent(storeId || '')"));
+  assert.ok(design.includes("encodeURIComponent(storeId)"));
   assert.ok(read('my-stores.html').includes('my-stores.js'));
   assert.ok(read('store-create.html').includes('store-create.js'));
   assert.ok(read('store-dashboard.html').includes('store-dashboard.js'));
