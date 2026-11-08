@@ -25,6 +25,20 @@ VALUES ('90000000-0000-0000-0000-000000000001','60000000-0000-0000-0000-00000000
 
 INSERT INTO public.dropshipper_stores (id,dropshipper_id,slug,store_name,description,published)
 VALUES ('80000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000001','youssef-shop-2','Youssef Shop Two','A second independent store',false);
+
+INSERT INTO public.dropshipper_store_designs (store_id,settings)
+VALUES
+ ('80000000-0000-0000-0000-000000000001','{"template":"clean","accent_color":"#c9f36a"}'::jsonb),
+ ('80000000-0000-0000-0000-000000000002','{"template":"bold","accent_color":"#ff5500"}'::jsonb);
+
+SET ROLE anon;
+DO $public_design_read_check$
+BEGIN
+  IF (SELECT count(*) FROM public.dropshipper_store_designs) <> 1 THEN
+    RAISE EXCEPTION 'Anonymous visitors should only read the published store design';
+  END IF;
+END $public_design_read_check$;
+RESET ROLE;
 DO $multi_store_check$
 BEGIN
   IF (SELECT count(*) FROM public.dropshipper_stores WHERE dropshipper_id='10000000-0000-0000-0000-000000000001') <> 2 THEN
@@ -35,6 +49,11 @@ BEGIN
   IF public.public_dropshipper_store_by_slug('youssef-shop') IS NOT NULL THEN
     RAISE EXCEPTION 'A shut-down store must not be publicly available';
   END IF;
+  SET ROLE anon;
+  IF (SELECT count(*) FROM public.dropshipper_store_designs) <> 0 THEN
+    RAISE EXCEPTION 'Anonymous visitors should not read a shut-down store design';
+  END IF;
+  RESET ROLE;
   IF public.public_dropshipper_store_by_slug('youssef-shop-2') IS NOT NULL THEN
     RAISE EXCEPTION 'An unpublished second store must not be publicly available';
   END IF;
