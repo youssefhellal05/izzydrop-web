@@ -20,7 +20,7 @@
     $('#dashboard-back').href=route('my-stores.html');
     $('#dashboard-edit-details').href=route('store-manager.html',q);
     $('#dashboard-edit-design').href=route('store-design.html',q);
-    $('#dashboard-manage-products').href=route('store-manager.html',q);
+    $('#dashboard-manage-products').href=route('store-manager.html',q)+'#store-listings-section';
     $('#dashboard-create-another').href=route('store-create.html');
   }
   function render(){
