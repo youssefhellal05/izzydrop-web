@@ -27,6 +27,7 @@
     'Design my store': 'تصميم متجري',
     'Sign out': 'تسجيل الخروج',
     'My Store': 'متجري',
+    'Product': 'منتج',
     'Back to My Store': 'العودة إلى متجري',
     'View store': 'عرض المتجر',
     'View published store ↗': 'عرض المتجر المنشور ↗',
@@ -155,6 +156,7 @@
     'Uploading logo…': 'جارٍ رفع الشعار…',
     'Uploading banner…': 'جارٍ رفع صورة الغلاف…',
     'Could not upload the image.': 'تعذر رفع الصورة.',
+    'Failed to fetch': 'تعذر الاتصال بالخادم. تحقق من اتصال الإنترنت وحاول مرة أخرى.',
     'Could not load product details.': 'تعذر تحميل تفاصيل المنتج.',
 
     'STORE BUILDER · DESIGN STUDIO': 'منشئ المتجر · استوديو التصميم',
