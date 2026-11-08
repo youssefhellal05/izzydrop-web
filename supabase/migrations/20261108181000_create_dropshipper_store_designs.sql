@@ -22,6 +22,7 @@ as $$
     from public.dropshipper_stores s
     where s.id = _store_id
       and s.published is true
+      and (to_jsonb(s)->>'closed_at') is null
   );
 $$;
 
