@@ -159,6 +159,49 @@
     'Failed to fetch': 'تعذر الاتصال بالخادم. تحقق من اتصال الإنترنت وحاول مرة أخرى.',
     'Could not load product details.': 'تعذر تحميل تفاصيل المنتج.',
 
+    'My Stores': 'متاجري',
+    'Create a store': 'إنشاء متجر',
+    'Create your first store': 'أنشئ متجرك الأول',
+    'Your first store starts here': 'متجرك الأول يبدأ من هنا',
+    'Your storefronts': 'متاجرك الإلكترونية',
+    'Create and manage all your online stores from one place.': 'أنشئ جميع متاجرك الإلكترونية وأدرها من مكان واحد.',
+    'Create your store': 'أنشئ متجرك',
+    'Start with your store name and link. Next, you\'ll choose a design and customize your brand.': 'ابدأ باسم متجرك ورابطه. بعد ذلك ستختار التصميم وتخصص هوية علامتك التجارية.',
+    'Back to My Stores': 'العودة إلى متاجري',
+    'Store dashboard': 'لوحة المتجر',
+    'Open store dashboard': 'افتح لوحة المتجر',
+    'Manage store': 'إدارة المتجر',
+    'STORE MANAGEMENT': 'إدارة المتجر',
+    'Update this store’s details, select products from IzzyDrop, and customize what customers see.': 'حدّث تفاصيل هذا المتجر، واختر منتجات من IzzyDrop، وخصص ما يراه العملاء.',
+    'Edit design': 'تعديل التصميم',
+    'Finish and view dashboard': 'إنهاء والانتقال إلى لوحة المتجر',
+    'Your store will be saved as a draft. It won\'t be public until you publish it.': 'سيتم حفظ متجرك كمسودة، ولن يكون متاحًا للعملاء حتى تنشره.',
+    'Continue to store design': 'المتابعة إلى تصميم المتجر',
+    'Store overview': 'نظرة عامة على المتجر',
+    'Manage your store': 'إدارة متجرك',
+    'Edit store details': 'تعديل تفاصيل المتجر',
+    'Name, link and description': 'الاسم والرابط والوصف',
+    'Edit store design': 'تعديل تصميم المتجر',
+    'Templates, colors and homepage': 'القوالب والألوان والصفحة الرئيسية',
+    'Manage products': 'إدارة المنتجات',
+    'Add, customize and hide products': 'إضافة المنتجات وتخصيصها وإخفاؤها',
+    'Products added': 'المنتجات المضافة',
+    'Products visible to customers': 'المنتجات الظاهرة للعملاء',
+    'Store design': 'تصميم المتجر',
+    'Customized': 'مخصص',
+    'Not customized': 'لم يتم تخصيصه',
+    'Shut down': 'متوقف',
+    'Shut down store': 'إيقاف المتجر',
+    'Reactivate store': 'إعادة تفعيل المتجر',
+    'Publish store': 'نشر المتجر',
+    'Store status updated.': 'تم تحديث حالة المتجر.',
+    'Created': 'تاريخ الإنشاء',
+    'Create another store': 'إنشاء متجر آخر',
+    'Your business, your storefronts.': 'مشروعك، ومتاجرك الإلكترونية.',
+    'Choose a store name and unique link.': 'اختر اسمًا للمتجر ورابطًا فريدًا.',
+    'You can run multiple independent stores from this same account.': 'يمكنك إدارة عدة متاجر مستقلة من الحساب نفسه.',
+    'Your store is a draft.': 'متجرك محفوظ كمسودة.',
+    'Public store link': 'رابط المتجر العام',
     'STORE BUILDER · DESIGN STUDIO': 'منشئ المتجر · استوديو التصميم',
     'Make it look like your brand.': 'اجعل متجرك يعكس هوية علامتك التجارية.',
     'Choose a layout, set your brand style, and preview your storefront as you customize it.': 'اختر قالبًا، وحدد هوية متجرك، وشاهد التعديلات مباشرة أثناء تخصيصه.',
@@ -327,7 +370,7 @@
 
   function preserveArabicRoutes() {
     if (!arabic) return;
-    document.querySelectorAll('a[href="app.html"], a[href="store-manager.html"], a[href="store-design.html"]').forEach(link => {
+    document.querySelectorAll('a[href="app.html"], a[href="store-manager.html"], a[href="store-design.html"], a[href="my-stores.html"], a[href="store-create.html"], a[href="store-dashboard.html"]').forEach(link => {
       const target = new URL(link.getAttribute('href'), location.href);
       target.searchParams.set('lang', 'ar');
       link.href = target.href;
