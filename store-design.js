@@ -192,7 +192,7 @@
     state.dropshipper = dropshippers?.[0] || null;
     if (!state.dropshipper) throw new Error('This account does not have a dropshipper workspace.');
     if (state.dropshipper.status !== 'active') throw new Error('Your dropshipper account must be active before using the store builder.');
-    const stores = await IZZY.request('/rest/v1/dropshipper_stores?select=*&dropshipper_id=eq.' + encodeURIComponent(state.dropshipper.id) + '&limit=1');
+    const stores = await IZZY.request('/rest/v1/dropshipper_stores?select=*&dropshipper_id=eq.' + encodeURIComponent(state.dropshipper.id) + (state.storeId ? '&id=eq.' + encodeURIComponent(state.storeId) : '') + '&order=created_at.asc&limit=1');
     state.store = stores?.[0] || null;
     if (!state.store) {
       setStatus('Create your store name and link in My Store first, then return here.');
@@ -208,6 +208,8 @@
     if (state.store.published && link) {
       $('#design-open-store').href = link;
       $('#design-open-store').hidden = false;
+      const finish = $('#design-finish');
+      if (finish) { const u = new URL('store-dashboard.html', location.href); u.searchParams.set('store_id', state.store.id); finish.href = u.href; finish.hidden = false; }
     }
     setDirty(false);
     setStatus('');
