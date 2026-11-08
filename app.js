@@ -47,7 +47,7 @@
       }
       const label=myStore.querySelector('span');
       if(label)label.textContent=local('My Store','متجري');
-      myStore.href=ar()?'store-manager.html?lang=ar':'store-manager.html';
+      myStore.href=ar()?'my-stores.html?lang=ar':'my-stores.html';
       myStore.setAttribute('lang',ar()?'ar':'en');
       myStore.setAttribute('aria-label',local('My Store','متجري'));
     }
