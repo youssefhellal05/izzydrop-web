@@ -166,7 +166,7 @@
       const response = await IZZY.request('/rest/v1/dropshipper_store_designs?on_conflict=store_id', {
         method: 'POST',
         headers: {'Prefer': 'resolution=merge-duplicates,return=representation'},
-        body: JSON.stringify({store_id: state.store.id, settings: s})
+        body: JSON.stringify({store_id: state.store.id, settings: s, updated_at: new Date().toISOString()})
       });
       setDirty(false);
       setStatus('Design saved. Your public storefront will use these settings.');
