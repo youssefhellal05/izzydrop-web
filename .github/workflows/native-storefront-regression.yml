@@ -26,6 +26,7 @@ on:
       - 'supabase/migrations/*native_dropshipper_storefronts*.sql'
       - 'supabase/migrations/*harden_native_storefront_privileges*.sql'
       - 'supabase/migrations/*enable_multiple_dropshipper_stores*.sql'
+      - 'supabase/migrations/*create_dropshipper_store_designs*.sql'
       - 'qa/native-storefront-*'
       - '.github/workflows/native-storefront-regression.yml'
   workflow_dispatch:
@@ -81,6 +82,7 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f qa/native-storefront-fixture.sql
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261026_native_dropshipper_storefronts.sql
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261026144000_harden_native_storefront_privileges.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261108181000_create_dropshipper_store_designs.sql
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261108182000_enable_multiple_dropshipper_stores.sql
       - name: Verify privacy boundary and store presentation data
         run: psql -v ON_ERROR_STOP=1 -f qa/native-storefront-smoke.sql
