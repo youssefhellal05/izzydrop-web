@@ -160,6 +160,26 @@
     'Could not load product details.': 'تعذر تحميل تفاصيل المنتج.',
 
     'My Stores': 'متاجري',
+    'Loading your stores…': 'جارٍ تحميل متاجرك…',
+    '← Back to My Stores': '← العودة إلى متاجري',
+    'This is the name customers will see on your storefront.': 'هذا هو الاسم الذي سيظهر للعملاء في متجرك.',
+    'Use English lowercase letters, numbers, and hyphens. Your public address will be unique.': 'استخدم أحرفًا إنجليزية صغيرة وأرقامًا وشرطات. يجب أن يكون رابط متجرك فريدًا.',
+    'Describe your store in a sentence or two. You can change this later.': 'اكتب وصفًا مختصرًا لمتجرك. يمكنك تغييره لاحقًا.',
+    'Products are copied into your store listing. Editing your listing will not change the supplier\'s original product.': 'تُضاف المنتجات إلى قائمة متجرك. تعديل قائمتك لن يغيّر المنتج الأصلي لدى المورد.',
+    'View storefront ↗': 'عرض المتجر ↗',
+    'Update your storefront whenever you need.': 'حدّث متجرك متى شئت.',
+    'Store visibility': 'ظهور المتجر',
+    'You can make the storefront unavailable without deleting its content.': 'يمكنك إيقاف إتاحة المتجر للعملاء دون حذف محتواه.',
+    '＋ Create another store': '＋ إنشاء متجر آخر',
+    'Store content is kept when a storefront is shut down.': 'يتم الاحتفاظ بمحتوى المتجر عند إيقافه.',
+    'Store Design · IzzyDrop': 'تصميم المتجر · IzzyDrop',
+    'Manage Store · IzzyDrop': 'إدارة المتجر · IzzyDrop',
+    'Create a Store · IzzyDrop': 'إنشاء متجر · IzzyDrop',
+    'Store Dashboard · IzzyDrop': 'لوحة المتجر · IzzyDrop',
+    'My Stores · IzzyDrop': 'متاجري · IzzyDrop',
+    'Your store': 'متجرك',
+    'Loading your store…': 'جارٍ تحميل متجرك…',
+
     'NEW STOREFRONT · STEP 1 OF 2': 'متجر جديد · الخطوة 1 من 2',
     'PUBLIC STORE LINK': 'رابط المتجر العام',
     'STORE OVERVIEW': 'نظرة عامة على المتجر',
@@ -383,7 +403,7 @@
     while (walker.nextNode()) {
       const node = walker.currentNode;
       const parent = node.parentElement;
-      if (parent?.closest('input, textarea, script, style, [translate="no"], [data-i18n-skip="true"]')) continue;
+      if (parent?.closest('input, textarea, script, style, [translate="no"], [data-i18n-skip="true"], .store-hub-card-name, #dashboard-store-name, .store-manager-product-body h3, .store-card-description, #store-name, #store-slug, #store-description, #edit-product-title, #edit-product-description, .design-preview-user-copy')) continue;
       node.nodeValue = translateValue(node.nodeValue);
     }
     if (root.querySelectorAll) {
