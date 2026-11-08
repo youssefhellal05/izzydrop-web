@@ -88,7 +88,7 @@
     const title = s.hero_title || storeName;
     const description = s.hero_description || state.store?.description || 'A short introduction to your store.';
     const announcement = s.announcement
-      ? '<div class="design-preview-announcement">' + escapeHtml(s.announcement) + '</div>' : '';
+      ? '<div class="design-preview-announcement design-preview-user-copy" data-i18n-skip="true">' + escapeHtml(s.announcement) + '</div>' : '';
     const bannerMarkup = banner
       ? '<div class="design-preview-banner" style="background-image:url(&quot;' + escapeHtml(banner) + '&quot;)"></div>' : '';
     const logoMarkup = logo
