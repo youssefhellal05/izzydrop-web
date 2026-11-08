@@ -358,7 +358,6 @@
     $('#edit-upload-photos').addEventListener('change',uploadPhotos);
     $$('[data-close-editor]').forEach(b=>b.addEventListener('click',closeEditor));
     document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#store-edit-modal').hidden)closeEditor();});
-    $('#store-sign-out').addEventListener('click',()=>{IZZY.logout();location.href='login.html';});
     $('#store-name').addEventListener('input',()=>{if(!state.store)$('#store-slug').value=slugify($('#store-name').value);});
     $('#store-slug').addEventListener('input',()=>{$('#store-slug').value=slugify($('#store-slug').value);});
   }
