@@ -56,7 +56,9 @@
       const result=await IZZY.rpc('public_dropshipper_store_by_slug',{_slug:slug},false);
       if(!result||!result.store){errorPage('This store is not available','The link may be incorrect, or the store has not been published.');return;}
       const store=result.store,products=Array.isArray(result.products)?result.products:[];
-      const designResponse=await fetch(IZZY.config.supabaseUrl+'/rest/v1/dropshipper_store_designs?select=settings&store_id=eq.'+encodeURIComponent(store.id),{headers:{apikey:IZZY.config.supabaseKey}});\n      const designRows=designResponse.ok?await designResponse.json():[];\n      const rawDesign=Array.isArray(designRows)?designRows[0]?.settings:null;
+      const designResponse=await fetch(IZZY.config.supabaseUrl+'/rest/v1/dropshipper_store_designs?select=settings&store_id=eq.'+encodeURIComponent(store.id),{headers:{apikey:IZZY.config.supabaseKey}});
+      const designRows=designResponse.ok?await designResponse.json():[];
+      const rawDesign=Array.isArray(designRows)?designRows[0]?.settings:null;
       const design=rawDesign&&typeof rawDesign==='object'?rawDesign:{};
       const allowedTemplates=['clean','editorial','bold'];
       const template=allowedTemplates.includes(design.template)?design.template:'clean';
