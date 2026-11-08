@@ -167,6 +167,7 @@
     'Your business, your storefronts.': 'مشروعك، ومتاجرك الإلكترونية.',
     'You can manage several independent storefronts from the same account.': 'يمكنك إدارة عدة متاجر مستقلة من الحساب نفسه.',
     'Products visible': 'منتجات ظاهرة',
+    'Listings published': 'قوائم منشورة',
     'Products added': 'منتجات مضافة',
     'View storefront': 'عرض المتجر',
     'Copy link': 'نسخ الرابط',
