@@ -20,6 +20,18 @@ begin
   end if;
 end $$;
 
+alter table public.dropshipper_stores
+  drop constraint if exists dropshipper_stores_slug_reserved;
+
+alter table public.dropshipper_stores
+  add constraint dropshipper_stores_slug_reserved check (
+    slug not in (
+      'admin','app','api','assets','auth','login','logout','products','product','settings',
+      'store','storefront','store-manager','store-design','my-stores','store-create',
+      'store-dashboard','supplier','suppliers','checkout','orders','help','about'
+    )
+  );
+
 create index if not exists idx_dropshipper_stores_owner_created
   on public.dropshipper_stores (dropshipper_id, created_at desc);
 
@@ -38,6 +50,10 @@ as $$
       and s.closed_at is null
   );
 $$;
+
+revoke all on function private.is_published_dropshipper_store(uuid) from public;
+grant usage on schema private to anon, authenticated;
+grant execute on function private.is_published_dropshipper_store(uuid) to anon, authenticated;
 
 create or replace function public.public_dropshipper_store_by_slug(_slug text)
 returns jsonb
