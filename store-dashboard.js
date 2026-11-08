@@ -26,6 +26,7 @@
   function render(){
     const s=state.store, url=storeUrl(),products=state.products;
     $('#dashboard-store-name').textContent=s.store_name;
+    $('#dashboard-store-name').setAttribute('data-i18n-skip','true');
     $('#dashboard-store-description').textContent=s.description||local('Manage your storefront, design and products here.','أدر متجرك وتصميمه ومنتجاته من هنا.');
     const badge=$('#dashboard-store-status');badge.textContent=statusOf(s);badge.className='store-dashboard-status '+statusClass(s);
     $('#dashboard-store-url').textContent=url;
