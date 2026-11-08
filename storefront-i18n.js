@@ -152,6 +152,10 @@
     'Your supplier price:': 'سعر المورد الخاص بك:',
     'Stock:': 'المخزون:',
     'Your supplier price': 'سعر المورد الخاص بك',
+    'Uploading logo…': 'جارٍ رفع الشعار…',
+    'Uploading banner…': 'جارٍ رفع صورة الغلاف…',
+    'Could not upload the image.': 'تعذر رفع الصورة.',
+    'Could not load product details.': 'تعذر تحميل تفاصيل المنتج.',
 
     'STORE BUILDER · DESIGN STUDIO': 'منشئ المتجر · استوديو التصميم',
     'Make it look like your brand.': 'اجعل متجرك يعكس هوية علامتك التجارية.',
@@ -231,7 +235,6 @@
 
   const placeholders = {
     'Your brand name': 'اسم علامتك التجارية',
-    'your-brand': 'اسم-علامتك',
     'What does your store sell?': 'ماذا يبيع متجرك؟',
     'Search marketplace products': 'ابحث في منتجات السوق',
     'Discover your next favorite thing': 'اكتشف منتجك المفضل القادم',
@@ -268,6 +271,10 @@
     if (match) return raw.replace(trimmed, 'صورتك ' + match[1]);
     match = trimmed.match(/^Show photo (\d+)$/i);
     if (match) return raw.replace(trimmed, 'عرض الصورة ' + match[1]);
+    match = trimmed.match(/^Your supplier price: (.+)$/i);
+    if (match) return raw.replace(trimmed, 'سعر المورد الخاص بك: ' + match[1]);
+    match = trimmed.match(/^WELCOME TO (.+)$/i);
+    if (match) return raw.replace(trimmed, 'مرحبًا بك في ' + match[1]);
     match = trimmed.match(/^Variants enabled$/i);
     if (match) return raw.replace(trimmed, 'الخيارات المفعّلة');
     return raw;
