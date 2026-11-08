@@ -277,6 +277,8 @@
     if (match) return raw.replace(trimmed, 'سعر المورد الخاص بك: ' + match[1]);
     match = trimmed.match(/^WELCOME TO (.+)$/i);
     if (match) return raw.replace(trimmed, 'مرحبًا بك في ' + match[1]);
+    match = trimmed.match(/^Copy this store link: (.+)$/i);
+    if (match) return raw.replace(trimmed, 'انسخ رابط المتجر هذا: \u2066' + match[1] + '\u2069');
     match = trimmed.match(/^Variants enabled$/i);
     if (match) return raw.replace(trimmed, 'الخيارات المفعّلة');
     return raw;
