@@ -38,12 +38,21 @@
     if(myStore){
       const nav=myStore.closest('nav');
       const storeLabels=new Set(['my store','متجري','my stores','متاجري']);
-      if(nav){
+      const removeDuplicateStoreLinks=()=>{
+        if(!nav)return;
         [...nav.querySelectorAll('a,button')].forEach(item=>{
           if(item===myStore)return;
           const label=(item.querySelector('span')?.textContent||item.textContent||'').trim().toLowerCase();
           if(item.id==='native-store-manager-nav'||storeLabels.has(label))item.remove();
         });
+      };
+      if(nav){
+        removeDuplicateStoreLinks();
+        if(!nav.dataset.singleStoreNavObserver&&typeof MutationObserver==='function'){
+          const observer=new MutationObserver(removeDuplicateStoreLinks);
+          observer.observe(nav,{childList:true,subtree:true,characterData:true});
+          nav.dataset.singleStoreNavObserver='true';
+        }
       }
       myStore.id='dropshipper-my-stores-link';
       const label=myStore.querySelector('span');
