@@ -34,7 +34,7 @@
     Object.entries(labels).forEach(([view,label])=>{
       document.querySelectorAll('[data-view="'+view+'"] span').forEach(el=>el.textContent=label);
     });
-    const myStore=$('#dropshipper-my-store-link');
+    const myStore=$('#dropshipper-my-stores-link')||$('#dropshipper-my-store-link');
     if(myStore){
       const nav=myStore.closest('nav');
       const storeLabels=new Set(['my store','متجري','my stores','متاجري']);
@@ -42,9 +42,10 @@
         [...nav.querySelectorAll('a,button')].forEach(item=>{
           if(item===myStore)return;
           const label=(item.querySelector('span')?.textContent||item.textContent||'').trim().toLowerCase();
-          if(storeLabels.has(label))item.remove();
+          if(item.id==='native-store-manager-nav'||storeLabels.has(label))item.remove();
         });
       }
+      myStore.id='dropshipper-my-stores-link';
       const label=myStore.querySelector('span');
       if(label)label.textContent=local('My Stores','متاجري');
       myStore.href=ar()?'my-stores.html?lang=ar':'my-stores.html';
