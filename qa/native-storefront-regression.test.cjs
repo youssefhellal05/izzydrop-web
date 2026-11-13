@@ -138,8 +138,8 @@ test('public storefront branding and banner layout stay cohesive on mobile', () 
   assert.match(css, /background-position:50% 42%/);
   assert.match(css, /background-position:50% 40%/);
   assert.match(css, /\.store-template-editorial \.storefront-brand-lockup\{flex-direction:column/);
-  assert.match(html, /storefront\.css\?v=20261113-brandhero1/);
-  assert.match(html, /storefront\.js\?v=20261113-brandhero1/);
+  assert.match(html, /storefront\.css\?v=20261113-independent1/);
+  assert.match(html, /storefront\.js\?v=20261113-independent1/);
 });
 
 
