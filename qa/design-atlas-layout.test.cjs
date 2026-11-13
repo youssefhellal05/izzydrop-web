@@ -59,11 +59,14 @@ test('Changed functionality-bearing page markup has no unrelated drift',()=>{
    next=next.replace('design-preview.js?v=20261017-atlas1','design-preview.js?v=20261017-pulse1')
             .replace('<link rel="stylesheet" href="design-atlas.css?v=20261017-atlas1">','');
     if(path==='app.html'){
-      // Both the base and PR now include WooCommerce; only normalize the intentional cache-buster change.
-      base=base.replace(/app\.js\?v=[^"]+/, 'app.js?v=__APP_JS_CACHE_KEY__');
-      next=next.replace(/app\.js\?v=[^"]+/, 'app.js?v=__APP_JS_CACHE_KEY__');
+      // Sidebar markup and its final normalizer are intentional; preserve strict checks for everything else.
+      base=base.replace(/app\\.js\\?v=[^"]+/, 'app.js?v=__APP_JS_CACHE_KEY__');
+      next=next.replace(/app\\.js\\?v=[^"]+/, 'app.js?v=__APP_JS_CACHE_KEY__');
+      next=next.replace('id="dropshipper-my-stores-link" href="my-stores.html"', 'id="dropshipper-my-store-link" href="store-manager.html"');
+      next=next.replace('<span>My Stores</span>', '<span>My Store</span>');
+      next=next.replace('<script src="sidebar-single-store.js?v=20261113-single-store-nav1"></script>\\n', '');
     }
-    assert.equal(next,base,path+' drifted outside the opt-in asset loader and intentional app script cache key');
+    assert.equal(next,base,path+' drifted outside the opt-in asset loader and intentional sidebar/cache changes');
  }
 });
 test('Atlas transforms real layout families, not merely colors',()=>{
