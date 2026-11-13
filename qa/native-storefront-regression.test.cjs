@@ -112,6 +112,11 @@ test('a dropshipper can own multiple isolated stores with reversible shutdown', 
   assert.match(read('app.html'), /id="dropshipper-my-stores-link" href="my-stores.html"/);
   assert.match(read('app.html'), /sidebar-single-store\.js\?v=20261113-single-store-nav1/);
   const sidebar = read('sidebar-single-store.js');
+  const dashboardCss = read('styles.css');
+  assert.match(dashboardCss, /\.dropshipper-side nav a\.dropshipper-mobile-nav-item\s*\{/);
+  assert.match(dashboardCss, /\.dropshipper-side nav a\.dropshipper-mobile-nav-item svg\s*\{/);
+  assert.doesNotMatch(dashboardCss, /a#dropshipper-my-store-link/);
+  assert.match(read('app.html'), /styles\.css\?v=20261113-my-stores-link-style1/);
   assert.doesNotThrow(() => new Function(sidebar), 'sidebar normalizer must remain valid JavaScript');
   assert.match(sidebar, /new MutationObserver\(normalizeStoreNavigation\)/);
   assert.match(sidebar, /item !== canonical && item\.isConnected/);
