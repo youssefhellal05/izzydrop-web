@@ -10,6 +10,7 @@ html[dir="rtl"] .storefront-language-switch select{padding:8px 12px 8px 34px}
 html[dir="rtl"] .storefront-brand-name{text-align:right}
 html[dir="rtl"] .storefront-products-head{text-align:right}
 html[dir="rtl"] .storefront-product-content{text-align:right}
+html[dir="rtl"] .storefront-product-description,html[dir="rtl"] .storefront-store-description{direction:rtl}
 html[dir="rtl"] .storefront-price-row{direction:rtl}
 html[dir="rtl"] .storefront-variant-select{text-align:right;direction:rtl}
 #storefront-main{min-height:72vh}
