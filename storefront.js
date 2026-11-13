@@ -75,6 +75,8 @@
       document.documentElement.style.setProperty('--store-page-background',palette.background_color);
       document.documentElement.style.setProperty('--store-ink',palette.text_color);
       document.documentElement.style.setProperty('--store-font',fonts[design.font]||fonts.modern);
+      const themeMeta=document.querySelector('meta[name="theme-color"]');
+      if(themeMeta)themeMeta.content=palette.background_color;
       const logo=safeUrl(design.logo_url)||safeUrl(store.logo_url);
       const banner=safeUrl(design.banner_url);
       const storeName=store.store_name||'Store';
