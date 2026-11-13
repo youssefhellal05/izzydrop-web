@@ -15,6 +15,7 @@
     'This store is not available': 'هذا المتجر غير متاح حاليًا',
     'The link may be incorrect, or the store has not been published.': 'قد يكون الرابط غير صحيح أو لم يتم نشر المتجر بعد.',
     'Choose language': 'اختر اللغة',
+    'Product': 'منتج',
     'Choose a variant': 'اختر أحد الخيارات',
     'View photo': 'عرض الصورة',
     'Store cover image': 'صورة غلاف المتجر',
@@ -86,7 +87,7 @@
       : "<div class='storefront-gallery'><div class='storefront-gallery-empty'>IZ</div></div>";
     const select=variants.length>1?"<label><span class='sr-only'>"+esc(t('Choose a variant'))+"</span><select class='storefront-variant-select' aria-label='"+esc(t('Choose a variant'))+"'>"+variants.map((x,i)=>"<option value='"+esc(x.id)+"' "+(i===0?'selected':'')+">"+esc(optionLabel(x))+"</option>").join('')+"</select></label>":"";
     return "<article class='storefront-product-card' id='store-product-"+esc(p.id)+"' data-store-product-id='"+esc(p.id)+"'>"+gallery+
-      "<div class='storefront-product-content'><h3>"+esc(p.title||'Product')+"</h3><p class='storefront-product-description'>"+esc(p.description||'')+"</p>"+
+      "<div class='storefront-product-content'><h3>"+esc(p.title||t('Product'))+"</h3><p class='storefront-product-description'>"+esc(p.description||'')+"</p>"+
       "<div class='storefront-price-row'><span class='storefront-price'>"+(v?money(v.price,p.currency):'—')+"</span><span class='storefront-stock "+(out?'out':'')+"'>"+(out?t('Out of stock'):t('Available'))+"</span></div>"+
       select+"<div class='storefront-option-note'>"+(v?esc(optionLabel(v)) :t('No variants are available right now.'))+"</div>"+
       "<div class='storefront-coming-soon'>"+esc(t('Online ordering is coming soon. This store is currently a product showcase.'))+"</div></div></article>";
