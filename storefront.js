@@ -82,12 +82,22 @@
       const heroDescription=String(design.hero_description||'').trim()||store.description||'';
       document.title=storeName+' · IzzyDrop';
       const announcement=String(design.announcement||'').trim();
+      const hasDistinctHeroTitle=heroTitle.trim().toLocaleLowerCase()!==storeName.trim().toLocaleLowerCase();
+      const storeNameMarkup=hasDistinctHeroTitle
+        ? "<span class='storefront-brand-name'>"+esc(storeName)+"</span>"
+        : "<h1 class='storefront-brand-name storefront-brand-name-heading'>"+esc(storeName)+"</h1>";
+      const heroHeadingMarkup=hasDistinctHeroTitle
+        ? "<h1 class='storefront-store-hero-title'>"+esc(heroTitle)+"</h1>"
+        : "";
       root.innerHTML=(announcement?"<div class='storefront-announcement'>"+esc(announcement)+"</div>":"")+
-        (banner?"<div class='storefront-banner' role='img' aria-label='Store cover image' style=\"background-image:url('"+esc(banner)+"')\"></div>":"")+
-        "<section class='storefront-store-hero'><div class='storefront-store-identity'>"+
+        (banner?"<div class='storefront-banner' role='img' aria-label='Store cover image' style='background-image:url(&quot;"+esc(banner)+"&quot;)'></div>":"")+
+        "<section class='storefront-store-hero'>"+
+        "<div class='storefront-brand-lockup'>"+
         (logo?"<img class='storefront-logo' src='"+esc(logo)+"' alt='"+esc(storeName)+"'>":"<div class='storefront-logo-fallback' aria-hidden='true'>"+esc(storeName.slice(0,2).toUpperCase())+"</div>")+
-        "<div><div class='storefront-eyebrow'>INDEPENDENT STORE</div><h1>"+esc(heroTitle)+"</h1><p class='storefront-store-description'>"+esc(heroDescription)+"</p></div></div>"+
-        "<div class='storefront-count'>"+products.length+" product"+(products.length===1?'':'s')+"</div></section>"+
+        storeNameMarkup+"</div>"+
+        "<div class='storefront-hero-copy'><div class='storefront-eyebrow'>INDEPENDENT STORE</div>"+heroHeadingMarkup+
+        (heroDescription?"<p class='storefront-store-description'>"+esc(heroDescription)+"</p>":"")+"</div>"+
+        "<div class='storefront-count'><span class='storefront-count-number'>"+products.length+"</span><span>product"+(products.length===1?'':'s')+"</span></div></section>"+
         "<section class='storefront-products-section'><header class='storefront-products-head'><div><h2>Shop the collection</h2><p>Products selected and presented by this independent seller.</p></div></header>"+
         "<div class='storefront-product-grid'>"+(products.length?products.map(renderProduct).join(''):"<div class='storefront-empty-products'><b>No products published yet</b><p>This store is being prepared. Please check back soon.</p></div>")+"</div></section>";
       wireProducts(products);
