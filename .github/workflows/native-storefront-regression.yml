@@ -23,6 +23,7 @@ on:
       - 'storefront.css'
       - 'storefront.js'
       - 'app.html'
+      - 'styles.css'
       - 'supabase/migrations/*native_dropshipper_storefronts*.sql'
       - 'supabase/migrations/*harden_native_storefront_privileges*.sql'
       - 'supabase/migrations/*enable_multiple_dropshipper_stores*.sql'
