@@ -155,6 +155,8 @@ test('public storefront stays seller-branded without platform promotion', () => 
   assert.match(js, /document\.title=storeName;/);
   assert.match(js, /descriptionMeta\.content=/);
   assert.match(js, /storeFavicon\.href=logo/);
+  assert.match(js, /themeMeta\.content=palette\.background_color/);
+  assert.doesNotMatch(css, /public-store-footer/);
   assert.doesNotMatch(js, /IzzyDrop|INDEPENDENT STORE|independent seller|Explore IzzyDrop/);
   assert.match(js, /Explore this store’s collection/);
   assert.match(html, /storefront\.css\?v=20261113-independent1/);
