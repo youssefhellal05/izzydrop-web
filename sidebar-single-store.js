@@ -7,7 +7,7 @@
   const storeLabels = new Set(['my store', 'my stores', 'متجري', 'متاجري']);
   const isStoreEntry = item => {
     const label = (item.querySelector('span')?.textContent || item.textContent || '')
-      .replace(/\\s+/g, ' ')
+      .replace(/\s+/g, ' ')
       .trim()
       .toLowerCase();
     return item.id === 'dropshipper-my-store-link'
