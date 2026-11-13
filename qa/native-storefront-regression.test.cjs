@@ -147,7 +147,7 @@ test('public storefront stays seller-branded without platform promotion', () => 
   const html = read('storefront.html');
   const js = read('storefront.js');
   const css = read('storefront.css');
-  assert.match(html, /Explore marketplace/);
+  assert.doesNotMatch(html, /Explore marketplace|storefront-market-link/);
   assert.doesNotMatch(html, /IzzyDrop|favicon\.svg|Independent seller storefront|INDEPENDENT STORE/);
   assert.doesNotMatch(html, /public-store-footer/);
   assert.match(html, /public-store-header--independent/);
@@ -158,7 +158,29 @@ test('public storefront stays seller-branded without platform promotion', () => 
   assert.match(js, /themeMeta\.content=palette\.background_color/);
   assert.doesNotMatch(css, /public-store-footer/);
   assert.doesNotMatch(js, /IzzyDrop|INDEPENDENT STORE|independent seller|Explore IzzyDrop/);
-  assert.match(js, /Explore this store’s collection/);
+  assert.doesNotMatch(js, /Explore this store’s collection|Shop the collection/);
   assert.match(html, /storefront\.css\?v=20261113-independent1/);
   assert.match(html, /storefront\.js\?v=20261113-independent1/);
+});
+
+test('public storefront has a working visitor language switch and natural copy', () => {
+  const html = read('storefront.html');
+  const js = read('storefront.js');
+  const css = read('storefront.css');
+  assert.match(html, /id="storefront-language"/);
+  assert.match(html, /option value="en">English/);
+  assert.match(html, /option value="ar">العربية/);
+  assert.doesNotMatch(html, /Explore marketplace|storefront-market-link/);
+  assert.match(html, /izzy_storefront_language/);
+  assert.match(js, /setLanguage\(selector\.value, true\)/);
+  assert.match(js, /url\.searchParams\.set\('lang', language\)/);
+  assert.match(js, /document\.documentElement\.dir = language === 'ar' \? 'rtl' : 'ltr'/);
+  assert.match(js, /Find your next favorite/);
+  assert.doesNotMatch(js, /Explore this store’s collection|Shop the collection/);
+  assert.match(js, /اكتشف ما يناسبك/);
+  assert.match(js, /تصفّح المنتجات واختر ما يعجبك/);
+  assert.match(css, /\.storefront-language-switch select/);
+  assert.match(css, /html\[dir="rtl"\] \.storefront-product-content/);
+  assert.match(html, /storefront\.css\?v=20261113-language1/);
+  assert.match(html, /storefront\.js\?v=20261113-language1/);
 });
