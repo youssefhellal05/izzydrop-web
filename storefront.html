@@ -5,16 +5,39 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#111318">
   <title>Store</title>
-  <meta name="description" content="Explore this store’s collection.">
+  <meta name="description" content="Find something you’ll love.">
+  <script>
+    (() => {
+      let language = 'en';
+      try {
+        const requested = new URLSearchParams(location.search).get('lang');
+        const saved = localStorage.getItem('izzy_storefront_language');
+        const browser = (navigator.language || '').toLowerCase();
+        language = requested === 'ar' || requested === 'en'
+          ? requested
+          : saved === 'ar' || saved === 'en'
+            ? saved
+            : browser.startsWith('ar') ? 'ar' : 'en';
+      } catch (_) {}
+      document.documentElement.lang = language;
+      document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
+    })();
+  </script>
   <link rel="stylesheet" href="styles.css?v=20261011-dropshipper-mobilemenu1">
-  <link rel="stylesheet" href="storefront.css?v=20261113-independent1">
+  <link rel="stylesheet" href="storefront.css?v=20261113-language1">
   <script src="config.js"></script>
   <script src="common.js?v=20261006-sessioncheck1"></script>
 </head>
 <body class="public-store-page">
   <div class="storefront-shell">
     <header class="public-store-header public-store-header--independent">
-      <a class="storefront-market-link" href="index.html">Explore marketplace</a>
+      <label class="storefront-language-switch">
+        <span class="sr-only">Choose language</span>
+        <select id="storefront-language" aria-label="Choose language">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+        </select>
+      </label>
     </header>
     <main id="storefront-main" aria-live="polite">
       <section class="storefront-loading">
@@ -23,6 +46,6 @@
       </section>
     </main>
   </div>
-  <script src="storefront.js?v=20261113-independent1"></script>
+  <script src="storefront.js?v=20261113-language1"></script>
 </body>
 </html>
