@@ -62,6 +62,8 @@ test('Changed functionality-bearing page markup has no unrelated drift',()=>{
       // Sidebar markup and its final normalizer are intentional; preserve strict checks for everything else.
       base=base.replace(/app\.js\?v=[^"]+/, 'app.js?v=__APP_JS_CACHE_KEY__');
       next=next.replace(/app\.js\?v=[^"]+/, 'app.js?v=__APP_JS_CACHE_KEY__');
+      base=base.replace(/styles\.css\?v=[^"]+/, 'styles.css?v=__STYLES_CSS_CACHE_KEY__');
+      next=next.replace(/styles\.css\?v=[^"]+/, 'styles.css?v=__STYLES_CSS_CACHE_KEY__');
       next=next.replace('id="dropshipper-my-stores-link" href="my-stores.html"', 'id="dropshipper-my-store-link" href="store-manager.html"');
       next=next.replace('<span>My Stores</span>', '<span>My Store</span>');
       next=next.replace('<script src="sidebar-single-store.js?v=20261113-single-store-nav1"></script>'+String.fromCharCode(10), '');
