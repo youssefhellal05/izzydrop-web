@@ -141,3 +141,22 @@ test('public storefront branding and banner layout stay cohesive on mobile', () 
   assert.match(html, /storefront\.css\?v=20261113-brandhero1/);
   assert.match(html, /storefront\.js\?v=20261113-brandhero1/);
 });
+
+
+test('public storefront stays seller-branded without platform promotion', () => {
+  const html = read('storefront.html');
+  const js = read('storefront.js');
+  const css = read('storefront.css');
+  assert.match(html, /Explore marketplace/);
+  assert.doesNotMatch(html, /IzzyDrop|favicon\.svg|Independent seller storefront|INDEPENDENT STORE/);
+  assert.doesNotMatch(html, /public-store-footer/);
+  assert.match(html, /public-store-header--independent/);
+  assert.match(css, /\.public-store-header--independent\{justify-content:flex-end\}/);
+  assert.match(js, /document\.title=storeName;/);
+  assert.match(js, /descriptionMeta\.content=/);
+  assert.match(js, /storeFavicon\.href=logo/);
+  assert.doesNotMatch(js, /IzzyDrop|INDEPENDENT STORE|independent seller|Explore IzzyDrop/);
+  assert.match(js, /Explore this store’s collection/);
+  assert.match(html, /storefront\.css\?v=20261113-independent1/);
+  assert.match(html, /storefront\.js\?v=20261113-independent1/);
+});
