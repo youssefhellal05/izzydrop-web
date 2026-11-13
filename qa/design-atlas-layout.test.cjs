@@ -44,15 +44,6 @@ test('Preview switch does not touch accounts, business API, or persistent prefer
 test('Changed functionality-bearing page markup has no unrelated drift',()=>{
  const changedFiles=new Set(execFileSync('git',['diff','--name-only','origin/main...HEAD'],{encoding:'utf8'})
    .trim().split(String.fromCharCode(10)).filter(Boolean));
- const wooCredentialsBlock=String.raw`            <div class="field" id="woocommerce-credentials" hidden>
-              <label class="field-label" for="woocommerce-key">WooCommerce consumer key</label>
-              <input id="woocommerce-key" type="password" autocomplete="off" placeholder="ck_…" spellcheck="false">
-              <label class="field-label" for="woocommerce-secret">WooCommerce consumer secret</label>
-              <input id="woocommerce-secret" type="password" autocomplete="off" placeholder="cs_…" spellcheck="false">
-              <small class="muted">Create a WooCommerce REST API key with Read/Write access in your WordPress admin. Credentials are sent to IzzyDrop’s server for verification.</small>
-            </div>
-`;
- const disconnectButton='            <button id="disconnect-woocommerce" class="btn secondary" type="button" hidden>Disconnect WooCommerce</button>';
  for(const path of pages){
    // The PR merge result inherits unchanged pages from main; a stale feature-branch checkout
    // must not be treated as a change to a page that is absent from the PR diff.
@@ -67,18 +58,12 @@ test('Changed functionality-bearing page markup has no unrelated drift',()=>{
             .replace('<link rel="stylesheet" href="design-atlas.css?v=20261017-atlas1">','');
    next=next.replace('design-preview.js?v=20261017-atlas1','design-preview.js?v=20261017-pulse1')
             .replace('<link rel="stylesheet" href="design-atlas.css?v=20261017-atlas1">','');
-   if(path==='app.html'){
-     // WooCommerce adds an optional credentials area, disconnect action, and updated cache URL.
-     next=next.replace('Connect a sales channel to IzzyDrop. Shopify uses secure authorization; WooCommerce uses API credentials that are sent directly to IzzyDrop over HTTPS.',
-       'Connect your Shopify store securely. You’ll be redirected to Shopify to approve IzzyDrop.');
-     next=next.replace('Shopify authorization and WooCommerce API credential verification are supported here. Custom website connections use the separate IzzyDrop web integration.',
-       'After authorization, we’ll verify the connection and its permissions. WooCommerce and custom website connections are not available yet.');
-     next=next.replace(wooCredentialsBlock,'').replace(disconnectButton+String.fromCharCode(10),'');
-     // Cache-buster changes are intentional; the WooCommerce test below checks the exact active key.
-     base=base.replace(/app\.js\?v=[^"]+/, 'app.js?v=__APP_JS_CACHE_KEY__');
-     next=next.replace(/app\.js\?v=[^"]+/, 'app.js?v=__APP_JS_CACHE_KEY__');
-   }
-   assert.equal(next,base,path+' drifted outside opt-in asset loader and explicitly allowed integration changes');
+    if(path==='app.html'){
+      // Both the base and PR now include WooCommerce; only normalize the intentional cache-buster change.
+      base=base.replace(/app\.js\?v=[^"]+/, 'app.js?v=__APP_JS_CACHE_KEY__');
+      next=next.replace(/app\.js\?v=[^"]+/, 'app.js?v=__APP_JS_CACHE_KEY__');
+    }
+    assert.equal(next,base,path+' drifted outside the opt-in asset loader and intentional app script cache key');
  }
 });
 test('Atlas transforms real layout families, not merely colors',()=>{
