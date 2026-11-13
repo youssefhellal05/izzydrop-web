@@ -17,6 +17,7 @@
     'Choose language': 'اختر اللغة',
     'Choose a variant': 'اختر أحد الخيارات',
     'View photo': 'عرض الصورة',
+    'Store cover image': 'صورة غلاف المتجر',
     'Out of stock': 'غير متوفر',
     'Available': 'متوفر',
     'No variants are available right now.': 'لا توجد خيارات متاحة حاليًا.',
@@ -161,14 +162,14 @@
         ? "<h1 class='storefront-store-hero-title'>"+esc(heroTitle)+"</h1>"
         : "";
       root.innerHTML=(announcement?"<div class='storefront-announcement'>"+esc(announcement)+"</div>":"")+
-        (banner?"<div class='storefront-banner' role='img' aria-label='Store cover image' style='background-image:url(&quot;"+esc(banner)+"&quot;)'></div>":"")+
+        (banner?"<div class='storefront-banner' role='img' aria-label='"+esc(t('Store cover image'))+"' style='background-image:url(&quot;"+esc(banner)+"&quot;)'></div>":"")+
         "<section class='storefront-store-hero'>"+
         "<div class='storefront-brand-lockup'>"+
         (logo?"<img class='storefront-logo' src='"+esc(logo)+"' alt='"+esc(storeName)+"'>":"<div class='storefront-logo-fallback' aria-hidden='true'>"+esc(storeName.slice(0,2).toUpperCase())+"</div>")+
         storeNameMarkup+"</div>"+
         "<div class='storefront-hero-copy'>"+heroHeadingMarkup+
         (heroDescription?"<p class='storefront-store-description'>"+esc(heroDescription)+"</p>":"")+"</div>"+
-        "<div class='storefront-count'><span class='storefront-count-number'>"+products.length+"</span><span>product"+(products.length===1?'':'s')+"</span></div></section>"+
+        "<div class='storefront-count'>"+esc(productCountLabel(products.length))+"</div></section>"+
         "<section class='storefront-products-section'><header class='storefront-products-head'><div><h2>"+esc(t('Find your next favorite'))+"</h2><p>"+esc(t('Take a look around and see what catches your eye.'))+"</p></div></header>"+
         "<div class='storefront-product-grid'>"+(products.length?products.map(renderProduct).join(''):"<div class='storefront-empty-products'><b>"+esc(t('No products published yet'))+"</b><p>"+esc(t('This store is being prepared. Please check back soon.'))+"</p></div>")+"</div></section>";
       wireProducts(products);
