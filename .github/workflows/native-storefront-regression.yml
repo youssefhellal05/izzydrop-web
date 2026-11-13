@@ -50,6 +50,7 @@ jobs:
           node --check store-dashboard.js
           node --check store-design.js
           node --check storefront-i18n.js
+          node --check sidebar-single-store.js
       - name: Run native storefront privacy and frontend regression checks
         run: node --test qa/native-storefront-regression.test.cjs
   storefront-migration-smoke:
