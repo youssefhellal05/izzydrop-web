@@ -124,3 +124,20 @@ test('a dropshipper can own multiple isolated stores with reversible shutdown', 
   assert.match(read('store-dashboard.js'), /closed_at:new Date\(\)\.toISOString\(\)/);
   assert.match(read('store-dashboard.js'), /closed_at:null/);
 });
+
+test('public storefront branding and banner layout stay cohesive on mobile', () => {
+  const storefront = read('storefront.js');
+  const css = read('storefront.css');
+  const html = read('storefront.html');
+  assert.match(storefront, /storefront-brand-lockup/);
+  assert.match(storefront, /storefront-brand-name/);
+  assert.match(storefront, /storefront-store-hero-title/);
+  assert.match(css, /\.storefront-brand-lockup\s*\{/);
+  assert.match(css, /\.storefront-brand-name\s*\{/);
+  assert.match(css, /\.storefront-store-hero-title\s*\{/);
+  assert.match(css, /background-position:50% 42%/);
+  assert.match(css, /background-position:50% 40%/);
+  assert.match(css, /\.store-template-editorial \.storefront-brand-lockup\{flex-direction:column/);
+  assert.match(html, /storefront\.css\?v=20261113-brandhero1/);
+  assert.match(html, /storefront\.js\?v=20261113-brandhero1/);
+});
