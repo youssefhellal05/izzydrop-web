@@ -150,7 +150,7 @@ test('public storefront stays seller-branded without platform promotion', () => 
   assert.doesNotMatch(html, /Explore marketplace|storefront-market-link/);
   assert.doesNotMatch(html, /IzzyDrop|favicon\.svg|Independent seller storefront|INDEPENDENT STORE/);
   assert.doesNotMatch(html, /public-store-footer/);
-  assert.match(css, /\.public-store-header--independent\{justify-content:flex-end\}/);
+  assert.match(css, /\.public-store-header\{[^}]*justify-content:flex-end/);
   assert.match(js, /document\.title=storeName;/);
   assert.match(js, /descriptionMeta\.content=/);
   assert.match(js, /storeFavicon\.href=logo/);
