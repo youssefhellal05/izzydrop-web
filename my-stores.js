@@ -22,10 +22,45 @@
   };
   const storeStatus=s=>s.closed_at?local('Shut down','متوقف'):s.published?local('Published','منشور'):local('Draft','مسودة');
   const storeStatusClass=s=>s.closed_at?'closed':s.published?'live':'';
+
+  function applyStoreHubTheme(){
+    if(IZZY.theme()!=='dark')return;
+    const paint=(element,styles)=>{
+      if(!element)return;
+      Object.entries(styles).forEach(([property,value])=>element.style.setProperty(property,value,'important'));
+    };
+    root.querySelectorAll('.store-hub-card,.store-hub-empty').forEach(card=>{
+      paint(card,{
+        'background-color':'#12161b',
+        'background-image':'none',
+        'color':'#f4f6f8',
+        'border-color':'#252b33',
+        'box-shadow':'0 14px 36px rgba(0,0,0,.32)'
+      });
+      card.querySelectorAll('h2,strong').forEach(el=>paint(el,{color:'#f4f6f8'}));
+      card.querySelectorAll('.store-hub-description,.store-hub-slug,.store-hub-card-date,.store-hub-stat span,.store-hub-empty p')
+        .forEach(el=>paint(el,{color:'#9aa4b1'}));
+      card.querySelectorAll('.store-hub-stat').forEach(el=>paint(el,{
+        'background-color':'#171d24',
+        'background-image':'none',
+        'border-color':'#29313a'
+      }));
+      card.querySelectorAll('.store-hub-icon,.store-hub-empty-icon').forEach(el=>paint(el,{
+        'background-color':'#1b242c',
+        color:'#bdd58b'
+      }));
+      card.querySelectorAll('.store-hub-status').forEach(el=>{
+        paint(el,{ 'background-color':'#20262e',color:'#c1c9d2' });
+        if(el.classList.contains('live'))paint(el,{ 'background-color':'#123126',color:'#79dfaa' });
+        if(el.classList.contains('closed'))paint(el,{ 'background-color':'#311c1a',color:'#ff9d91' });
+      });
+    });
+  }
   function render(){
     $('#create-store-link').href=route('store-create.html');
     if(!state.stores.length){
       root.innerHTML="<div class='store-hub-empty'><div class='store-hub-empty-icon'><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.7'><path d='M3 10h18l-2-6H5zM5 10v10h14V10M9 20v-6h6v6'/></svg></div><h2>"+local('Your first store starts here','متجرك الأول يبدأ من هنا')+"</h2><p>"+local('Create a storefront for a niche or brand. You can run multiple independent stores from this same account.','أنشئ متجرًا لعلامة أو مجال مختلف. يمكنك إدارة عدة متاجر مستقلة من الحساب نفسه.')+"</p><a class='btn' href='"+esc(route('store-create.html'))+"'>"+local('Create your first store','أنشئ متجرك الأول')+"</a></div>";
+      applyStoreHubTheme();
       return;
     }
     root.innerHTML=state.stores.map(s=>{
@@ -38,6 +73,7 @@
         "<div class='store-hub-card-actions'><a class='btn' href='"+esc(route('store-dashboard.html',{store_id:s.id}))+"'>"+local('Open store dashboard','افتح لوحة المتجر')+"</a><span class='store-hub-card-date'>"+local('Created','تاريخ الإنشاء')+" · "+dateLabel(s.created_at)+"</span></div>"+
       "</article>";
     }).join('');
+    applyStoreHubTheme();
   }
   async function init(){
     if(!IZZY.session()?.access_token){location.replace('login.html');return;}
