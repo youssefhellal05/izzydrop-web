@@ -57,15 +57,6 @@
     setLanguage(language);
     selector.addEventListener('change', () => setLanguage(selector.value, true));
   }
-  function productCountLabel(count) {
-    if (language !== 'ar') return count + ' ' + (count === 1 ? 'product' : 'products');
-    if (count === 0) return '0 منتج';
-    if (count === 1) return 'منتج واحد';
-    if (count === 2) return 'منتجان';
-    if (count % 100 >= 3 && count % 100 <= 10) return count + ' منتجات';
-    return count + ' منتجًا';
-  }
-
   const path = location.pathname.split('/').filter(Boolean);
   const last = path[path.length-1] || '';
   const slug = new URLSearchParams(location.search).get('slug') || (last && last !== 'storefront.html' ? last : '');
@@ -175,7 +166,7 @@
         "<section class='storefront-store-hero'>"+
         "<div class='storefront-hero-copy'>"+heroHeadingMarkup+
         (heroDescription?"<p class='storefront-store-description'>"+esc(heroDescription)+"</p>":"")+"</div>"+
-        "<div class='storefront-count'>"+esc(productCountLabel(products.length))+"</div></section>"+
+        "</section>"+
         "<section class='storefront-products-section'><header class='storefront-products-head'><div><h2>"+esc(t('Find your next favorite'))+"</h2><p>"+esc(t('Take a look around and see what catches your eye.'))+"</p></div></header>"+
         "<div class='storefront-product-grid'>"+(products.length?products.map(renderProduct).join(''):"<div class='storefront-empty-products'><b>"+esc(t('No products published yet'))+"</b><p>"+esc(t('This store is being prepared. Please check back soon.'))+"</p></div>")+"</div></section>";
       wireProducts(products);
