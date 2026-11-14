@@ -52,3 +52,78 @@ html[dir=rtl] .store-dashboard-action{text-align:right}
 html[dir=rtl] .store-dashboard-chevron{margin-left:0;margin-right:auto;transform:rotate(180deg)}
 html[dir=rtl] .store-dashboard-bottom{direction:rtl}
 @media(max-width:760px){.store-dashboard-main{padding:25px 0 50px}.store-dashboard-heading{align-items:flex-start;flex-direction:column}.store-dashboard-info{padding:17px}.store-dashboard-stats{gap:8px}.store-dashboard-stat{padding:13px}.store-dashboard-stat span{font-size:20px}.store-dashboard-actions-grid{grid-template-columns:1fr}.store-dashboard-section{padding:17px}.store-dashboard-shutdown{align-items:flex-start;flex-direction:column}.store-dashboard-shutdown .btn{width:100%}}
+
+/* Store Dashboard dark theme */
+html[data-theme="dark"] body.store-dashboard-page {
+  background: #0b0d10 !important;
+  color: #f4f6f8 !important;
+}
+html[data-theme="dark"] body.store-dashboard-page .store-dashboard-nav .navlinks a,
+html[data-theme="dark"] body.store-dashboard-page .store-dashboard-heading h1,
+html[data-theme="dark"] body.store-dashboard-page .store-dashboard-info strong,
+html[data-theme="dark"] body.store-dashboard-page .store-dashboard-stat span,
+html[data-theme="dark"] body.store-dashboard-page .store-dashboard-section-heading h2,
+html[data-theme="dark"] body.store-dashboard-page .store-dashboard-action b,
+html[data-theme="dark"] body.store-dashboard-page .store-dashboard-shutdown h2 {
+  color: #f4f6f8 !important;
+}
+html[data-theme="dark"] body.store-dashboard-page .store-dashboard-back,
+html[data-theme="dark"] body.store-dashboard-page .store-dashboard-heading p,
+html[data-theme="dark"] body.store-dashboard-page .store-dashboard-label,
+html[data-theme="dark"] body.store-dashboard-page .store-dashboard-date,
+html[data-theme="dark"] body.store-dashboard-page .store-dashboard-stat small,
+html[data-theme="dark"] body.store-dashboard-page .store-dashboard-section-heading p,
+html[data-theme="dark"] body.store-dashboard-page .store-dashboard-action small,
+html[data-theme="dark"] body.store-dashboard-page .store-dashboard-chevron,
+html[data-theme="dark"] body.store-dashboard-page .store-dashboard-shutdown p,
+html[data-theme="dark"] body.store-dashboard-page .store-dashboard-bottom span,
+html[data-theme="dark"] body.store-dashboard-page .store-dashboard-loading {
+  color: #9aa4b1 !important;
+}
+html[data-theme="dark"] body.store-dashboard-page .store-dashboard-info,
+html[data-theme="dark"] body.store-dashboard-page .store-dashboard-stat,
+html[data-theme="dark"] body.store-dashboard-page .store-dashboard-section,
+html[data-theme="dark"] body.store-dashboard-page .store-dashboard-shutdown {
+  background: #12161b !important;
+  color: #f4f6f8 !important;
+  border-color: #252b33 !important;
+  box-shadow: 0 14px 36px rgba(0,0,0,.28) !important;
+}
+html[data-theme="dark"] body.store-dashboard-page .store-dashboard-action {
+  background: #171d24 !important;
+  color: #f4f6f8 !important;
+  border-color: #29313a !important;
+}
+html[data-theme="dark"] body.store-dashboard-page .store-dashboard-action:hover {
+  border-color: #71864a !important;
+}
+html[data-theme="dark"] body.store-dashboard-page .store-dashboard-store-icon,
+html[data-theme="dark"] body.store-dashboard-page .store-dashboard-action-icon {
+  background: #1b242c !important;
+  color: #bdd58b !important;
+}
+html[data-theme="dark"] body.store-dashboard-page .store-dashboard-status {
+  background: #20262e !important;
+  color: #c1c9d2 !important;
+}
+html[data-theme="dark"] body.store-dashboard-page .store-dashboard-status.live {
+  background: #123126 !important;
+  color: #79dfaa !important;
+}
+html[data-theme="dark"] body.store-dashboard-page .store-dashboard-status.closed {
+  background: #311c1a !important;
+  color: #ff9d91 !important;
+}
+html[data-theme="dark"] body.store-dashboard-page .store-dashboard-shutdown .btn.danger {
+  background: #311c1a !important;
+  border: 1px solid #59302b !important;
+  color: #ff9d91 !important;
+}
+html[data-theme="dark"] body.store-dashboard-page .store-dashboard-bottom a {
+  color: #bdd58b !important;
+}
+html[data-theme="dark"] body.store-dashboard-page .store-dashboard-info-actions .btn.secondary {
+  background: #252d36 !important;
+  color: #f4f6f8 !important;
+}
+
