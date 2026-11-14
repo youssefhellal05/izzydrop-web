@@ -83,3 +83,23 @@ body.public-store-page{background:var(--store-page-background);font-family:var(-
   .storefront-language-switch select{min-height:38px;font-size:12px}
   html[dir="rtl"] .storefront-store-hero{text-align:center}
 }
+
+
+/* Store identity sits in the upper-left header, beside the language selector. */
+.public-store-header{justify-content:space-between;direction:ltr;min-height:80px}
+.storefront-header-brand{display:flex;align-items:center;justify-content:flex-start;gap:12px;flex:1;min-width:0;color:var(--store-ink);direction:ltr;text-align:left}
+.storefront-header-brand[hidden]{display:none}
+.storefront-header-logo,.storefront-header-logo-fallback{display:block;width:46px;height:46px;min-width:46px;max-width:46px;aspect-ratio:1/1;object-fit:cover;object-position:center;border-radius:13px;border:1px solid var(--store-line);background:#fff;flex:0 0 46px}
+.storefront-header-logo-fallback{display:grid;place-items:center;background:var(--store-ink);color:#fff;font-size:16px;font-weight:800}
+.storefront-header-store-name{display:block;min-width:0;max-width:min(42vw,360px);margin:0;color:var(--store-ink);font-size:18px;font-weight:800;line-height:1.2;letter-spacing:-.025em;text-align:left;overflow-wrap:anywhere}
+.store-template-editorial .storefront-header-store-name{font-family:Georgia,serif;font-weight:500}
+.store-template-bold .storefront-header-store-name{font-weight:850}
+@media(max-width:600px){
+  .public-store-header{min-height:64px;gap:12px}
+  .storefront-header-brand{gap:9px}
+  .storefront-header-logo,.storefront-header-logo-fallback{width:42px;height:42px;min-width:42px;max-width:42px;flex-basis:42px;border-radius:12px}
+  .storefront-header-store-name{max-width:45vw;font-size:15px}
+}
+@media(max-width:370px){
+  .storefront-header-store-name{max-width:39vw;font-size:14px}
+}
