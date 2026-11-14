@@ -105,3 +105,21 @@ html[data-theme="dark"] body.store-hub-page .store-hub-card-actions .btn:hover,
 html[data-theme="dark"] body.store-hub-page .store-hub-heading .btn:hover{
   background:#e4e9ef !important;
 }
+
+/* Final My Stores dark-surface override */
+html[data-theme="dark"] body.store-hub-page .my-stores-grid > .store-hub-card,
+html[data-theme="dark"] body.store-hub-page .my-stores-grid > .store-hub-empty{
+  background-color:#12161b !important;
+  background-image:none !important;
+  color:#f4f6f8 !important;
+  border-color:#252b33 !important;
+}
+html[data-theme="dark"] body.store-hub-page .my-stores-grid > .store-hub-card .store-hub-stat{
+  background-color:#171d24 !important;
+  background-image:none !important;
+  border-color:#29313a !important;
+}
+html[data-theme="dark"] body.store-hub-page .my-stores-grid > .store-hub-card h2,
+html[data-theme="dark"] body.store-hub-page .my-stores-grid > .store-hub-card strong{
+  color:#f4f6f8 !important;
+}
