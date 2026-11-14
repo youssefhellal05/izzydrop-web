@@ -157,17 +157,22 @@
       const announcement=String(design.announcement||'').trim();
       const hasDistinctHeroTitle=heroTitle.trim().toLocaleLowerCase()!==storeName.trim().toLocaleLowerCase();
       const storeNameMarkup=hasDistinctHeroTitle
-        ? "<span class='storefront-brand-name'>"+esc(storeName)+"</span>"
-        : "<h1 class='storefront-brand-name storefront-brand-name-heading'>"+esc(storeName)+"</h1>";
+        ? "<span class='storefront-header-store-name'>"+esc(storeName)+"</span>"
+        : "<h1 class='storefront-header-store-name'>"+esc(storeName)+"</h1>";
       const heroHeadingMarkup=hasDistinctHeroTitle
         ? "<h1 class='storefront-store-hero-title'>"+esc(heroTitle)+"</h1>"
         : "";
+      const headerBrand=$('#storefront-brand');
+      if(headerBrand){
+        headerBrand.innerHTML=(logo
+          ? "<img class='storefront-header-logo' src='"+esc(logo)+"' alt=''>"
+          : "<div class='storefront-header-logo-fallback' aria-hidden='true'>"+esc(storeName.slice(0,2).toUpperCase())+"</div>")+storeNameMarkup;
+        headerBrand.hidden=false;
+        headerBrand.setAttribute('aria-label',storeName);
+      }
       root.innerHTML=(announcement?"<div class='storefront-announcement'>"+esc(announcement)+"</div>":"")+
         (banner?"<div class='storefront-banner' role='img' aria-label='"+esc(t('Store cover image'))+"' style='background-image:url(&quot;"+esc(banner)+"&quot;)'></div>":"")+
         "<section class='storefront-store-hero'>"+
-        "<div class='storefront-brand-lockup'>"+
-        (logo?"<img class='storefront-logo' src='"+esc(logo)+"' alt='"+esc(storeName)+"'>":"<div class='storefront-logo-fallback' aria-hidden='true'>"+esc(storeName.slice(0,2).toUpperCase())+"</div>")+
-        storeNameMarkup+"</div>"+
         "<div class='storefront-hero-copy'>"+heroHeadingMarkup+
         (heroDescription?"<p class='storefront-store-description'>"+esc(heroDescription)+"</p>":"")+"</div>"+
         "<div class='storefront-count'>"+esc(productCountLabel(products.length))+"</div></section>"+
