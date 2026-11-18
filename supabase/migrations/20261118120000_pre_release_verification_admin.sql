@@ -58,6 +58,9 @@ declare
   changed public.supplier_verification_applications%rowtype;
 begin
   if auth.uid() is null then raise exception 'Authentication required'; end if;
+  if not exists(select 1 from auth.users where id=auth.uid() and email_confirmed_at is not null) then
+    raise exception 'Confirm your email address before submitting supplier verification';
+  end if;
 
   select id into sid
   from public.suppliers
@@ -172,6 +175,9 @@ declare
   account_phone text;
 begin
   if auth.uid() is null then raise exception 'Authentication required'; end if;
+  if not exists(select 1 from auth.users where id=auth.uid() and email_confirmed_at is not null) then
+    raise exception 'Confirm your email address before submitting identity verification';
+  end if;
   select id into did from public.dropshippers where profile_id=auth.uid() for update;
   if did is null then raise exception 'Dropshipper account not found'; end if;
 
@@ -245,11 +251,14 @@ begin
   if not found then raise exception 'No identity verification submitted'; end if;
 
   if _decision='approve' then
+    select profile_id into owner_id from public.dropshippers where id=_dropshipper_id;
+    if not exists(select 1 from auth.users where id=owner_id and email_confirmed_at is not null) then
+      raise exception 'The dropshipper must confirm their email address before identity approval';
+    end if;
     if coalesce(btrim(v.legal_name),'')='' or length(btrim(coalesce(v.residential_address,'')))<8
        or coalesce(btrim(v.id_document_path),'')='' then
       raise exception 'Full legal name, residential address and ID document are required';
     end if;
-    select profile_id into owner_id from public.dropshippers where id=_dropshipper_id;
     if not exists(select 1 from public.profiles p where p.id=owner_id
       and length(regexp_replace(coalesce(p.phone,''),'[^0-9+]','','g'))>=8) then
       raise exception 'A contact phone number is required';
@@ -318,6 +327,9 @@ begin
   if _decision='request_changes' then next_status:='needs_changes';
   elsif _decision='reject' then next_status:='rejected';
   elsif _decision='approve' then
+    if not exists(select 1 from auth.users where id=owner_id and email_confirmed_at is not null) then
+      raise exception 'The supplier must confirm their email address before verification approval';
+    end if;
     if a.review_status<>'submitted' then raise exception 'Only submitted applications may be approved'; end if;
     if coalesce(btrim(a.legal_name),'')='' or coalesce(btrim(a.identity_document_path),'')=''
        or length(btrim(coalesce(a.business_address,'')))<8
@@ -586,6 +598,11 @@ as $function$
 begin
   if auth.role()='service_role' or private.has_role(auth.uid(),'admin'::public.app_role) then return; end if;
   if auth.uid() is null or not exists(
+    select 1
+    from public.dropshippers d
+    join auth.users u on u.id=d.profile_id
+    where d.id=_dropshipper_id and d.profile_id=auth.uid() and u.email_confirmed_at is not null
+  ) or not exists(
     select 1
     from public.dropshipper_identity_verifications v
     where v.dropshipper_id=_dropshipper_id and v.review_status='approved'
