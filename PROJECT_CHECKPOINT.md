@@ -98,3 +98,106 @@ Continue from `main` and the exact next task above. Inspect the existing impleme
 - **Verification:** All three tables have RLS enabled; anon has no direct SELECT; authenticated CRUD privileges are true while TRUNCATE/REFERENCES/TRIGGER are false. Both indexes exist. The CI migration smoke test and source tests passed: https://github.com/youssefhellal05/izzydrop-web/actions/runs/40341540811.
 - **Existing data:** Still zero storefronts/store listings. All six supplier products remain inactive. No supplier statuses, order rows, or integration credentials were changed.
 - **Remaining release check:** Confirm the latest GitHub Pages deployment finishes after the security-hotfix merge/checkpoint commit. Then follow the existing next task above: a real-account storefront smoke test after an appropriate product is activated through normal admin/supplier workflow. Keep Phase 1 browse-only; checkout/COD remains Phase 2.
+
+
+## Pre-release readiness implementation — 2026-11-18
+
+**Implementation branch:** \`feat/pre-release-readiness\`  
+**Base/main at implementation start:** \`0373a51902b86e7cef45206ce6e680c3fd863606\`  
+**Validated feature commit before this checkpoint update:** \`d3b1a237ccf9ce30c5acab8ca4a83029864103e3\`
+
+### Implemented in the feature branch
+
+- Signup now collects a phone number and saves it in the account metadata/profile flow. SMS verification remains deliberately off for launch.
+- Supplier and dropshipper verification forms now capture the agreed legal name, ID document, contact phone, business/residential address, optional Google Maps link, registration status and payout readiness. Supplier tax documents are optional where they are not applicable; registered suppliers must provide commercial registration evidence.
+- Verification submission and approval are gated on confirmed email. Database triggers prevent unverified dropshippers from linking products or publishing native store listings.
+- Existing native store builder is preserved. Product linking and publish controls now explain and enforce the identity approval requirement.
+- Native storefront now has bilingual Arabic/English RTL-aware cash-on-delivery checkout for one selected variant and quantity. Server-side checkout validates the store, identity, stock, customer delivery details, Cairo delivery availability, rate limits and idempotency; it creates an existing-format order and records customer price without returning supplier cost or supplier identity.
+- Admin Control Center now has an operational Accounts view, profile editing, dropshipper suspend/reactivate, payout destination editing, supplier/dropshipper verification detail editing, customer delivery detail editing and per-variant available-stock adjustment. New admin changes are role-gated and audited. Private ID/registration documents remain private and are opened with expiring signed URLs. Passwords and auth secrets are not exposed.
+- Admin approval for a supplier whose registration is in progress or not yet completed prompts for an explanatory approval note, matching the database rule.
+- The four staged migrations are:
+  - \`20261118120000_pre_release_verification_admin.sql\`
+  - \`20261118130000_native_storefront_checkout.sql\`
+  - \`20261118140000_admin_order_inventory_controls.sql\`
+  - \`20261118150000_admin_verification_edit_controls.sql\`
+- Native storefront checkout Edge Function source is at \`supabase/functions/native-storefront-gateway/index.ts\`. Its service-role key is read from server environment only and is not included in browser assets.
+
+### Validation
+
+- GitHub Actions run **44330009156** completed successfully on commit \`d3b1a237ccf9ce30c5acab8ca4a83029864103e3\`.
+- Browser source syntax checks: PASS.
+- Pre-release, native storefront and pilot onboarding regression suites: PASS.
+- PostgreSQL SQL parser for all four staged migrations: PASS.
+- Deno type-check for the native storefront gateway: PASS.
+- The live Supabase production project was inspected read-only only. **No migration was applied and no production data was changed.**
+- GitHub Pages/main was not changed or deployed from this branch.
+
+### Before production release
+
+1. Confirm the production impact on the currently published but empty, unverified store. The new identity gate will keep it hidden until its owner submits documents and an admin approves them.
+2. After explicit production-release approval, apply the four migrations to production in timestamp order. The project owner has chosen not to create a Supabase staging branch.
+3. Configure \`SUPABASE_URL\` and \`SUPABASE_SERVICE_ROLE_KEY\` as Edge Function secrets and deploy \`native-storefront-gateway\` to production. Never expose the service-role key in browser code or chat.
+4. Publish the frontend only after the migrations and Edge Function are in place. Then run smoke tests for signup/email verification, document upload/review, product linking, store publishing, COD checkout and admin controls.
+5. Run Arabic/English and mobile browser smoke tests. Current checkout supports one product variant per order, with quantity; it is not a multi-item cart.
+6. Keep PR #58 draft until the existing-store impact is accepted and the production deployment is explicitly approved.
+
+**Current release status:** implementation and automated source/regression checks are green, but the new migrations and Edge Function are not deployed. The owner has chosen to skip staging. Production remains unchanged until the deployment is explicitly approved. Keep the native store URL behavior as implemented (\`storefront.html?slug=...\`) until pretty-path routing is separately verified.
+
+### PR review validation update — 2026-11-18
+
+- **Draft PR #58:** https://github.com/youssefhellal05/izzydrop-web/pull/58
+- **Latest code commit validated:** `120083556d6c544c77a6bfa494f6a6779609af26`.
+- **All PR checks passed on that code commit:**
+  - Pre-release readiness: run `44331651236`
+  - Native storefront regression: run `44331651069`
+  - Pilot onboarding: run `44331651504`
+  - Atlas layout isolation: run `44331651388`
+  - V2 visual preview safety: run `44331651214`
+- The Atlas markup-parity test now normalizes only the intentional additions to login, supplier, admin, dashboard and storefront pages. Independent source comparison confirmed the changed HTML pages match main after those exact additions are normalized.
+- PR remains **draft and unmerged**. The production website and production Supabase database have not been changed.
+- **Historical note superseded by the final audit below:** staging is waived by owner decision. Production rollout is still pending explicit approval, migration deployment, Edge Function deployment and post-deployment smoke tests.
+
+
+## Final pre-release audit — 2026-11-18
+
+**Latest implementation commit:** `402929b890176059b61971cb27ea4badca0746ff`  
+**Branch:** `feat/pre-release-readiness`  
+**PR:** [#58 — Pre-release readiness](https://github.com/youssefhellal05/izzydrop-web/pull/58) — open, draft, unmerged.
+
+### Final validation
+
+All five GitHub Actions checks passed on the latest implementation commit:
+- Pre-release readiness — run 44373187725
+- Native storefront regression — run 44373187710
+- Pilot onboarding — run 44373187692
+- Atlas layout isolation — run 44373187789
+- V2 visual preview safety — run 44373187695
+
+SQL parsing, browser source/regression checks and Edge Function type-checking passed. The production Supabase project was inspected read-only. All four PR migrations remain unapplied and `native-storefront-gateway` remains undeployed.
+
+### Owner decision about staging
+
+The owner has chosen to skip a Supabase staging branch. Do not create one or request a staging cost confirmation. No staging branch has been created and no staging charge has been incurred.
+
+### Read-only production facts
+
+- Supabase project status: healthy.
+- 4 active dropshippers.
+- 2 approved suppliers; both currently have `verification_required=false`.
+- 1 published/open dropshipper store; it currently has zero published products.
+- 0 dropshipper identity-verification records and 0 approved records.
+- 1 processing order and 1 delivered order.
+
+### Existing-store impact
+
+The new migration gates public store visibility and publication on approved dropshipper identity. The one existing published store will therefore become hidden until its owner submits identity documents and an admin approves the verification. Do not silently bypass this gate or fabricate an approval. Confirm that this empty store may remain hidden, or have the real owner complete verification before deployment.
+
+### Final production sequence
+
+1. Confirm how to handle the existing empty, unverified store.
+2. After explicit approval, apply the four migrations in timestamp order to production.
+3. Deploy `native-storefront-gateway` with `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` configured as server-side secrets.
+4. Publish frontend changes only after database and Edge Function deployment.
+5. Run post-deployment smoke tests for verification, linking/publishing, COD checkout, admin edits, Arabic/English RTL and mobile.
+
+**Release status:** Code and automated checks are ready; production rollout is **not complete**. PR #58 remains draft because the existing-store impact and production deployment have not been approved. No production schema, account, order, or other business data was changed during this audit.

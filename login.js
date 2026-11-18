@@ -39,17 +39,18 @@
   }
 
   // Pilot-specific signup path; preserves the established login and session implementation.
-  async function signupWithPilotTerms({email,password,fullName,businessName,type,preferredLanguage,termsAccepted,termsVersion}){
+  async function signupWithPilotTerms({email,password,fullName,phone,businessName,type,preferredLanguage,termsAccepted,termsVersion}){
     if(termsAccepted!==true||termsVersion!==PILOT_TERMS_VERSION)throw Error('Please accept the current IzzyDrop policies.');
     if(!['supplier','dropshipper'].includes(type))throw Error('Choose an account type.');
     if(!['en','ar'].includes(preferredLanguage))throw Error('Choose your language.');
+    if(String(phone||'').replace(/[^0-9+]/g,'').length<8)throw Error('Enter a valid phone number.');
     const C=IZZY.config;
     const redirectTo=new URL('login.html',location.href).href;
     const response=await fetch(C.supabaseUrl+'/auth/v1/signup?redirect_to='+encodeURIComponent(redirectTo),{
       method:'POST',
       headers:{apikey:C.supabaseKey,'Content-Type':'application/json'},
       body:JSON.stringify({email,password,data:{
-        full_name:fullName,business_name:businessName,requested_account_type:type,
+        full_name:fullName,phone:String(phone).trim(),business_name:businessName,requested_account_type:type,
         pilot_terms_accepted:true,pilot_terms_version:termsVersion,
         preferred_language:preferredLanguage
       }})
@@ -281,6 +282,7 @@
         email:$('#signup-email').value.trim(),
         password,
         fullName:$('#signup-name').value.trim(),
+        phone:$('#signup-phone').value.trim(),
         businessName:business,
         type:signupRole,
         preferredLanguage:signupLanguage,

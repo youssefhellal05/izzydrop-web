@@ -6,7 +6,7 @@
   const local=(en,ar)=>isAr()?ar:en;
   const params=new URLSearchParams(location.search);
   const storeId=params.get('store_id');
-  const state={user:null,dropshipper:null,store:null,products:[],hasDesign:false};
+  const state={user:null,dropshipper:null,store:null,products:[],hasDesign:false,identityApproved:false,identityStatus:'not submitted'};
   const msg=$('#store-dashboard-status-message'),actionMsg=$('#dashboard-action-status');
   const route=(file,extra={})=>{const u=new URL(file,location.href);Object.entries(extra).forEach(([k,v])=>u.searchParams.set(k,v));if(isAr())u.searchParams.set('lang','ar');return u.href};
   const setMsg=(el,text,bad=false)=>{el.textContent=text||'';el.className='status'+(bad?' bad':'')};
@@ -25,6 +25,8 @@
   }
   function render(){
     const s=state.store, url=storeUrl(),products=state.products;
+     const notice=$('#dashboard-identity-notice');
+     if(notice){notice.hidden=state.identityApproved;notice.textContent=local('Your store can be prepared as a draft. Complete identity verification and add payout details before publishing it or making listings public.','يمكنك تجهيز متجرك كمسودة. أكمل التحقق من الهوية وأضف بيانات الدفع قبل نشره أو إظهار المنتجات للعملاء.');}
     $('#dashboard-store-name').textContent=s.store_name;
     $('#dashboard-store-name').setAttribute('data-i18n-skip','true');
     $('#dashboard-store-description').textContent=s.description||local('Manage your storefront, design and products here.','أدر متجرك وتصميمه ومنتجاته من هنا.');
@@ -50,6 +52,9 @@
     const user=await IZZY.request('/auth/v1/user');state.user=user;
     const ds=await IZZY.request('/rest/v1/dropshippers?select=id,profile_id,status&profile_id=eq.'+encodeURIComponent(user.id)+'&limit=1');
     state.dropshipper=ds?.[0]||null;
+    const identity=await IZZY.request('/rest/v1/dropshipper_identity_verifications?select=review_status&dropshipper_id=eq.'+encodeURIComponent(state.dropshipper.id)+'&limit=1').catch(()=>[]);
+    state.identityStatus=identity?.[0]?.review_status||'not submitted';
+    state.identityApproved=state.identityStatus==='approved';
     if(!state.dropshipper||state.dropshipper.status!=='active')throw new Error(local('An active dropshipper workspace is required.','يلزم وجود مساحة عمل دروبشيبر نشطة.'));
     const stores=await IZZY.request('/rest/v1/dropshipper_stores?select=id,dropshipper_id,store_name,slug,description,published,closed_at,created_at,updated_at&id=eq.'+encodeURIComponent(storeId)+'&dropshipper_id=eq.'+encodeURIComponent(state.dropshipper.id)+'&limit=1');
     state.store=stores?.[0]||null;
@@ -61,6 +66,7 @@
   }
   async function lifecycleAction(){
     const s=state.store,closed=!!s.closed_at,published=s.published===true;
+     if((closed||!published)&&!state.identityApproved){setMsg(actionMsg,local('Complete identity verification and add your payout details before publishing your store.','أكمل التحقق من الهوية وأضف بيانات الدفع قبل نشر متجرك.'),true);return;}
     const prompt=closed?local('Reactivate and publish this store? Customers will be able to visit it again.','هل تريد إعادة تفعيل المتجر ونشره؟ سيتمكن العملاء من زيارته مرة أخرى.')
       :published?local('Shut down this store? Its public link will stop working, but its products and design will be kept.','هل تريد إيقاف المتجر؟ سيتوقف الرابط العام عن العمل، مع الاحتفاظ بالمنتجات والتصميم.')
       :local('Publish this store now? Customers will be able to visit its public link.','هل تريد نشر المتجر الآن؟ سيتمكن العملاء من زيارة رابطه العام.');

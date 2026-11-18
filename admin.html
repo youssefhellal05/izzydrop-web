@@ -35,6 +35,7 @@
         <div class="brand side-brand"><span class="brand-mark">IZ</span><span class="brand-word">IzzyDrop</span></div>
         <nav>
           <button class="on" data-view="overview"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h6V4H4zM14 20h6V11h-6zM4 20h6v-4H4zM14 8h6V4h-6z"/></svg><span>Overview</span></button>
+          <button data-view="accounts"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20v-1a6 6 0 0 1 12 0v1M17 8h4M19 6v4"/></svg><span>Accounts</span></button>
           <button data-view="suppliers"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20v-9l8-5 8 5v9M8 20v-6h8v6"/></svg><span>Suppliers</span></button>
           <button data-view="identity"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 5 3 8 7 10 4-2 7-5 7-10V6zM9 12l2 2 4-4"/></svg><span>Identity verification</span></button>
           <button data-view="products"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h8M8 17h5"/></svg><span>Products</span></button>
@@ -99,6 +100,17 @@
             </div>
             <div id="audit-activity" class="audit-list"></div>
           </div>
+        </section>
+
+        <section id="view-accounts" class="view" hidden>
+          <div class="section-heading"><div><h2>Operational accounts</h2><p class="muted">Inspect user identity, contact and address data, verification, payout setup and dropshipper access. Passwords and authentication secrets are never shown.</p></div></div>
+          <div class="admin-toolbar">
+            <div class="search-wrap"><input id="admin-account-search" class="search" placeholder="Search name, email, phone or business"></div>
+            <button id="admin-account-refresh" class="btn secondary" type="button">Refresh accounts</button>
+          </div>
+          <div id="admin-account-meta" class="results-meta muted"></div>
+          <div id="admin-account-status" class="status" role="status" aria-live="polite"></div>
+          <div id="admin-account-results" class="orders-list"><div class="notice">Open Accounts to load operational records.</div></div>
         </section>
 
         <section id="view-suppliers" class="view" hidden>
@@ -227,8 +239,9 @@
 
 <script src="config.js"></script>
 <script src="common.js?v=20261006-sessioncheck1"></script><script src="i18n.js?v=20261017-arcoverage3"></script>
-<script src="admin.js?v=20261019-verification1"></script>
-<script src="admin-payout-directory.js?v=20261010-payoutdetails1"></script>
+<script src="admin.js?v=20261118-verificationedit3"></script>
+<script src="admin-payout-directory.js?v=20261118-payoutedit1"></script>
+<script src="admin-accounts.js?v=20261118-accounts1"></script>
 <script>window.IZZY_SETTINGS_ROLE="admin"</script>
 <script src="settings.js?v=20261017-accountlang1"></script>
 </body>

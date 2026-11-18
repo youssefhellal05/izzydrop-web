@@ -129,17 +129,17 @@ test('public storefront branding and banner layout stay cohesive on mobile', () 
   const storefront = read('storefront.js');
   const css = read('storefront.css');
   const html = read('storefront.html');
-  assert.match(storefront, /storefront-brand-lockup/);
-  assert.match(storefront, /storefront-brand-name/);
+  assert.match(storefront, /\$\('#storefront-brand'\)/);
+  assert.match(storefront, /storefront-header-store-name/);
   assert.match(storefront, /storefront-store-hero-title/);
-  assert.match(css, /\.storefront-brand-lockup\s*\{/);
-  assert.match(css, /\.storefront-brand-name\s*\{/);
+  assert.match(css, /\.storefront-header-brand\s*\{/);
+  assert.match(css, /\.storefront-header-store-name\s*\{/);
   assert.match(css, /\.storefront-store-hero-title\s*\{/);
   assert.match(css, /background-position:50% 42%/);
   assert.match(css, /background-position:50% 40%/);
-  assert.match(css, /\.store-template-editorial \.storefront-brand-lockup\{flex-direction:column/);
-  assert.match(html, /storefront\.css\?v=20261113-language1/);
-  assert.match(html, /storefront\.js\?v=20261113-language1/);
+  assert.match(css, /@media\(max-width:600px\)/);
+  assert.match(html, /storefront\.css\?v=20261118-nativecheckout1/);
+  assert.match(html, /storefront\.js\?v=20261118-nativecheckout2/);
 });
 
 
@@ -150,7 +150,8 @@ test('public storefront stays seller-branded without platform promotion', () => 
   assert.doesNotMatch(html, /Explore marketplace|storefront-market-link/);
   assert.doesNotMatch(html, /IzzyDrop|favicon\.svg|Independent seller storefront|INDEPENDENT STORE/);
   assert.doesNotMatch(html, /public-store-footer/);
-  assert.match(css, /\.public-store-header\{[^}]*justify-content:flex-end/);
+  assert.match(css, /\.public-store-header\{[^}]*justify-content:space-between/);
+  assert.match(css, /\.storefront-header-brand\{[^}]*direction:ltr/);
   assert.match(js, /document\.title=storeName;/);
   assert.match(js, /descriptionMeta\.content=/);
   assert.match(js, /storeFavicon\.href=logo/);
@@ -158,11 +159,12 @@ test('public storefront stays seller-branded without platform promotion', () => 
   assert.doesNotMatch(css, /public-store-footer/);
   assert.doesNotMatch(js, /IzzyDrop|INDEPENDENT STORE|independent seller|Explore IzzyDrop/);
   assert.doesNotMatch(js, /Explore this store’s collection|Shop the collection/);
-  assert.match(html, /storefront\.css\?v=20261113-language1/);
-  assert.match(html, /storefront\.js\?v=20261113-language1/);
+  assert.match(html, /storefront\.css\?v=20261118-nativecheckout1/);
+  assert.match(html, /storefront\.js\?v=20261118-nativecheckout2/);
 });
 
-test('public storefront has a working visitor language switch and natural copy', () => {
+
+test('public storefront has a working visitor language switch and keeps product count hidden', () => {
   const html = read('storefront.html');
   const js = read('storefront.js');
   const css = read('storefront.css');
@@ -175,13 +177,14 @@ test('public storefront has a working visitor language switch and natural copy',
   assert.match(js, /url\.searchParams\.set\('lang', language\)/);
   assert.match(js, /document\.documentElement\.dir = language === 'ar' \? 'rtl' : 'ltr'/);
   assert.match(js, /Find your next favorite/);
-  assert.match(js, /productCountLabel\(products\.length\)/);
   assert.match(js, /منتجات/);
+  assert.doesNotMatch(js, /productCountLabel|storefront-count/);
+  assert.doesNotMatch(html, /storefront-count|0 Products/);
   assert.doesNotMatch(js, /Explore this store’s collection|Shop the collection/);
   assert.match(js, /اكتشف ما يناسبك/);
   assert.match(js, /تصفّح المنتجات واختر ما يعجبك/);
   assert.match(css, /\.storefront-language-switch select/);
   assert.match(css, /html\[dir="rtl"\] \.storefront-product-content/);
-  assert.match(html, /storefront\.css\?v=20261113-language1/);
-  assert.match(html, /storefront\.js\?v=20261113-language1/);
+  assert.match(html, /storefront\.css\?v=20261118-nativecheckout1/);
+  assert.match(html, /storefront\.js\?v=20261118-nativecheckout2/);
 });

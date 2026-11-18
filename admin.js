@@ -13,6 +13,7 @@
     commissions:['Commissions','Control marketplace, supplier, and product commission rules.'],
     shipping:['Shipping','Control Cairo delivery pricing and the shipping-company cost.'],
     admins:['Admins','Invite trusted people and review Control Center access.'],
+    accounts:['Accounts','Inspect and edit user profiles, verification status, and operational access.'],
     settings:['Settings','Manage your IzzyDrop account, appearance, and security.']
   };
 
@@ -253,14 +254,34 @@
       }
       const detail=v?`<details class="pilot-review-summary">
           <summary>Verification: ${IZZY.esc(v.review_status.replaceAll('_',' '))}</summary>
+          <div><b>Legal name:</b> ${IZZY.esc(v.legal_name||'—')}</div>
           <div><b>Address:</b> ${IZZY.esc(v.business_address)}</div>
           <div><b>Phone:</b> ${IZZY.esc(v.business_phone)}</div>
+          ${v.business_maps_url?`<div><a href="${IZZY.esc(v.business_maps_url)}" target="_blank" rel="noopener noreferrer">Open supplier location map</a></div>`:''}
           <div><b>Registration:</b> ${IZZY.esc(v.registration_status)} — ${IZZY.esc(v.registration_number||'not provided')}</div>
           <div><b>Tax number:</b> ${IZZY.esc(v.tax_registration_number||'not provided')}</div>
+          ${v.identity_document_path?`<button class="btn secondary pilot-doc-btn" type="button" data-path="${IZZY.esc(v.identity_document_path)}">View private ID document</button>`:''}
           ${v.registration_document_path?`<button class="btn secondary pilot-doc-btn" type="button" data-path="${IZZY.esc(v.registration_document_path)}">View registration document</button>`:''}
           ${v.tax_document_path?`<button class="btn secondary pilot-doc-btn" type="button" data-path="${IZZY.esc(v.tax_document_path)}">View tax card</button>`:''}
           ${v.supplier_notes?`<div><b>Notes:</b> ${IZZY.esc(v.supplier_notes)}</div>`:''}
           ${v.review_reason?`<div><b>Review reason:</b> ${IZZY.esc(v.review_reason)}</div>`:''}
+          <details class="order-details"><summary>Edit verification details</summary>
+            <form class="form admin-supplier-verification-edit" data-id="${IZZY.esc(s.id)}">
+              <label class="field-label">Legal name<input name="legal_name" maxlength="120" value="${IZZY.esc(v.legal_name||'')}" required></label>
+              <label class="field-label">Business address<textarea name="business_address" minlength="8" maxlength="400" rows="2" required>${IZZY.esc(v.business_address||'')}</textarea></label>
+              <label class="field-label">Business phone<input name="business_phone" type="tel" maxlength="40" value="${IZZY.esc(v.business_phone||'')}" required></label>
+              <label class="field-label">Google Maps link<input name="business_maps_url" type="url" maxlength="500" value="${IZZY.esc(v.business_maps_url||'')}"></label>
+              <label class="field-label">Registration status<select name="registration_status" required>
+                <option value="registered" ${v.registration_status==='registered'?'selected':''}>Registered</option>
+                <option value="in_progress" ${v.registration_status==='in_progress'?'selected':''}>Registration in progress</option>
+                <option value="not_registered" ${v.registration_status==='not_registered'?'selected':''}>Not registered yet</option>
+              </select></label>
+              <label class="field-label">Commercial registration number<input name="registration_number" maxlength="100" value="${IZZY.esc(v.registration_number||'')}"></label>
+              <label class="field-label">Tax registration number<input name="tax_registration_number" maxlength="100" value="${IZZY.esc(v.tax_registration_number||'')}"></label>
+              <label class="field-label">Notes<textarea name="supplier_notes" maxlength="1500" rows="2">${IZZY.esc(v.supplier_notes||'')}</textarea></label>
+              <button class="btn" type="submit">Save verification details</button>
+            </form>
+          </details>
         </details>`:s.verification_required?'<small class="muted">Verification not submitted</small>':'<small class="muted">Legacy approval rules</small>';
       return `<div class="admin-supplier-table admin-table-row ${s.status==='pending'?'needs-review':''}">
         <div class="admin-entity-cell"><span class="entity-avatar">${IZZY.esc((s.business_name||'S')[0].toUpperCase())}</span><div><b>${IZZY.esc(s.business_name||'Supplier')}</b><small>${IZZY.esc(p.full_name||'')} ${p.phone?'· '+IZZY.esc(p.phone):''}</small>${detail}</div></div>
@@ -307,7 +328,18 @@
       return `<article class="card admin-order-card">
         <div class="admin-order-head"><div><b>${IZZY.esc(p.full_name||d.business_name||'Dropshipper')}</b><small>${IZZY.esc(d.business_name||'')} · Submitted ${IZZY.esc(submitted)}</small></div>
           <span class="tag ${v.review_status==='approved'?'ok':v.review_status==='submitted'?'warn':'bad'}">${IZZY.esc(reviewStatus)}</span></div>
+        ${v.legal_name?`<div><b>Legal name:</b> ${IZZY.esc(v.legal_name)}</div>`:''}
+        ${v.residential_address?`<div><b>Residential address:</b> ${IZZY.esc(v.residential_address)}</div>`:''}
+        ${v.residential_maps_url?`<div><a href="${IZZY.esc(v.residential_maps_url)}" target="_blank" rel="noopener noreferrer">Open customer location map</a></div>`:''}
         ${v.review_reason?`<div class="notice">${IZZY.esc(v.review_reason)}</div>`:''}
+        <details class="order-details"><summary>Edit identity details</summary>
+          <form class="form admin-dropshipper-verification-edit" data-id="${IZZY.esc(v.dropshipper_id)}">
+            <label class="field-label">Legal name<input name="legal_name" maxlength="120" value="${IZZY.esc(v.legal_name||'')}" required></label>
+            <label class="field-label">Residential address<textarea name="residential_address" minlength="8" maxlength="500" rows="3" required>${IZZY.esc(v.residential_address||'')}</textarea></label>
+            <label class="field-label">Google Maps link<input name="residential_maps_url" type="url" maxlength="500" value="${IZZY.esc(v.residential_maps_url||'')}"></label>
+            <button class="btn" type="submit">Save identity details</button>
+          </form>
+        </details>
         <div class="admin-row-actions"><button class="btn secondary identity-doc-btn" type="button" data-path="${IZZY.esc(v.id_document_path)}">View private ID document</button>${actions}</div>
       </article>`;
     }).join('')||'<div class="empty-state"><div class="empty-icon">ID</div><h3>No ID submissions yet</h3><p>Dropshipper ID documents will appear here after submission.</p></div>';
@@ -352,6 +384,14 @@
       reason=prompt(actual==='request_changes'?'What must the supplier change before approval?':'Explain why this supplier is rejected:');
       if(reason===null)return;
       if(reason.trim().length<8){msg('Enter a clear reason of at least eight characters.',true);return}
+    }else if(pilot&&actual==='approve'){
+      const application=VERIFICATIONS.find(x=>x.supplier_id===btn.dataset.id);
+      if(['in_progress','not_registered'].includes(application?.registration_status)){
+        reason=prompt('This supplier is not fully registered yet. Add an admin approval note explaining why this exception is acceptable (at least 8 characters):');
+        if(reason===null)return;
+        if(reason.trim().length<8){msg('An approval note of at least eight characters is required for this registration exception.',true);return}
+      }
+      if(!confirm('Confirm approval of this supplier verification?'))return;
     }else if((actual==='reject'||actual==='suspend'||actual==='approve')&&!confirm('Confirm '+actual+' for this supplier?')){
       return;
     }
@@ -396,6 +436,7 @@
     $('#products').innerHTML=rows.map(p=>{
       const s=supplierFor(p.supplier_id),img=imageFor(p.id),stock=totalStock(p.id);
       const canModerate=['active','inactive'].includes(p.status);
+      const stockAction=variantsForProduct(p.id).length?`<button class="btn secondary admin-adjust-stock" type="button" data-product-id="${p.id}">Adjust inventory</button>`:'';
       const action=canModerate?`<button class="btn secondary moderate-product" data-id="${p.id}" data-next="${p.admin_blocked?'active':'inactive'}">${p.admin_blocked?'Unblock':'Block'}</button>`:'';
       return `<div class="admin-product-table admin-table-row">
         <div class="admin-product-cell"><div class="admin-product-thumb">${img?.url?`<img src="${IZZY.esc(img.url)}" alt="">`:'IZ'}</div><div><b>${IZZY.esc(productName(p))}</b><small>${IZZY.esc(p.sku||'')}</small></div></div>
@@ -404,11 +445,41 @@
         <span data-label="Price">${IZZY.money(p.suggested_retail_price,p.currency)}</span>
         <span data-label="Status"><span class="tag ${p.admin_blocked?'bad':p.status==='active'?'ok':p.status==='inactive'?'warn':''}">${p.admin_blocked?'Blocked by IzzyDrop':IZZY.esc(p.status)}</span></span>
         <span data-label="Added">${fmtDate(p.created_at)}</span>
-        <div class="admin-row-actions"><a class="btn secondary" href="product.html?slug=${encodeURIComponent(p.public_slug||'')}&from=admin" target="_blank" rel="noopener">Inspect</a>${action}</div>
+        <div class="admin-row-actions"><a class="btn secondary" href="product.html?slug=${encodeURIComponent(p.public_slug||'')}&from=admin" target="_blank" rel="noopener">Inspect</a>${stockAction}${action}</div>
       </div>`;
     }).join('')||'<div class="empty-state admin-table-empty"><div class="empty-icon">□</div><h3>No products found</h3><p>Try changing the product filters.</p></div>';
 
+    document.querySelectorAll('.admin-adjust-stock').forEach(b=>b.onclick=()=>adjustInventory(b));
     document.querySelectorAll('.moderate-product').forEach(b=>b.onclick=()=>moderateProduct(b));
+  }
+
+
+  async function adjustInventory(button){
+    const productId=button.dataset.productId,product=productFor(productId),variants=variantsForProduct(productId);
+    if(!variants.length){msg('This product has no variants to adjust.',true);return;}
+    const options=variants.map((v,i)=>{
+      const option=Object.entries(v.option_values||{}).map(([k,val])=>k+': '+val).join(', ');
+      return (i+1)+'. '+(v.variant_name||option||'Variant')+' · SKU '+(v.sku||'—')+' · available '+Number(v.stock_quantity||0);
+    }).join('\n');
+    const selectedRaw=prompt('Choose the variant number to adjust:\n'+options+'\n\nEnter a number:','1');
+    if(selectedRaw===null)return;
+    const selectedIndex=Number(selectedRaw)-1;
+    if(!Number.isInteger(selectedIndex)||selectedIndex<0||selectedIndex>=variants.length){msg('Choose a valid variant number.',true);return;}
+    const variant=variants[selectedIndex];
+    const stockRaw=prompt('New AVAILABLE stock quantity for '+(variant.variant_name||'this variant')+'. This is stock available now, after existing reservations:',String(variant.stock_quantity??0));
+    if(stockRaw===null)return;
+    const newStock=Number(stockRaw);
+    if(!Number.isInteger(newStock)||newStock<0||newStock>1000000){msg('Enter a whole number from 0 to 1,000,000.',true);return;}
+    const reason=prompt('Reason for this inventory correction (required):','');
+    if(reason===null)return;
+    if(reason.trim().length<8){msg('Enter a clear reason of at least eight characters.',true);return;}
+    if(!confirm('Update available stock for '+(product?.name||'this product')+' to '+newStock+'?'))return;
+    button.disabled=true;
+    try{
+      const result=await IZZY.rpc('admin_adjust_product_variant_stock',{_variant_id:variant.id,_new_available_stock:newStock,_reason:reason.trim()});
+      msg(result?.updated?'Available variant stock updated and audited.':'No stock change was needed.');
+      await load(false);
+    }catch(error){msg(error.message||'Could not adjust inventory.',true);button.disabled=false;}
   }
 
   async function moderateProduct(btn){
@@ -447,6 +518,7 @@
       const d=DROPSHIPPERS.find(x=>x.id===o.dropshipper_id);
       const dp=profileFor(d?.profile_id);
       const shipping=shippingForOrder(o.id);
+      const canEditDelivery=['pending','processing'].includes(o.status);
       const itemHtml=items.map(i=>{
         const p=productFor(i.supplier_product_id),s=supplierFor(i.supplier_id);
         return `<div class="admin-order-item"><div><b>${IZZY.esc(productName(p)||'Product')} × ${Number(i.quantity||1)}</b><small>${IZZY.esc(s.business_name||'Supplier')}</small></div><div><span class="tag ${i.fulfillment_status==='fulfilled'?'ok':i.fulfillment_status==='cancelled'?'bad':''}">${IZZY.esc(i.fulfillment_status==='fulfilled'?(window.IZZY_I18N?.status?.('shipped')||'shipped'):(window.IZZY_I18N?.status?.(i.fulfillment_status)||i.fulfillment_status))}</span>${i.tracking_number?`<small>${IZZY.esc(i.shipping_carrier||'Carrier')} · ${IZZY.esc(i.tracking_number)}</small>`:''}</div></div>`;
@@ -465,6 +537,15 @@
           <div><small>Customer delivery</small><b>${IZZY.money(o.shipping_fee_at_purchase||0,o.currency)}</b><span>Cairo</span></div>
           <div><small>Customer total</small><b>${IZZY.money(o.total_amount,o.currency)}</b></div>
         </div>
+        ${canEditDelivery?`<details class="order-details"><summary>Customer delivery details · Edit</summary>
+          <form class="form admin-order-delivery-edit" data-order-id="${IZZY.esc(o.id)}">
+            <label class="field-label">Customer name<input name="customer_name" maxlength="120" value="${IZZY.esc(o.customer_name||'')}" required></label>
+            <label class="field-label">Customer phone<input name="customer_phone" type="tel" maxlength="40" value="${IZZY.esc(o.customer_phone||'')}" required></label>
+            <label class="field-label">Customer email<input name="customer_email" type="email" maxlength="254" value="${IZZY.esc(o.customer_email||'')}"></label>
+            <label class="field-label">Delivery address (JSON object)<textarea name="shipping_address" rows="5" maxlength="2000" spellcheck="false">${IZZY.esc(JSON.stringify(o.shipping_address||{},null,2))}</textarea></label>
+            <button class="btn" type="submit">Save delivery details</button>
+          </form>
+        </details>`:'<div class="notice">Delivery details are locked after processing begins.</div>'}
         <details class="order-details"><summary>View order items & shipping</summary><div class="admin-order-items">${itemHtml}</div><div class="notice"><b>Shipping company</b><span>${IZZY.esc(shipping.shipping_partner_name||'Not set')} · Internal courier cost: ${shipping.courier_cost_at_purchase==null?'—':IZZY.money(shipping.courier_cost_at_purchase,o.currency)}</span></div></details>
       </article>`;
     }).join('')||'<div class="empty-state"><div class="empty-icon">□</div><h3>No orders found</h3><p>Try changing the order filters.</p></div>';
@@ -892,6 +973,50 @@
     }
   }
 
+  const supplierEditorRoot=$('#suppliers');
+  if(supplierEditorRoot){
+    supplierEditorRoot.addEventListener('submit',async event=>{
+      const form=event.target.closest('.admin-supplier-verification-edit');
+      if(!form)return;
+      event.preventDefault();
+      const button=form.querySelector('[type="submit"]');button.disabled=true;
+      try{
+        await IZZY.rpc('admin_update_supplier_verification_details',{
+          _supplier_id:form.dataset.id,
+          _legal_name:form.elements.legal_name.value.trim(),
+          _business_address:form.elements.business_address.value.trim(),
+          _business_phone:form.elements.business_phone.value.trim(),
+          _business_maps_url:form.elements.business_maps_url.value.trim()||null,
+          _registration_status:form.elements.registration_status.value,
+          _registration_number:form.elements.registration_number.value.trim()||null,
+          _tax_registration_number:form.elements.tax_registration_number.value.trim()||null,
+          _supplier_notes:form.elements.supplier_notes.value.trim()||null
+        });
+        msg('Supplier verification details updated and recorded in the audit log.');
+        await load(false);go('suppliers');
+      }catch(error){msg(error.message||'Could not update supplier verification details.',true);button.disabled=false;}
+    });
+  }
+  const identityEditorRoot=$('#identity-review-list');
+  if(identityEditorRoot){
+    identityEditorRoot.addEventListener('submit',async event=>{
+      const form=event.target.closest('.admin-dropshipper-verification-edit');
+      if(!form)return;
+      event.preventDefault();
+      const button=form.querySelector('[type="submit"]');button.disabled=true;
+      try{
+        await IZZY.rpc('admin_update_dropshipper_verification_details',{
+          _dropshipper_id:form.dataset.id,
+          _legal_name:form.elements.legal_name.value.trim(),
+          _residential_address:form.elements.residential_address.value.trim(),
+          _residential_maps_url:form.elements.residential_maps_url.value.trim()||null
+        });
+        msg('Dropshipper identity details updated and recorded in the audit log.');
+        await load(false);go('identity');
+      }catch(error){msg(error.message||'Could not update dropshipper identity details.',true);button.disabled=false;}
+    });
+  }
+
   $('#supplier-search').oninput=renderSuppliers;
   $('#supplier-status-filter').onchange=renderSuppliers;
   $('#admin-product-search').oninput=renderProducts;
@@ -901,6 +1026,27 @@
   $('#admin-order-status').onchange=()=>{ORDER_OPEN_ONLY=false;renderOrders()};
   $('#admin-order-supplier').onchange=()=>renderOrders();
   if($('#admin-load-more-orders'))$('#admin-load-more-orders').onclick=loadMoreAdminOrders;
+
+
+  $('#orders').addEventListener('submit',async event=>{
+    const form=event.target.closest('.admin-order-delivery-edit');
+    if(!form)return;
+    event.preventDefault();
+    let address;
+    try{address=JSON.parse(form.elements.shipping_address.value||'{}');}
+    catch{msg('Delivery address must be valid JSON. Nothing was saved.',true);return;}
+    if(!address||typeof address!=='object'||Array.isArray(address)){msg('Delivery address must be a JSON object.',true);return;}
+    const button=form.querySelector('[type="submit"]');button.disabled=true;
+    try{
+      await IZZY.rpc('admin_update_order_shipping_details',{
+        _order_id:form.dataset.orderId,_customer_name:form.elements.customer_name.value.trim(),
+        _customer_phone:form.elements.customer_phone.value.trim(),_customer_email:form.elements.customer_email.value.trim()||null,
+        _shipping_address:address
+      });
+      msg('Order delivery details updated and recorded in the audit log.');
+      await load(false);
+    }catch(error){msg(error.message||'Could not update order delivery details.',true);button.disabled=false;}
+  });
 
   $('#commission-supplier').onchange=e=>{SELECTED_SUPPLIER=e.target.value;renderCommissions()};
 

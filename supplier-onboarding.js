@@ -60,35 +60,24 @@
     </form>`;
   }
   function verificationMarkup(){
-    return `<form id="pilot-verification-form" class="form pilot-form">
-      <h3>Supplier verification</h3>
-      <p class="muted">Only IzzyDrop administrators can review this information. No national ID photo is required for this pilot.</p>
-      <div id="pilot-review-state" class="notice"></div>
-      <label>Business / warehouse address<textarea name="business_address" minlength="8" maxlength="400" rows="2" required></textarea></label>
-      <label>Business contact number<input name="business_phone" type="tel" minlength="7" maxlength="40" required></label>
-      <label>Business registration status<select name="registration_status" required>
-        <option value="">Choose one</option><option value="registered">Registered</option>
-        <option value="in_progress">Registration in progress</option>
-        <option value="not_registered">Not yet registered</option></select></label>
-      <div class="pilot-form-grid">
-        <label>Commercial registration number<input name="registration_number" maxlength="100"></label>
-        <label>Tax registration number<input name="tax_registration_number" maxlength="100"></label>
-      </div>
-      <div class="pilot-form-grid">
-        <label>Commercial registration (PDF/JPG/PNG, up to 5 MB)
-          <input name="registration_file" type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png">
-          <small id="pilot-registration-uploaded" class="muted"></small></label>
-        <label>Tax card (PDF/JPG/PNG, up to 5 MB)
-          <input name="tax_file" type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png">
-          <small id="pilot-tax-uploaded" class="muted"></small></label>
-      </div>
-      <input name="registration_document_path" type="hidden">
-      <input name="tax_document_path" type="hidden">
-      <label>Notes for IzzyDrop (optional)<textarea name="supplier_notes" maxlength="1500" rows="2"></textarea></label>
-      <button type="submit" class="btn">Submit verification</button>
-      <p class="muted">Registered suppliers must provide complete commercial and tax details before approval. Request changes will keep your account pending.</p>
-      <div class="status" id="pilot-verification-status" aria-live="polite"></div>
-    </form>`;
+    return '<form id="pilot-verification-form" class="form pilot-form">'+
+      '<h3>Supplier verification</h3>'+
+      '<p class="muted">Only IzzyDrop administrators can review these details. Your ID and business documents stay private. You may prepare private product drafts while your application is pending.</p>'+
+      '<div id="pilot-review-state" class="notice"></div>'+
+      '<label>Full legal name<input name="legal_name" maxlength="120" autocomplete="name" required></label>'+
+      '<label>Business / warehouse address<textarea name="business_address" minlength="8" maxlength="400" rows="2" required></textarea></label>'+
+      '<label>Google Maps link (optional)<input name="business_maps_url" type="url" maxlength="500" placeholder="https://maps.app.goo.gl/..."></label>'+
+      '<label>Business contact number<input name="business_phone" type="tel" minlength="7" maxlength="40" required></label>'+
+      '<label>Business registration status<select name="registration_status" required><option value="">Choose one</option><option value="registered">Registered</option><option value="in_progress">Registration in progress</option><option value="not_registered">Not registered yet</option></select></label>'+
+      '<div class="pilot-form-grid"><label>Commercial registration number (when applicable)<input name="registration_number" maxlength="100"></label><label>Commercial registration (when applicable)<input name="registration_file" type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"><small id="pilot-registration-uploaded" class="muted"></small></label></div>'+
+      '<div class="pilot-form-grid"><label>Tax registration number (optional)<input name="tax_registration_number" maxlength="100"></label><label>Tax card / document (optional)<input name="tax_file" type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"><small id="pilot-tax-uploaded" class="muted"></small></label></div>'+
+      '<input name="registration_document_path" type="hidden"><input name="tax_document_path" type="hidden">'+
+      '<label>National ID document (PDF/JPG/PNG, up to 5 MB)<input name="identity_file" type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"><small id="pilot-identity-uploaded" class="muted"></small></label>'+
+      '<input name="identity_document_path" type="hidden">'+
+      '<label>Notes for IzzyDrop (optional)<textarea name="supplier_notes" maxlength="1500" rows="2"></textarea></label>'+
+      '<button type="submit" class="btn">Submit verification</button>'+
+      '<p class="muted">Registered businesses must provide their commercial registration. Tax documents are reviewed when applicable. Registration exceptions may be reviewed manually by an administrator with an explanatory note. Add your payout destination in Settings → Payout details.</p>'+
+      '<div class="status" id="pilot-verification-status" aria-live="polite"></div></form>';
   }
   async function refreshVerification(id){
     const app=await fetchApplication(id);
@@ -100,13 +89,15 @@
       (app?.review_reason?'<p>'+esc(app.review_reason)+'</p>':'')+
       (app?.reviewed_at?'<small>Last reviewed '+esc(new Date(app.reviewed_at).toLocaleDateString())+'</small>':'');
     if(!app)return;
-    for(const name of ['business_address','business_phone','registration_status','registration_number','tax_registration_number','supplier_notes']){
+    for(const name of ['legal_name','business_address','business_maps_url','business_phone','registration_status','registration_number','tax_registration_number','supplier_notes']){
       if(f.elements.namedItem(name))f.elements.namedItem(name).value=app[name]||'';
     }
     f.elements.registration_document_path.value=app.registration_document_path||'';
     f.elements.tax_document_path.value=app.tax_document_path||'';
+    f.elements.identity_document_path.value=app.identity_document_path||'';
     byId('pilot-registration-uploaded').textContent=app.registration_document_path?'Existing registration document saved privately.':'';
     byId('pilot-tax-uploaded').textContent=app.tax_document_path?'Existing tax document saved privately.':'';
+    byId('pilot-identity-uploaded').textContent=app.identity_document_path?'Existing ID document saved privately.':'';
     const locked=status==='approved';
     f.querySelectorAll('input,select,textarea,button[type="submit"]').forEach(el=>el.disabled=locked);
   }
@@ -171,29 +162,33 @@
       const f=ev.currentTarget,button=f.querySelector('button[type="submit"]');
       button.disabled=true;
       try{
-        const regFile=f.elements.registration_file.files?.[0];
-        const taxFile=f.elements.tax_file.files?.[0];
+        const regFile=f.elements.registration_file.files?.[0],taxFile=f.elements.tax_file.files?.[0],idFile=f.elements.identity_file.files?.[0];
         let regPath=f.elements.registration_document_path.value||null;
         let taxPath=f.elements.tax_document_path.value||null;
-        if(regFile){
-          banner('pilot-verification-status','Uploading commercial registration securely…');
-          regPath=await uploadPilotDocument(regFile,'registration',supplierId);
-          f.elements.registration_document_path.value=regPath;
-        }
-        if(taxFile){
-          banner('pilot-verification-status','Uploading tax card securely…');
-          taxPath=await uploadPilotDocument(taxFile,'tax',supplierId);
-          f.elements.tax_document_path.value=taxPath;
-        }
+        let idPath=f.elements.identity_document_path.value||null;
+        const regStatus=f.elements.registration_status.value;
+        const regNumber=f.elements.registration_number.value.trim();
+        const taxNumber=f.elements.tax_registration_number.value.trim();
+        if(regStatus==='registered'&&!regNumber&&!regFile&&!regPath)throw Error('Registered businesses must provide their commercial registration number and document.');
+        const hasTaxNumber=!!(taxNumber||taxPath),hasTaxFile=!!(taxFile||taxPath);
+        if(taxNumber&&!taxFile&&!taxPath)throw Error('Provide the tax number and document together, or leave both blank.');
+        if(taxFile&&!taxNumber)throw Error('Provide the tax number with the tax document, or leave both blank.');
+        if(regFile){banner('pilot-verification-status','Uploading commercial registration securely…');regPath=await uploadPilotDocument(regFile,'registration',supplierId);f.elements.registration_document_path.value=regPath;}
+        if(taxFile){banner('pilot-verification-status','Uploading tax document securely…');taxPath=await uploadPilotDocument(taxFile,'tax',supplierId);f.elements.tax_document_path.value=taxPath;}
+        if(idFile){banner('pilot-verification-status','Uploading ID document securely…');idPath=await uploadPilotDocument(idFile,'identity',supplierId);f.elements.identity_document_path.value=idPath;}
+        if(!idPath)throw Error('Upload your national ID document first.');
         banner('pilot-verification-status','Submitting verification…');
-        await IZZY.rpc('supplier_submit_verification',{
+        await IZZY.rpc('supplier_submit_verification_v2',{
+          _legal_name:f.elements.legal_name.value.trim(),
           _business_address:f.elements.business_address.value.trim(),
           _business_phone:f.elements.business_phone.value.trim(),
-          _registration_status:f.elements.registration_status.value,
-          _registration_number:f.elements.registration_number.value.trim()||null,
-          _tax_registration_number:f.elements.tax_registration_number.value.trim()||null,
+          _business_maps_url:f.elements.business_maps_url.value.trim()||null,
+          _registration_status:regStatus,
+          _registration_number:regNumber||null,
+          _tax_registration_number:taxNumber||null,
           _registration_document_path:regPath,
           _tax_document_path:taxPath,
+          _identity_document_path:idPath,
           _supplier_notes:f.elements.supplier_notes.value.trim()||null
         });
         banner('pilot-verification-status','Verification submitted. IzzyDrop will review your details.');
