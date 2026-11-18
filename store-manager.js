@@ -3,7 +3,7 @@
   const $ = (s, root = document) => root.querySelector(s);
   const $$ = (s, root = document) => [...root.querySelectorAll(s)];
   const statusEl = $('#store-manager-status');
-  const state = { session: IZZY.session(), dropshipper: null, store: null, links: [], linked: [], catalog: [], storeProducts: [], storeVariants: [], editing: null };
+  const state = { session: IZZY.session(), dropshipper: null, store: null, identityApproved:false, identityStatus:'not submitted', links: [], linked: [], catalog: [], storeProducts: [], storeVariants: [], editing: null };
   const storeId = new URLSearchParams(location.search).get('store_id');
   const clean = v => String(v ?? '').trim();
   const esc = IZZY.esc;
@@ -78,7 +78,7 @@
       imageMarkup(p.primary_image_url, titleOf(p)) +
       "<div class='store-manager-product-body'><h3>" + esc(titleOf(p)) + "</h3><p class='store-card-description'>" + esc(descOf(p) || 'No description provided yet.') + "</p>" +
       "<div class='store-manager-price-details'><div><small>Supplier price</small><b>" + money(p.supplier_cost,p.currency) + "</b></div><div><small>Suggested retail</small><b>" + money(p.suggested_retail_price,p.currency) + "</b></div></div>" +
-      "<div class='store-manager-product-actions'><button class='btn add-store-product' data-product-id='" + esc(p.product_id) + "'>Add to my store</button></div></div></article>").join('');
+      "<div class='store-manager-product-actions'><button class='btn add-store-product' data-product-id='" + esc(p.product_id) + "' " + (state.identityApproved ? "" : "disabled") + ">Add to my store</button></div></div></article>").join('');
     $$('.add-store-product', root).forEach(b => b.addEventListener('click', () => addProduct(b.dataset.productId, b)));
   }
 
