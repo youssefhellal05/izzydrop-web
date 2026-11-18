@@ -102,7 +102,7 @@
         "<div class='store-manager-price-details'><div><small>Supplier price</small><b>" + money(p.supplier_price ?? p.supplier_cost,p.currency) + "</b></div><div><small>Variants enabled</small><b>" + enabledCount + "</b></div></div>" +
         (available ? "" : "<p class='store-card-description'>Supplier availability needs attention. The listing will not be shown while its source product is unavailable.</p>") +
         "<div class='store-manager-product-actions'><button class='btn secondary edit-store-product' data-id='" + esc(sp.id) + "'>Customize</button>" +
-        "<button class='btn secondary toggle-store-product' data-id='" + esc(sp.id) + "' data-published='" + (sp.is_published ? "1" : "0") + "'>" + (sp.is_published ? "Hide" : "Show") + "</button>" +
+        "<button class='btn secondary toggle-store-product' data-id='" + esc(sp.id) + "' data-published='" + (sp.is_published ? "1" : "0") + "' " + (!state.identityApproved && !sp.is_published ? "disabled" : "") + ">" + (sp.is_published ? "Hide" : "Show") + "</button>" +
         "<button class='text-danger remove-store-product' data-id='" + esc(sp.id) + "'>Remove</button></div></div></article>";
     }).join('');
     $$('.edit-store-product',root).forEach(b => b.addEventListener('click',()=>openEditor(b.dataset.id)));
@@ -118,6 +118,9 @@
     state.dropshipper = ds && ds[0] || null;
     if (!state.dropshipper) throw new Error('This account does not have a dropshipper workspace yet.');
     if (state.dropshipper.status !== 'active') throw new Error('Your dropshipper account must be active before you can publish a store.');
+    const identityRows = await IZZY.request('/rest/v1/dropshipper_identity_verifications?select=review_status&dropshipper_id=eq.' + encodeURIComponent(state.dropshipper.id) + '&limit=1').catch(()=>[]);
+    state.identityStatus = identityRows?.[0]?.review_status || 'not submitted';
+    state.identityApproved = state.identityStatus === 'approved';
     const results = await Promise.all([
       IZZY.request('/rest/v1/dropshipper_stores?select=*&id=eq.' + encodeURIComponent(storeId || '') + '&dropshipper_id=eq.' + encodeURIComponent(state.dropshipper.id) + '&limit=1'),
       IZZY.request('/rest/v1/dropshipper_product_links?select=id,dropshipper_id,supplier_product_id,retail_price,pricing_mode,status&dropshipper_id=eq.' + encodeURIComponent(state.dropshipper.id)),
@@ -138,7 +141,8 @@
         state.storeVariants = await IZZY.request('/rest/v1/dropshipper_store_product_variants?select=*&store_product_id=in.(' + ids + ')');
       }
     }
-    renderProfile(); renderCatalog(); renderListings(); setStatus('');
+    renderProfile(); renderCatalog(); renderListings();
+    setStatus(state.identityApproved ? '' : localNav('Marketplace browsing is available. Complete identity verification and add payout details before linking products or publishing your store.','يمكنك تصفح السوق. أكمل التحقق من الهوية وأضف بيانات الدفع قبل ربط المنتجات أو نشر متجرك.'));
   }
 
   async function saveProfile(e) {
@@ -147,6 +151,7 @@
     const slug = slugify($('#store-slug').value);
     const description = $('#store-description').value.trim();
     const published = $('#store-published').checked;
+    if(published && !state.identityApproved){$('#store-published').checked=false;return setStatus(localNav('Complete identity verification and add your payout details before publishing your store.','أكمل التحقق من الهوية وأضف بيانات الدفع قبل نشر متجرك.'),true);}
     const reserved = /^(admin|app|api|assets|auth|login|logout|products|product|settings|store|storefront|store-manager|supplier|suppliers|checkout|orders|help|about)$/;
     if (name.length < 2) return setStatus('Enter a store name with at least 2 characters.',true);
     if (slug.length < 2 || reserved.test(slug)) return setStatus('Choose a different store link. Use lowercase letters, numbers and hyphens.',true);
@@ -166,6 +171,7 @@
   }
 
   async function ensureLink(p) {
+    if(!state.identityApproved)throw new Error(localNav('Complete identity verification before linking marketplace products.','أكمل التحقق من الهوية قبل ربط منتجات السوق.'));
     let link = state.links.find(l=>l.supplier_product_id===p.product_id);
     if (link && link.status !== 'active') throw new Error('This product is paused in My Products. Reactivate it there before adding it to your store.');
     if (link) return link;
@@ -199,6 +205,7 @@
   }
 
   async function addProduct(productId,button) {
+    if(!state.identityApproved)return setStatus(localNav('Complete identity verification before adding products to your store.','أكمل التحقق من الهوية قبل إضافة المنتجات إلى متجرك.'),true);
     if (!state.store || !state.store.id) return setStatus('Save your store details first, then add products.',true);
     const p=state.catalog.find(x=>x.product_id===productId);
     if (!p || Number(p.stock_quantity||0)<1) return setStatus('This product is no longer available to add.',true);
@@ -312,6 +319,7 @@
   }
 
   async function toggleProduct(id,published) {
+    if(published&&!state.identityApproved)return setStatus(localNav('Complete identity verification before making a listing public.','أكمل التحقق من الهوية قبل إظهار المنتج للعملاء.'),true);
     try {await IZZY.request('/rest/v1/dropshipper_store_products?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({is_published:published})});await loadData();setStatus(published?'Product is now visible in your store.':'Product is hidden from your store.');}
     catch(error){setStatus(userError(error,'Could not update product visibility.','تعذر تحديث حالة ظهور المنتج. حاول مرة أخرى.'),true);}
   }
