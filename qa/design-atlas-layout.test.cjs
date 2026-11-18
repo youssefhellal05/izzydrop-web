@@ -68,7 +68,7 @@ test('Changed functionality-bearing page markup has no unrelated drift',()=>{
     if(path==='login.html'){
       // The phone field is the approved pre-release signup addition; normalize it only
       // for this legacy Atlas markup-parity check, along with the intentional script cache key.
-      next=next.replace(/\s*<div class="auth-field">\s*<label for="signup-phone">[\s\S]*?<\/div>\s*/, '\n');
+      next=next.replace(/\n\s*<div class="auth-field">\s*<label for="signup-phone">[\s\S]*?<\/div>\n\s*(?=<div id="signup-business-field")/, '\n\n              ');
       base=base.replace(/login\.js\?v=[^"]+/, 'login.js?v=__LOGIN_JS_CACHE_KEY__');
       next=next.replace(/login\.js\?v=[^"]+/, 'login.js?v=__LOGIN_JS_CACHE_KEY__');
     }
