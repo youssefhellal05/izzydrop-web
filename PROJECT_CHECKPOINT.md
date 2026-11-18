@@ -142,3 +142,17 @@ Continue from `main` and the exact next task above. Inspect the existing impleme
 6. Only after staging checks pass should a reviewed PR be considered for merge and the migrations/Edge Function be deployed to production.
 
 **Current release status:** implementation and automated source/regression checks are staged and green. It is **not yet production-ready/deployed** because migrations and the Edge Function still require staging execution and real account/browser verification. Keep the native store URL behavior as implemented (\`storefront.html?slug=...\`) until pretty-path routing is separately verified. Do not test against or mutate production data during the remaining QA.
+
+### PR review validation update — 2026-11-18
+
+- **Draft PR #58:** https://github.com/youssefhellal05/izzydrop-web/pull/58
+- **Latest code commit validated:** `120083556d6c544c77a6bfa494f6a6779609af26`.
+- **All PR checks passed on that code commit:**
+  - Pre-release readiness: run `44331651236`
+  - Native storefront regression: run `44331651069`
+  - Pilot onboarding: run `44331651504`
+  - Atlas layout isolation: run `44331651388`
+  - V2 visual preview safety: run `44331651214`
+- The Atlas markup-parity test now normalizes only the intentional additions to login, supplier, admin, dashboard and storefront pages. Independent source comparison confirmed the changed HTML pages match main after those exact additions are normalized.
+- PR remains **draft and unmerged**. The production website and production Supabase database have not been changed.
+- **Do not mark release complete yet:** the four SQL migrations still need execution and full role/RLS/runtime testing in staging, and the Edge Function still needs secret configuration, staging deployment and end-to-end COD checkout testing.
