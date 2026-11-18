@@ -331,12 +331,12 @@
         ${v.legal_name?`<div><b>Legal name:</b> ${IZZY.esc(v.legal_name)}</div>`:''}
         ${v.residential_address?`<div><b>Residential address:</b> ${IZZY.esc(v.residential_address)}</div>`:''}
         ${v.residential_maps_url?`<div><a href="${IZZY.esc(v.residential_maps_url)}" target="_blank" rel="noopener noreferrer">Open customer location map</a></div>`:''}
-        \${v.review_reason?\`<div class="notice">\${IZZY.esc(v.review_reason)}</div>\`:''}
+        ${v.review_reason?`<div class="notice">${IZZY.esc(v.review_reason)}</div>`:''}
         <details class="order-details"><summary>Edit identity details</summary>
-          <form class="form admin-dropshipper-verification-edit" data-id="\${IZZY.esc(v.dropshipper_id)}">
-            <label class="field-label">Legal name<input name="legal_name" maxlength="120" value="\${IZZY.esc(v.legal_name||'')}" required></label>
-            <label class="field-label">Residential address<textarea name="residential_address" minlength="8" maxlength="500" rows="3" required>\${IZZY.esc(v.residential_address||'')}</textarea></label>
-            <label class="field-label">Google Maps link<input name="residential_maps_url" type="url" maxlength="500" value="\${IZZY.esc(v.residential_maps_url||'')}"></label>
+          <form class="form admin-dropshipper-verification-edit" data-id="${IZZY.esc(v.dropshipper_id)}">
+            <label class="field-label">Legal name<input name="legal_name" maxlength="120" value="${IZZY.esc(v.legal_name||'')}" required></label>
+            <label class="field-label">Residential address<textarea name="residential_address" minlength="8" maxlength="500" rows="3" required>${IZZY.esc(v.residential_address||'')}</textarea></label>
+            <label class="field-label">Google Maps link<input name="residential_maps_url" type="url" maxlength="500" value="${IZZY.esc(v.residential_maps_url||'')}"></label>
             <button class="btn" type="submit">Save identity details</button>
           </form>
         </details>
