@@ -13,6 +13,7 @@
     commissions:['Commissions','Control marketplace, supplier, and product commission rules.'],
     shipping:['Shipping','Control Cairo delivery pricing and the shipping-company cost.'],
     admins:['Admins','Invite trusted people and review Control Center access.'],
+    accounts:['Accounts','Inspect and edit user profiles, verification status, and operational access.'],
     settings:['Settings','Manage your IzzyDrop account, appearance, and security.']
   };
 
@@ -253,10 +254,13 @@
       }
       const detail=v?`<details class="pilot-review-summary">
           <summary>Verification: ${IZZY.esc(v.review_status.replaceAll('_',' '))}</summary>
+          <div><b>Legal name:</b> ${IZZY.esc(v.legal_name||'—')}</div>
           <div><b>Address:</b> ${IZZY.esc(v.business_address)}</div>
           <div><b>Phone:</b> ${IZZY.esc(v.business_phone)}</div>
+          ${v.business_maps_url?`<div><a href="${IZZY.esc(v.business_maps_url)}" target="_blank" rel="noopener noreferrer">Open supplier location map</a></div>`:''}
           <div><b>Registration:</b> ${IZZY.esc(v.registration_status)} — ${IZZY.esc(v.registration_number||'not provided')}</div>
           <div><b>Tax number:</b> ${IZZY.esc(v.tax_registration_number||'not provided')}</div>
+          ${v.identity_document_path?`<button class="btn secondary pilot-doc-btn" type="button" data-path="${IZZY.esc(v.identity_document_path)}">View private ID document</button>`:''}
           ${v.registration_document_path?`<button class="btn secondary pilot-doc-btn" type="button" data-path="${IZZY.esc(v.registration_document_path)}">View registration document</button>`:''}
           ${v.tax_document_path?`<button class="btn secondary pilot-doc-btn" type="button" data-path="${IZZY.esc(v.tax_document_path)}">View tax card</button>`:''}
           ${v.supplier_notes?`<div><b>Notes:</b> ${IZZY.esc(v.supplier_notes)}</div>`:''}
@@ -307,6 +311,9 @@
       return `<article class="card admin-order-card">
         <div class="admin-order-head"><div><b>${IZZY.esc(p.full_name||d.business_name||'Dropshipper')}</b><small>${IZZY.esc(d.business_name||'')} · Submitted ${IZZY.esc(submitted)}</small></div>
           <span class="tag ${v.review_status==='approved'?'ok':v.review_status==='submitted'?'warn':'bad'}">${IZZY.esc(reviewStatus)}</span></div>
+        ${v.legal_name?`<div><b>Legal name:</b> ${IZZY.esc(v.legal_name)}</div>`:''}
+        ${v.residential_address?`<div><b>Residential address:</b> ${IZZY.esc(v.residential_address)}</div>`:''}
+        ${v.residential_maps_url?`<div><a href="${IZZY.esc(v.residential_maps_url)}" target="_blank" rel="noopener noreferrer">Open customer location map</a></div>`:''}
         ${v.review_reason?`<div class="notice">${IZZY.esc(v.review_reason)}</div>`:''}
         <div class="admin-row-actions"><button class="btn secondary identity-doc-btn" type="button" data-path="${IZZY.esc(v.id_document_path)}">View private ID document</button>${actions}</div>
       </article>`;
