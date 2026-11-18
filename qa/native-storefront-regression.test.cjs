@@ -129,7 +129,7 @@ test('public storefront branding and banner layout stay cohesive on mobile', () 
   const storefront = read('storefront.js');
   const css = read('storefront.css');
   const html = read('storefront.html');
-  assert.match(storefront, /storefront-header-brand/);
+  assert.match(storefront, /\$\('#storefront-brand'\)/);
   assert.match(storefront, /storefront-header-store-name/);
   assert.match(storefront, /storefront-store-hero-title/);
   assert.match(css, /\.storefront-header-brand\s*\{/);
