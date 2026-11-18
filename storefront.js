@@ -31,7 +31,25 @@
     'No products published yet': 'لم تُضف منتجات إلى المتجر بعد',
     'This store is being prepared. Please check back soon.': 'المتجر قيد التجهيز. تفقّد المتجر مرة أخرى قريبًا.',
     'Find something you’ll love.': 'اكتشف منتجات تعجبك.',
-    'Find products you’ll love.': 'اكتشف منتجات تعجبك.'
+    'Find products you’ll love.': 'اكتشف منتجات تعجبك.',
+    'Order with cash on delivery': 'اطلب والدفع عند الاستلام',
+    'Order details': 'بيانات الطلب',
+    'Confirm your delivery details to place a cash-on-delivery order. Delivery is currently available in Cairo only.': 'أدخل بيانات التوصيل لتأكيد طلب الدفع عند الاستلام. التوصيل متاح حاليًا في القاهرة فقط.',
+    'Full name': 'الاسم بالكامل',
+    'Phone number': 'رقم الهاتف',
+    'Email (optional)': 'البريد الإلكتروني (اختياري)',
+    'Street address / building / apartment': 'العنوان بالتفصيل / المبنى / الشقة',
+    'District / city': 'المنطقة / المدينة',
+    'Governorate': 'المحافظة',
+    'Google Maps link (optional)': 'رابط Google Maps (اختياري)',
+    'Quantity': 'الكمية',
+    'Place COD order': 'تأكيد الطلب والدفع عند الاستلام',
+    'Order total': 'إجمالي الطلب',
+    'Cash on delivery': 'الدفع عند الاستلام',
+    'Order placed successfully': 'تم تسجيل طلبك بنجاح',
+    'Try again': 'حاول مرة أخرى',
+    'Your order reference is': 'رقم طلبك هو',
+    'Your total is': 'إجمالي طلبك'
   };
   const t = value => language === 'ar' ? (copy[value] || value) : value;
   function setLanguage(nextLanguage, reload = false) {
@@ -70,36 +88,108 @@
   function renderProduct(p) {
     const images=(Array.isArray(p.images)?p.images:[]).map(safeUrl).filter(Boolean);
     const variants=Array.isArray(p.variants)?p.variants:[];
-    const v=variants[0]||null;
-    const out=!v||v.in_stock!==true;
+    const v=variants.find(x=>x.in_stock===true)||variants[0]||null;
+    const index=Math.max(0,variants.indexOf(v)),out=!variants.some(x=>x.in_stock===true);
     const gallery=images.length
       ? "<div class='storefront-gallery'><img class='storefront-main-image' src='"+esc(images[0])+"' alt='"+esc(p.title)+"' loading='lazy'>"+
         (images.length>1?"<div class='storefront-photo-dots'>"+images.map((url,i)=>"<button type='button' data-photo-index='"+i+"' class='"+(i===0?'on':'')+"' aria-label='"+esc(t('View photo'))+' '+(i+1)+"'></button>").join('')+"</div>":"")+"</div>"
       : "<div class='storefront-gallery'><div class='storefront-gallery-empty'>IZ</div></div>";
-    const select=variants.length>1?"<label><span class='sr-only'>"+esc(t('Choose a variant'))+"</span><select class='storefront-variant-select' aria-label='"+esc(t('Choose a variant'))+"'>"+variants.map((x,i)=>"<option value='"+esc(x.id)+"' "+(i===0?'selected':'')+">"+esc(optionLabel(x))+"</option>").join('')+"</select></label>":"";
+    const select=variants.length>1?"<label><span class='sr-only'>"+esc(t('Choose a variant'))+"</span><select class='storefront-variant-select' aria-label='"+esc(t('Choose a variant'))+"'>"+
+      variants.map((x,i)=>"<option value='"+esc(x.id)+"' "+(i===index?'selected':'')+">"+esc(optionLabel(x))+(x.in_stock?'':' · '+esc(t('Out of stock')))+"</option>").join('')+"</select></label>":"";
+    const orderButton="<button type='button' class='btn storefront-order-button' data-order-product='"+esc(p.id)+"' "+(out?'disabled':'')+">"+esc(t('Order with cash on delivery'))+"</button>";
     return "<article class='storefront-product-card' id='store-product-"+esc(p.id)+"' data-store-product-id='"+esc(p.id)+"'>"+gallery+
       "<div class='storefront-product-content'><h3>"+esc(p.title||t('Product'))+"</h3><p class='storefront-product-description'>"+esc(p.description||'')+"</p>"+
       "<div class='storefront-price-row'><span class='storefront-price'>"+(v?money(v.price,p.currency):'—')+"</span><span class='storefront-stock "+(out?'out':'')+"'>"+(out?t('Out of stock'):t('Available'))+"</span></div>"+
-      select+"<div class='storefront-option-note'>"+(v?esc(optionLabel(v)) :t('No variants are available right now.'))+"</div>"+
-      "<div class='storefront-coming-soon'>"+esc(t('Online ordering is coming soon. This store is currently a product showcase.'))+"</div></div></article>";
+      select+"<div class='storefront-option-note'>"+(v?esc(optionLabel(v)):t('No variants are available right now.'))+"</div>"+
+      "<div class='storefront-product-actions'>"+orderButton+"</div></div></article>";
   }
   function wireProducts(products) {
     $$('.storefront-product-card').forEach(card=>{
       const p=products.find(x=>x.id===card.dataset.storeProductId);if(!p)return;
       const variants=Array.isArray(p.variants)?p.variants:[];
-      const select=$('.storefront-variant-select',card),price=$('.storefront-price',card),stock=$('.storefront-stock',card),note=$('.storefront-option-note',card),image=$('.storefront-main-image',card);
-      const dots=$$('.storefront-photo-dots button',card),images=(Array.isArray(p.images)?p.images:[]).map(safeUrl).filter(Boolean);
+      const select=$('.storefront-variant-select',card),price=$('.storefront-price',card),stock=$('.storefront-stock',card),note=$('.storefront-option-note',card),image=$('.storefront-main-image',card),order=$('.storefront-order-button',card);
+      const images=(Array.isArray(p.images)?p.images:[]).map(safeUrl).filter(Boolean);
       if(select)select.addEventListener('change',()=>{
         const v=variants.find(x=>x.id===select.value)||variants[0];if(!v)return;
         price.textContent=money(v.price,p.currency);
         const out=v.in_stock!==true;stock.textContent=out?t('Out of stock'):t('Available');stock.classList.toggle('out',out);
-        note.textContent=optionLabel(v);
+        note.textContent=optionLabel(v);if(order)order.disabled=out;
         const vi=safeUrl(v.image_url);if(image&&vi&&images.includes(vi))image.src=vi;
       });
-      dots.forEach(button=>button.addEventListener('click',()=>{
-        const i=Number(button.dataset.photoIndex);if(image&&images[i])image.src=images[i];dots.forEach(x=>x.classList.toggle('on',x===button));
+      if(order)order.addEventListener('click',()=>{
+        const v=variants.find(x=>x.id===(select?.value||''))||variants.find(x=>x.in_stock===true);
+        if(!v||v.in_stock!==true)return;
+        openCheckout(p,v);
+      });
+      $$('.storefront-photo-dots button',card).forEach(button=>button.addEventListener('click',()=>{
+        const i=Number(button.dataset.photoIndex);if(image&&images[i])image.src=images[i];
+        $$('.storefront-photo-dots button',card).forEach(x=>x.classList.toggle('on',x===button));
       }));
     });
+  }
+  let checkoutSelection=null,checkoutKey='';
+  function checkoutMarkup(){
+    return "<section id='storefront-checkout' class='storefront-checkout' hidden>"+
+      "<div class='storefront-checkout-head'><div><span class='storefront-checkout-eyebrow'>"+esc(t('Order details'))+"</span><h2>"+esc(t('Order details'))+"</h2></div><button type='button' id='storefront-checkout-close' class='storefront-checkout-close' aria-label='Close'>×</button></div>"+
+      "<p class='storefront-checkout-intro'>"+esc(t('Confirm your delivery details to place a cash-on-delivery order. Delivery is currently available in Cairo only.') )+"</p>"+
+      "<div class='storefront-checkout-summary'><b id='storefront-checkout-product'></b><span id='storefront-checkout-variant'></span><strong id='storefront-checkout-price'></strong></div>"+
+      "<form id='storefront-checkout-form' class='storefront-checkout-form'>"+
+      "<label>"+esc(t('Full name'))+"<input id='checkout-name' name='customer_name' autocomplete='name' minlength='2' maxlength='120' required></label>"+
+      "<label>"+esc(t('Phone number'))+"<input id='checkout-phone' name='customer_phone' type='tel' autocomplete='tel' minlength='7' maxlength='40' required></label>"+
+      "<label>"+esc(t('Email (optional)'))+"<input id='checkout-email' name='customer_email' type='email' autocomplete='email' maxlength='254'></label>"+
+      "<label class='storefront-checkout-wide'>"+esc(t('Street address / building / apartment'))+"<textarea id='checkout-address' name='address1' minlength='3' maxlength='500' rows='2' required></textarea></label>"+
+      "<label>"+esc(t('District / city'))+"<input id='checkout-city' name='city' minlength='2' maxlength='120' required></label>"+
+      "<label>"+esc(t('Governorate'))+"<input id='checkout-governorate' name='governorate' value='"+(language==='ar'?'القاهرة':'Cairo')+"' readonly required></label>"+
+      "<label class='storefront-checkout-wide'>"+esc(t('Google Maps link (optional)'))+"<input id='checkout-map' name='map_url' type='url' maxlength='500' placeholder='https://maps.app.goo.gl/...'></label>"+
+      "<label>"+esc(t('Quantity'))+"<input id='checkout-quantity' type='number' min='1' max='50' step='1' value='1' required></label>"+
+      "<div class='storefront-checkout-total'><span>"+esc(t('Order total'))+"</span><strong id='storefront-checkout-total'></strong><small>"+esc(t('Cash on delivery'))+"</small></div>"+
+      "<button class='btn storefront-place-order' type='submit'>"+esc(t('Place COD order'))+"</button>"+
+      "<div id='storefront-checkout-status' class='status' role='status' aria-live='polite'></div></form></section>"+
+      "<section id='storefront-order-result' class='storefront-order-result' hidden><h2>"+esc(t('Order placed successfully'))+"</h2><p id='storefront-order-result-text'></p><button class='btn secondary' type='button' id='storefront-order-another'>"+esc(t('Try again'))+"</button></section>";
+  }
+  function updateCheckoutSummary(){
+    if(!checkoutSelection)return;
+    const quantity=Math.max(1,Math.min(50,Number($('#checkout-quantity').value)||1));
+    $('#storefront-checkout-price').textContent=money(checkoutSelection.variant.price,checkoutSelection.product.currency);
+    $('#storefront-checkout-total').textContent=money(Number(checkoutSelection.variant.price||0)*quantity,checkoutSelection.product.currency)+' + delivery';
+  }
+  function openCheckout(product,variant){
+    checkoutSelection={product,variant};checkoutKey=crypto.randomUUID();
+    $('#storefront-order-result').hidden=true;$('#storefront-checkout').hidden=false;
+    $('#storefront-checkout-product').textContent=product.title||t('Product');
+    $('#storefront-checkout-variant').textContent=optionLabel(variant);
+    $('#checkout-quantity').value='1';$('#storefront-checkout-status').textContent='';
+    $('#checkout-governorate').value=language==='ar'?'القاهرة':'Cairo';
+    updateCheckoutSummary();$('#storefront-checkout').scrollIntoView({behavior:'smooth',block:'start'});
+  }
+  function wireCheckout(){
+    const form=$('#storefront-checkout-form');if(!form)return;
+    form.addEventListener('input',()=>{checkoutKey=crypto.randomUUID();updateCheckoutSummary();});
+    $('#checkout-quantity').addEventListener('change',updateCheckoutSummary);
+    $('#storefront-checkout-close').addEventListener('click',()=>{$('#storefront-checkout').hidden=true;});
+    $('#storefront-order-another').addEventListener('click',()=>{$('#storefront-order-result').hidden=true;root.scrollIntoView({behavior:'smooth'});});
+    form.addEventListener('submit',submitCheckout);
+  }
+  async function submitCheckout(event){
+    event.preventDefault();if(!checkoutSelection)return;
+    const button=$('.storefront-place-order'),status=$('#storefront-checkout-status'),quantity=Number($('#checkout-quantity').value);
+    if(!Number.isInteger(quantity)||quantity<1||quantity>50){status.textContent=language==='ar'?'أدخل كمية من 1 إلى 50.':'Enter a quantity from 1 to 50.';return;}
+    button.disabled=true;status.textContent=language==='ar'?'جارٍ تسجيل الطلب…':'Placing your order…';
+    try{
+      const payload={slug,variant_id:checkoutSelection.variant.id,quantity,customer_name:$('#checkout-name').value.trim(),
+        customer_phone:$('#checkout-phone').value.trim(),customer_email:$('#checkout-email').value.trim()||null,
+        address1:$('#checkout-address').value.trim(),city:$('#checkout-city').value.trim(),
+        governorate:$('#checkout-governorate').value.trim(),map_url:$('#checkout-map').value.trim()||null,idempotency_key:checkoutKey};
+      const response=await fetch(IZZY.config.supabaseUrl+'/functions/v1/native-storefront-gateway',{
+        method:'POST',headers:{'Content-Type':'application/json',apikey:IZZY.config.supabaseKey},body:JSON.stringify(payload)
+      });
+      const data=await response.json().catch(()=>({}));
+      if(!response.ok||data.ok!==true)throw Error(data.error||'Could not place your order. Please try again.');
+      $('#storefront-checkout').hidden=true;$('#storefront-order-result').hidden=false;
+      $('#storefront-order-result-text').textContent=t('Your order reference is')+' '+data.reference+'. '+t('Your total is')+' '+money(data.total_amount,checkoutSelection.product.currency)+' ('+t('Cash on delivery')+').';
+      $('#storefront-order-result').scrollIntoView({behavior:'smooth',block:'center'});form.reset();
+    }catch(error){status.textContent=error.message||t('Try again');}
+    finally{button.disabled=false;}
   }
   async function init() {
     if(!slug||!/^[a-z0-9]+(-[a-z0-9]+)*$/i.test(slug)){errorPage('Store not found','Check that the store link is correct.');return;}
@@ -168,8 +258,9 @@
         (heroDescription?"<p class='storefront-store-description'>"+esc(heroDescription)+"</p>":"")+"</div>"+
         "</section>"+
         "<section class='storefront-products-section'><header class='storefront-products-head'><div><h2>"+esc(t('Find your next favorite'))+"</h2><p>"+esc(t('Take a look around and see what catches your eye.'))+"</p></div></header>"+
-        "<div class='storefront-product-grid'>"+(products.length?products.map(renderProduct).join(''):"<div class='storefront-empty-products'><b>"+esc(t('No products published yet'))+"</b><p>"+esc(t('This store is being prepared. Please check back soon.'))+"</p></div>")+"</div></section>";
+        "<div class='storefront-product-grid'>"+(products.length?products.map(renderProduct).join(''):"<div class='storefront-empty-products'><b>"+esc(t('No products published yet'))+"</b><p>"+esc(t('This store is being prepared. Please check back soon.'))+"</p></div>")+"</div></section>"+checkoutMarkup();
       wireProducts(products);
+      wireCheckout();
     } catch(error) {
       errorPage('We couldn’t open this store','Please refresh the page in a moment.');
       console.error('Public storefront load failed:',error);
