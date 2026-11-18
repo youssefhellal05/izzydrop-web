@@ -102,6 +102,12 @@
                 <input id="signup-name" autocomplete="name" placeholder="Your name" required>
               </div>
 
+              <div class="auth-field">
+                <label for="signup-phone">Phone number</label>
+                <input id="signup-phone" type="tel" inputmode="tel" autocomplete="tel" minlength="7" maxlength="40" pattern="\\+?[0-9\\s()\\-]{7,40}" placeholder="+20 1XXXXXXXXX" required>
+                <small>Collected for account and delivery contact. SMS verification is not enabled at launch.</small>
+              </div>
+
               <div id="signup-business-field" class="auth-field">
                 <label id="signup-business-label" for="signup-business">Store / business name <span class="muted">(optional)</span></label>
                 <input id="signup-business" autocomplete="organization" placeholder="Your store or business">
