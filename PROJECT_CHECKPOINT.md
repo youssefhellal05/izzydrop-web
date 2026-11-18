@@ -158,46 +158,64 @@ Continue from `main` and the exact next task above. Inspect the existing impleme
 - **Historical note superseded by the final audit below:** staging is waived by owner decision. Production rollout is still pending explicit approval, migration deployment, Edge Function deployment and post-deployment smoke tests.
 
 
-## Final pre-release audit — 2026-11-18
+## Final pre-release rollout — 2026-11-18
 
-**Latest implementation commit:** `402929b890176059b61971cb27ea4badca0746ff`  
-**Branch:** `feat/pre-release-readiness`  
-**PR:** [#58 — Pre-release readiness](https://github.com/youssefhellal05/izzydrop-web/pull/58) — open, draft, unmerged.
+**Merged PR:** [#58 — Pre-release readiness](https://github.com/youssefhellal05/izzydrop-web/pull/58)  
+**Merge commit on `main`:** `49da01217a1c85e49e0d54962cccbae417d2ee7e`  
+**Application code commit validated before merge:** `402929b890176059b61971cb27ea4badca0746ff`
 
-### Final validation
+### Production deployment completed
 
-All five GitHub Actions checks passed on the latest implementation commit:
-- Pre-release readiness — run 44373187725
-- Native storefront regression — run 44373187710
-- Pilot onboarding — run 44373187692
-- Atlas layout isolation — run 44373187789
-- V2 visual preview safety — run 44373187695
+The owner approved proceeding without a Supabase staging branch and accepted that the existing empty, unverified storefront may remain hidden until its owner completes verification.
 
-SQL parsing, browser source/regression checks and Edge Function type-checking passed. The production Supabase project was inspected read-only. All four PR migrations remain unapplied and `native-storefront-gateway` remains undeployed.
+The four migrations were successfully applied to production, in order:
+- `20261118193200_pre_release_verification_admin`
+- `20261118193220_native_storefront_checkout`
+- `20261118193230_admin_order_inventory_controls`
+- `20261118193249_admin_verification_edit_controls`
 
-### Owner decision about staging
+The Supabase Edge Function `native-storefront-gateway` is ACTIVE at version 1, with `verify_jwt=false` for public customer checkout. It reads `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` from Supabase's server-side Edge Function environment; no service-role key is present in browser code.
 
-The owner has chosen to skip a Supabase staging branch. Do not create one or request a staging cost confirmation. No staging branch has been created and no staging charge has been incurred.
+GitHub Pages build and deployment succeeded for merge commit `49da01217a1c85e49e0d54962cccbae417d2ee7e`:
+- Workflow run: [44382026115 — pages build and deployment](https://github.com/youssefhellal05/izzydrop-web/actions/runs/44382026115)
+- Build job: PASS
+- Deploy to GitHub Pages: PASS
+- Report build status: PASS
 
-### Read-only production facts
+### Validation and production data safety
 
-- Supabase project status: healthy.
-- 4 active dropshippers.
-- 2 approved suppliers; both currently have `verification_required=false`.
-- 1 published/open dropshipper store; it currently has zero published products.
-- 0 dropshipper identity-verification records and 0 approved records.
-- 1 processing order and 1 delivered order.
+All five pre-release automated workflows passed on the documentation-updated feature branch:
+- Pre-release readiness — run 44376266494
+- Native storefront regression — run 44376266474
+- Pilot onboarding — run 44376266622
+- Atlas layout isolation — run 44376266728
+- V2 visual preview safety — run 44376266706
 
-### Existing-store impact
+Post-migration SQL checks confirmed:
+- The checkout idempotency table and required RPCs exist.
+- Anonymous callers cannot execute `native_storefront_create_order`; only `service_role` can.
+- Anonymous callers cannot submit identity verification or execute admin order edits.
+- The signed-in user-facing RPCs retain in-function owner/admin checks.
+- Production order count remains 2. No test orders were created.
+- No inventory was adjusted by the deployment.
+- The existing published store has no approved dropshipper identity record and is therefore hidden by the new public-store gate until its owner completes verification and an admin approves it.
+- Production Supabase project remains healthy.
 
-The new migration gates public store visibility and publication on approved dropshipper identity. The one existing published store will therefore become hidden until its owner submits identity documents and an admin approves the verification. Do not silently bypass this gate or fabricate an approval. Confirm that this empty store may remain hidden, or have the real owner complete verification before deployment.
+### Staging decision
 
-### Final production sequence
+The owner chose to skip staging. No staging branch was created and no staging charge was incurred.
 
-1. Confirm how to handle the existing empty, unverified store.
-2. After explicit approval, apply the four migrations in timestamp order to production.
-3. Deploy `native-storefront-gateway` with `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` configured as server-side secrets.
-4. Publish frontend changes only after database and Edge Function deployment.
-5. Run post-deployment smoke tests for verification, linking/publishing, COD checkout, admin edits, Arabic/English RTL and mobile.
+### Remaining manual smoke tests
 
-**Release status:** Code and automated checks are ready; production rollout is **not complete**. PR #58 remains draft because the existing-store impact and production deployment have not been approved. No production schema, account, order, or other business data was changed during this audit.
+Production schema, Edge Function and GitHub Pages deployment are complete. **Live end-to-end customer checkout has not yet been exercised.** The public site and function endpoint were not reachable from the execution environment used for this rollout, so no HTTP checkout smoke test could be completed here.
+
+Next test with a real browser/account:
+1. Supplier and dropshipper signup, email confirmation, identity document upload and admin review.
+2. Product linking and store publishing after verification approval.
+3. Customer COD checkout: valid Cairo address, invalid address, low stock, duplicate submission and rate-limit behavior.
+4. Admin account/profile, verification, payout, delivery-detail and inventory editing; verify audit entries.
+5. English/Arabic RTL and mobile layout.
+
+Current checkout supports one selected product variant per order with a quantity; it is not a multi-item cart.
+
+**Final status:** PR #58 merged; production migrations applied; checkout gateway deployed; GitHub Pages deployment passed. The release is deployed, but the real-account/browser smoke test remains outstanding. Do not claim full end-to-end checkout validation until those manual tests pass.
