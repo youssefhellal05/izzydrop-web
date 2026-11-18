@@ -96,8 +96,8 @@ test('admin account, order, payout and inventory changes are role-gated and audi
   assert.match(ui, /admin_set_dropshipper_status/);
   assert.match(payout, /admin_update_payout_destination/);
   assert.match(admin, /admin_update_order_shipping_details/);
-  assert.match(adminSql, /old_row\\.status not in \\('pending','processing'\\)/);
-  assert.match(admin, /const canEditDelivery=\\['pending','processing'\\]\\.includes\\(o\\.status\\)/);
+  assert.match(adminSql, /old_row\.status not in \('pending','processing'\)/);
+  assert.match(admin, /const canEditDelivery=\['pending','processing'\]\.includes\(o\.status\)/);
   assert.match(admin, /Delivery details are locked after processing begins/);
   assert.match(admin, /admin_adjust_product_variant_stock/);
 });
