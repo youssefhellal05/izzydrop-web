@@ -264,25 +264,25 @@
           ${v.registration_document_path?`<button class="btn secondary pilot-doc-btn" type="button" data-path="${IZZY.esc(v.registration_document_path)}">View registration document</button>`:''}
           ${v.tax_document_path?`<button class="btn secondary pilot-doc-btn" type="button" data-path="${IZZY.esc(v.tax_document_path)}">View tax card</button>`:''}
           ${v.supplier_notes?`<div><b>Notes:</b> ${IZZY.esc(v.supplier_notes)}</div>`:''}
-          \${v.review_reason?\`<div><b>Review reason:</b> \${IZZY.esc(v.review_reason)}</div>\`:''}
+          ${v.review_reason?`<div><b>Review reason:</b> ${IZZY.esc(v.review_reason)}</div>`:''}
           <details class="order-details"><summary>Edit verification details</summary>
-            <form class="form admin-supplier-verification-edit" data-id="\${IZZY.esc(s.id)}">
-              <label class="field-label">Legal name<input name="legal_name" maxlength="120" value="\${IZZY.esc(v.legal_name||'')}" required></label>
-              <label class="field-label">Business address<textarea name="business_address" minlength="8" maxlength="400" rows="2" required>\${IZZY.esc(v.business_address||'')}</textarea></label>
-              <label class="field-label">Business phone<input name="business_phone" type="tel" maxlength="40" value="\${IZZY.esc(v.business_phone||'')}" required></label>
-              <label class="field-label">Google Maps link<input name="business_maps_url" type="url" maxlength="500" value="\${IZZY.esc(v.business_maps_url||'')}"></label>
+            <form class="form admin-supplier-verification-edit" data-id="${IZZY.esc(s.id)}">
+              <label class="field-label">Legal name<input name="legal_name" maxlength="120" value="${IZZY.esc(v.legal_name||'')}" required></label>
+              <label class="field-label">Business address<textarea name="business_address" minlength="8" maxlength="400" rows="2" required>${IZZY.esc(v.business_address||'')}</textarea></label>
+              <label class="field-label">Business phone<input name="business_phone" type="tel" maxlength="40" value="${IZZY.esc(v.business_phone||'')}" required></label>
+              <label class="field-label">Google Maps link<input name="business_maps_url" type="url" maxlength="500" value="${IZZY.esc(v.business_maps_url||'')}"></label>
               <label class="field-label">Registration status<select name="registration_status" required>
-                <option value="registered" \${v.registration_status==='registered'?'selected':''}>Registered</option>
-                <option value="in_progress" \${v.registration_status==='in_progress'?'selected':''}>Registration in progress</option>
-                <option value="not_registered" \${v.registration_status==='not_registered'?'selected':''}>Not registered yet</option>
+                <option value="registered" ${v.registration_status==='registered'?'selected':''}>Registered</option>
+                <option value="in_progress" ${v.registration_status==='in_progress'?'selected':''}>Registration in progress</option>
+                <option value="not_registered" ${v.registration_status==='not_registered'?'selected':''}>Not registered yet</option>
               </select></label>
-              <label class="field-label">Commercial registration number<input name="registration_number" maxlength="100" value="\${IZZY.esc(v.registration_number||'')}"></label>
-              <label class="field-label">Tax registration number<input name="tax_registration_number" maxlength="100" value="\${IZZY.esc(v.tax_registration_number||'')}"></label>
-              <label class="field-label">Notes<textarea name="supplier_notes" maxlength="1500" rows="2">\${IZZY.esc(v.supplier_notes||'')}</textarea></label>
+              <label class="field-label">Commercial registration number<input name="registration_number" maxlength="100" value="${IZZY.esc(v.registration_number||'')}"></label>
+              <label class="field-label">Tax registration number<input name="tax_registration_number" maxlength="100" value="${IZZY.esc(v.tax_registration_number||'')}"></label>
+              <label class="field-label">Notes<textarea name="supplier_notes" maxlength="1500" rows="2">${IZZY.esc(v.supplier_notes||'')}</textarea></label>
               <button class="btn" type="submit">Save verification details</button>
             </form>
           </details>
-        </details>\`:s.verification_required?'<small class="muted">Verification not submitted</small>':'<small class="muted">Legacy approval rules</small>';
+        </details>`:s.verification_required?'<small class="muted">Verification not submitted</small>':'<small class="muted">Legacy approval rules</small>';
       return `<div class="admin-supplier-table admin-table-row ${s.status==='pending'?'needs-review':''}">
         <div class="admin-entity-cell"><span class="entity-avatar">${IZZY.esc((s.business_name||'S')[0].toUpperCase())}</span><div><b>${IZZY.esc(s.business_name||'Supplier')}</b><small>${IZZY.esc(p.full_name||'')} ${p.phone?'· '+IZZY.esc(p.phone):''}</small>${detail}</div></div>
         <span data-label="Joined">${fmtDate(s.created_at)}</span>
