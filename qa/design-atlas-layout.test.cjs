@@ -87,7 +87,7 @@ test('Changed functionality-bearing page markup has no unrelated drift',()=>{
     if(path==='admin.html'){
       // Normalize the approved admin Accounts navigation/view and the scripts that now
       // load the new admin controls; other admin page markup remains under exact parity.
-      next=stripOnce(next,/          <button data-view="accounts">[^\n]*<\/button>\n\n/g,'Accounts navigation button');
+      next=stripOnce(next,/          <button data-view="accounts">[^\n]*<\/button>\n/g,'Accounts navigation button');
       next=stripOnce(next,/        <section id="view-accounts" class="view" hidden>[\s\S]*?        <\/section>\n\n/g,'Accounts view');
       next=stripOnce(next,/^<script src="admin-accounts\.js\?v=[^"]+"><\/script>\n/gm,'admin Accounts script');
       for(const [sourceName,pattern,placeholder] of [
