@@ -22,7 +22,7 @@ begin
   ) then
     alter table public.supplier_verification_applications
       add constraint supplier_verification_business_maps_url_check
-      check (business_maps_url is null or business_maps_url ~* '^https://(maps\\.app\\.goo\\.gl/|www\\.google\\.[^/]+/maps|maps\\.google\\.[^/]+/)');
+      check (business_maps_url is null or business_maps_url ~* '^https://(maps\.app\.goo\.gl/|www\.google\.[^/]+/maps|maps\.google\.[^/]+/)');
   end if;
   if not exists (
     select 1 from pg_constraint
@@ -31,7 +31,7 @@ begin
   ) then
     alter table public.dropshipper_identity_verifications
       add constraint dropshipper_identity_maps_url_check
-      check (residential_maps_url is null or residential_maps_url ~* '^https://(maps\\.app\\.goo\\.gl/|www\\.google\\.[^/]+/maps|maps\\.google\\.[^/]+/)');
+      check (residential_maps_url is null or residential_maps_url ~* '^https://(maps\.app\.goo\.gl/|www\.google\.[^/]+/maps|maps\.google\.[^/]+/)');
   end if;
 end $$;
 
@@ -97,7 +97,7 @@ begin
   end if;
   if _business_maps_url is not null and (
     length(_business_maps_url)>500 or
-    _business_maps_url !~* '^https://(maps\\.app\\.goo\\.gl/|www\\.google\\.[^/]+/maps|maps\\.google\\.[^/]+/)'
+    _business_maps_url !~* '^https://(maps\.app\.goo\.gl/|www\.google\.[^/]+/maps|maps\.google\.[^/]+/)'
   ) then raise exception 'Use a valid Google Maps link or leave it blank'; end if;
 
   if not exists(select 1 from storage.objects where bucket_id='supplier-documents' and name=_identity_document_path
@@ -187,7 +187,7 @@ begin
   end if;
   if _residential_maps_url is not null and (
     length(_residential_maps_url)>500 or
-    _residential_maps_url !~* '^https://(maps\\.app\\.goo\\.gl/|www\\.google\\.[^/]+/maps|maps\\.google\\.[^/]+/)'
+    _residential_maps_url !~* '^https://(maps\.app\.goo\.gl/|www\.google\.[^/]+/maps|maps\.google\.[^/]+/)'
   ) then raise exception 'Use a valid Google Maps link or leave it blank'; end if;
   if coalesce(btrim(_id_document_path),'')='' or length(_id_document_path)>300
      or left(_id_document_path,length(did::text)+1)<>did::text||'/'
