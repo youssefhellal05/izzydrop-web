@@ -72,6 +72,44 @@ test('Changed functionality-bearing page markup has no unrelated drift',()=>{
       base=base.replace(/login\.js\?v=[^"]+/, 'login.js?v=__LOGIN_JS_CACHE_KEY__');
       next=next.replace(/login\.js\?v=[^"]+/, 'login.js?v=__LOGIN_JS_CACHE_KEY__');
     }
+    const stripOnce=(source,pattern,label)=>{
+      const matches=source.match(pattern)||[];
+      assert.equal(matches.length,1,path+' expected one intentional '+label+' change');
+      return source.replace(pattern,'');
+    };
+    if(path==='supplier.html'){
+      // These two script changes only refresh the verification implementations.
+      base=base.replace(/supplier-onboarding\.js\?v=[^"]+/, 'supplier-onboarding.js?v=__SUPPLIER_ONBOARDING_CACHE_KEY__');
+      next=next.replace(/supplier-onboarding\.js\?v=[^"]+/, 'supplier-onboarding.js?v=__SUPPLIER_ONBOARDING_CACHE_KEY__');
+      base=base.replace(/verification-center\.js\?v=[^"]+/, 'verification-center.js?v=__VERIFICATION_CENTER_CACHE_KEY__');
+      next=next.replace(/verification-center\.js\?v=[^"]+/, 'verification-center.js?v=__VERIFICATION_CENTER_CACHE_KEY__');
+    }
+    if(path==='admin.html'){
+      // Normalize the approved admin Accounts navigation/view and the scripts that now
+      // load the new admin controls; other admin page markup remains under exact parity.
+      next=stripOnce(next,/          <button data-view="accounts">[^\n]*<\/button>/g,'Accounts navigation button');
+      next=stripOnce(next,/        <section id="view-accounts" class="view" hidden>[\s\S]*?        <\/section>\n/g,'Accounts view');
+      next=stripOnce(next,/^<script src="admin-accounts\.js\?v=[^"]+"><\/script>\n/gm,'admin Accounts script');
+      for(const [sourceName,pattern,placeholder] of [
+        ['admin.js',/admin\.js\?v=[^"]+/,'admin.js?v=__ADMIN_JS_CACHE_KEY__'],
+        ['admin payout directory',/admin-payout-directory\.js\?v=[^"]+/,'admin-payout-directory.js?v=__ADMIN_PAYOUT_CACHE_KEY__']
+      ]){
+        base=base.replace(pattern,placeholder);
+        next=next.replace(pattern,placeholder);
+      }
+    }
+    if(path==='store-dashboard.html'){
+      next=stripOnce(next,/^      <div id="dashboard-identity-notice" class="notice" hidden><\/div>\n/gm,'identity notice');
+    }
+    if(path==='storefront.html'){
+      for(const [pattern,placeholder] of [
+        [/storefront\.css\?v=[^"]+/,'storefront.css?v=__STOREFRONT_CSS_CACHE_KEY__'],
+        [/storefront\.js\?v=[^"]+/,'storefront.js?v=__STOREFRONT_JS_CACHE_KEY__']
+      ]){
+        base=base.replace(pattern,placeholder);
+        next=next.replace(pattern,placeholder);
+      }
+    }
     assert.equal(next,base,path+' drifted outside the opt-in asset loader and intentional sidebar/cache changes');
  }
 });
