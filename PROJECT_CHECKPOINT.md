@@ -134,14 +134,14 @@ Continue from `main` and the exact next task above. Inspect the existing impleme
 
 ### Before production release
 
-1. Apply all four migrations to a disposable/staging Supabase project with the matching IzzyDrop schema; run real SQL migration smoke tests and role/RLS tests. The current CI parser validates SQL syntax, not full execution against a complete Supabase schema.
-2. Configure \`SUPABASE_URL\` and \`SUPABASE_SERVICE_ROLE_KEY\` as Edge Function secrets, deploy \`native-storefront-gateway\` to staging, and test the public checkout end to end. Test duplicate submissions, low stock, disabled variants, rate-limit responses and the Cairo delivery guard.
-3. Verify the Supabase email-confirmation setting and test new supplier and dropshipper accounts from signup through email confirmation, document upload, manual approval and first protected action.
-4. Perform a real-account admin walkthrough covering operational account edits, private document access, verification edits, payouts, orders and stock adjustments. Confirm every admin edit appears in \`audit_log\`.
+1. Confirm the production impact on the currently published but empty, unverified store. The new identity gate will keep it hidden until its owner submits documents and an admin approves them.
+2. After explicit production-release approval, apply the four migrations to production in timestamp order. The project owner has chosen not to create a Supabase staging branch.
+3. Configure \`SUPABASE_URL\` and \`SUPABASE_SERVICE_ROLE_KEY\` as Edge Function secrets and deploy \`native-storefront-gateway\` to production. Never expose the service-role key in browser code or chat.
+4. Publish the frontend only after the migrations and Edge Function are in place. Then run smoke tests for signup/email verification, document upload/review, product linking, store publishing, COD checkout and admin controls.
 5. Run Arabic/English and mobile browser smoke tests. Current checkout supports one product variant per order, with quantity; it is not a multi-item cart.
-6. Only after staging checks pass should a reviewed PR be considered for merge and the migrations/Edge Function be deployed to production.
+6. Keep PR #58 draft until the existing-store impact is accepted and the production deployment is explicitly approved.
 
-**Current release status:** implementation and automated source/regression checks are staged and green. It is **not yet production-ready/deployed** because migrations and the Edge Function still require staging execution and real account/browser verification. Keep the native store URL behavior as implemented (\`storefront.html?slug=...\`) until pretty-path routing is separately verified. Do not test against or mutate production data during the remaining QA.
+**Current release status:** implementation and automated source/regression checks are green, but the new migrations and Edge Function are not deployed. The owner has chosen to skip staging. Production remains unchanged until the deployment is explicitly approved. Keep the native store URL behavior as implemented (\`storefront.html?slug=...\`) until pretty-path routing is separately verified.
 
 ### PR review validation update — 2026-11-18
 
@@ -156,3 +156,48 @@ Continue from `main` and the exact next task above. Inspect the existing impleme
 - The Atlas markup-parity test now normalizes only the intentional additions to login, supplier, admin, dashboard and storefront pages. Independent source comparison confirmed the changed HTML pages match main after those exact additions are normalized.
 - PR remains **draft and unmerged**. The production website and production Supabase database have not been changed.
 - **Do not mark release complete yet:** the four SQL migrations still need execution and full role/RLS/runtime testing in staging, and the Edge Function still needs secret configuration, staging deployment and end-to-end COD checkout testing.
+
+
+## Final pre-release audit — 2026-11-18
+
+**Latest implementation commit:** `402929b890176059b61971cb27ea4badca0746ff`  
+**Branch:** `feat/pre-release-readiness`  
+**PR:** [#58 — Pre-release readiness](https://github.com/youssefhellal05/izzydrop-web/pull/58) — open, draft, unmerged.
+
+### Final validation
+
+All five GitHub Actions checks passed on the latest implementation commit:
+- Pre-release readiness — run 44373187725
+- Native storefront regression — run 44373187710
+- Pilot onboarding — run 44373187692
+- Atlas layout isolation — run 44373187789
+- V2 visual preview safety — run 44373187695
+
+SQL parsing, browser source/regression checks and Edge Function type-checking passed. The production Supabase project was inspected read-only. All four PR migrations remain unapplied and `native-storefront-gateway` remains undeployed.
+
+### Owner decision about staging
+
+The owner has chosen to skip a Supabase staging branch. Do not create one or request a staging cost confirmation. No staging branch has been created and no staging charge has been incurred.
+
+### Read-only production facts
+
+- Supabase project status: healthy.
+- 4 active dropshippers.
+- 2 approved suppliers; both currently have `verification_required=false`.
+- 1 published/open dropshipper store; it currently has zero published products.
+- 0 dropshipper identity-verification records and 0 approved records.
+- 1 processing order and 1 delivered order.
+
+### Existing-store impact
+
+The new migration gates public store visibility and publication on approved dropshipper identity. The one existing published store will therefore become hidden until its owner submits identity documents and an admin approves the verification. Do not silently bypass this gate or fabricate an approval. Confirm that this empty store may remain hidden, or have the real owner complete verification before deployment.
+
+### Final production sequence
+
+1. Confirm how to handle the existing empty, unverified store.
+2. After explicit approval, apply the four migrations in timestamp order to production.
+3. Deploy `native-storefront-gateway` with `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` configured as server-side secrets.
+4. Publish frontend changes only after database and Edge Function deployment.
+5. Run post-deployment smoke tests for verification, linking/publishing, COD checkout, admin edits, Arabic/English RTL and mobile.
+
+**Release status:** Code and automated checks are ready; production rollout is **not complete**. PR #58 remains draft because the existing-store impact and production deployment have not been approved. No production schema, account, order, or other business data was changed during this audit.
