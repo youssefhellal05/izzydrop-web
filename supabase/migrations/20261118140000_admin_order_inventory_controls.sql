@@ -45,8 +45,8 @@ begin
 
   select * into old_row from public.orders where id=_order_id for update;
   if not found then raise exception 'Order not found'; end if;
-  if old_row.status in ('delivered','cancelled','refunded','returned') then
-    raise exception 'Delivery details cannot be changed for a closed order';
+  if old_row.status not in ('pending','processing') then
+    raise exception 'Delivery details can only be changed while an order is pending or processing';
   end if;
 
   if old_row.customer_name is distinct from btrim(_customer_name) then changed_fields:=array_append(changed_fields,'customer_name'); end if;
