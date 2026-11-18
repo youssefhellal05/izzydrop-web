@@ -282,6 +282,7 @@
         email:$('#signup-email').value.trim(),
         password,
         fullName:$('#signup-name').value.trim(),
+        phone:$('#signup-phone').value.trim(),
         businessName:business,
         type:signupRole,
         preferredLanguage:signupLanguage,
