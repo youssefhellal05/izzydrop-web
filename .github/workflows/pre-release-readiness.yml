@@ -25,6 +25,7 @@ on:
       - 'supabase/migrations/20261118150000_admin_verification_edit_controls.sql'
       - 'supabase/functions/native-storefront-gateway/**'
       - 'qa/pre-release-readiness.test.cjs'
+      - 'qa/native-storefront-regression.test.cjs'
       - '.github/workflows/pre-release-readiness.yml'
   pull_request:
     branches: [main]
@@ -49,6 +50,7 @@ on:
       - 'supabase/migrations/20261118150000_admin_verification_edit_controls.sql'
       - 'supabase/functions/native-storefront-gateway/**'
       - 'qa/pre-release-readiness.test.cjs'
+      - 'qa/native-storefront-regression.test.cjs'
       - '.github/workflows/pre-release-readiness.yml'
   workflow_dispatch:
 
