@@ -384,6 +384,14 @@
       reason=prompt(actual==='request_changes'?'What must the supplier change before approval?':'Explain why this supplier is rejected:');
       if(reason===null)return;
       if(reason.trim().length<8){msg('Enter a clear reason of at least eight characters.',true);return}
+    }else if(pilot&&actual==='approve'){
+      const application=VERIFICATIONS.find(x=>x.supplier_id===btn.dataset.id);
+      if(['in_progress','not_registered'].includes(application?.registration_status)){
+        reason=prompt('This supplier is not fully registered yet. Add an admin approval note explaining why this exception is acceptable (at least 8 characters):');
+        if(reason===null)return;
+        if(reason.trim().length<8){msg('An approval note of at least eight characters is required for this registration exception.',true);return}
+      }
+      if(!confirm('Confirm approval of this supplier verification?'))return;
     }else if((actual==='reject'||actual==='suspend'||actual==='approve')&&!confirm('Confirm '+actual+' for this supplier?')){
       return;
     }
