@@ -1,0 +1,4 @@
+project_id = "bbqpowtmzsoorluqwfbm"
+
+[functions.native-storefront-gateway]
+verify_jwt = false
