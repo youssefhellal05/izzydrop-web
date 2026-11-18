@@ -99,6 +99,27 @@ test('admin account, order, payout and inventory changes are role-gated and audi
   assert.match(admin, /admin_adjust_product_variant_stock/);
 });
 
+test('email confirmation is required before verification submission and protected store actions', () => {
+  assert.match(verificationSql, /Confirm your email address before submitting supplier verification/);
+  assert.match(verificationSql, /Confirm your email address before submitting identity verification/);
+  assert.match(verificationSql, /supplier must confirm their email address before verification approval/);
+  assert.match(verificationSql, /dropshipper must confirm their email address before identity approval/);
+  assert.match(verificationSql, /u\.email_confirmed_at is not null/);
+});
+
+test('admins can edit supplier and dropshipper verification records with audit logging', () => {
+  const editSql = read('supabase/migrations/20261118150000_admin_verification_edit_controls.sql');
+  const admin = read('admin.js');
+  assert.match(editSql, /admin_update_supplier_verification_details/);
+  assert.match(editSql, /admin_update_dropshipper_verification_details/);
+  assert.match(editSql, /admin_supplier_verification_details_updated/);
+  assert.match(editSql, /admin_dropshipper_verification_details_updated/);
+  assert.match(admin, /admin-supplier-verification-edit/);
+  assert.match(admin, /admin-dropshipper-verification-edit/);
+  assert.match(admin, /admin_update_supplier_verification_details/);
+  assert.match(admin, /admin_update_dropshipper_verification_details/);
+});
+
 test('private service credentials are not shipped in browser assets', () => {
   for (const file of ['login.js','storefront.js','admin.js','admin-accounts.js','verification-center.js']) {
     const source = read(file);
