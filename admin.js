@@ -518,6 +518,7 @@
       const d=DROPSHIPPERS.find(x=>x.id===o.dropshipper_id);
       const dp=profileFor(d?.profile_id);
       const shipping=shippingForOrder(o.id);
+      const canEditDelivery=['pending','processing'].includes(o.status);
       const itemHtml=items.map(i=>{
         const p=productFor(i.supplier_product_id),s=supplierFor(i.supplier_id);
         return `<div class="admin-order-item"><div><b>${IZZY.esc(productName(p)||'Product')} × ${Number(i.quantity||1)}</b><small>${IZZY.esc(s.business_name||'Supplier')}</small></div><div><span class="tag ${i.fulfillment_status==='fulfilled'?'ok':i.fulfillment_status==='cancelled'?'bad':''}">${IZZY.esc(i.fulfillment_status==='fulfilled'?(window.IZZY_I18N?.status?.('shipped')||'shipped'):(window.IZZY_I18N?.status?.(i.fulfillment_status)||i.fulfillment_status))}</span>${i.tracking_number?`<small>${IZZY.esc(i.shipping_carrier||'Carrier')} · ${IZZY.esc(i.tracking_number)}</small>`:''}</div></div>`;
@@ -536,7 +537,7 @@
           <div><small>Customer delivery</small><b>${IZZY.money(o.shipping_fee_at_purchase||0,o.currency)}</b><span>Cairo</span></div>
           <div><small>Customer total</small><b>${IZZY.money(o.total_amount,o.currency)}</b></div>
         </div>
-        <details class="order-details"><summary>Customer delivery details · Edit</summary>
+        ${canEditDelivery?`<details class="order-details"><summary>Customer delivery details · Edit</summary>
           <form class="form admin-order-delivery-edit" data-order-id="${IZZY.esc(o.id)}">
             <label class="field-label">Customer name<input name="customer_name" maxlength="120" value="${IZZY.esc(o.customer_name||'')}" required></label>
             <label class="field-label">Customer phone<input name="customer_phone" type="tel" maxlength="40" value="${IZZY.esc(o.customer_phone||'')}" required></label>
@@ -544,7 +545,7 @@
             <label class="field-label">Delivery address (JSON object)<textarea name="shipping_address" rows="5" maxlength="2000" spellcheck="false">${IZZY.esc(JSON.stringify(o.shipping_address||{},null,2))}</textarea></label>
             <button class="btn" type="submit">Save delivery details</button>
           </form>
-        </details>
+        </details>`:'<div class="notice">Delivery details are locked after processing begins.</div>'}
         <details class="order-details"><summary>View order items & shipping</summary><div class="admin-order-items">${itemHtml}</div><div class="notice"><b>Shipping company</b><span>${IZZY.esc(shipping.shipping_partner_name||'Not set')} · Internal courier cost: ${shipping.courier_cost_at_purchase==null?'—':IZZY.money(shipping.courier_cost_at_purchase,o.currency)}</span></div></details>
       </article>`;
     }).join('')||'<div class="empty-state"><div class="empty-icon">□</div><h3>No orders found</h3><p>Try changing the order filters.</p></div>';
