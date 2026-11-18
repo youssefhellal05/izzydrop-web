@@ -45,6 +45,7 @@
     'Quantity': 'الكمية',
     'Place COD order': 'تأكيد الطلب والدفع عند الاستلام',
     'Order total': 'إجمالي الطلب',
+    'Product subtotal': 'إجمالي المنتجات',
     'Cash on delivery': 'الدفع عند الاستلام',
     'Order placed successfully': 'تم تسجيل طلبك بنجاح',
     'Try again': 'حاول مرة أخرى',
@@ -151,7 +152,7 @@
     if(!checkoutSelection)return;
     const quantity=Math.max(1,Math.min(50,Number($('#checkout-quantity').value)||1));
     $('#storefront-checkout-price').textContent=money(checkoutSelection.variant.price,checkoutSelection.product.currency);
-    $('#storefront-checkout-total').textContent=money(Number(checkoutSelection.variant.price||0)*quantity,checkoutSelection.product.currency)+' + delivery';
+    $('#storefront-checkout-total').textContent=money(Number(checkoutSelection.variant.price||0)*quantity,checkoutSelection.product.currency)+' · delivery fee added to total';
   }
   function openCheckout(product,variant){
     checkoutSelection={product,variant};checkoutKey=crypto.randomUUID();
