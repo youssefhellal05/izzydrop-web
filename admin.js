@@ -403,6 +403,7 @@
     $('#products').innerHTML=rows.map(p=>{
       const s=supplierFor(p.supplier_id),img=imageFor(p.id),stock=totalStock(p.id);
       const canModerate=['active','inactive'].includes(p.status);
+      const stockAction=variantsForProduct(p.id).length?`<button class="btn secondary admin-adjust-stock" type="button" data-product-id="${p.id}">Adjust inventory</button>`:'';
       const action=canModerate?`<button class="btn secondary moderate-product" data-id="${p.id}" data-next="${p.admin_blocked?'active':'inactive'}">${p.admin_blocked?'Unblock':'Block'}</button>`:'';
       return `<div class="admin-product-table admin-table-row">
         <div class="admin-product-cell"><div class="admin-product-thumb">${img?.url?`<img src="${IZZY.esc(img.url)}" alt="">`:'IZ'}</div><div><b>${IZZY.esc(productName(p))}</b><small>${IZZY.esc(p.sku||'')}</small></div></div>
@@ -411,11 +412,41 @@
         <span data-label="Price">${IZZY.money(p.suggested_retail_price,p.currency)}</span>
         <span data-label="Status"><span class="tag ${p.admin_blocked?'bad':p.status==='active'?'ok':p.status==='inactive'?'warn':''}">${p.admin_blocked?'Blocked by IzzyDrop':IZZY.esc(p.status)}</span></span>
         <span data-label="Added">${fmtDate(p.created_at)}</span>
-        <div class="admin-row-actions"><a class="btn secondary" href="product.html?slug=${encodeURIComponent(p.public_slug||'')}&from=admin" target="_blank" rel="noopener">Inspect</a>${action}</div>
+        <div class="admin-row-actions"><a class="btn secondary" href="product.html?slug=${encodeURIComponent(p.public_slug||'')}&from=admin" target="_blank" rel="noopener">Inspect</a>${stockAction}${action}</div>
       </div>`;
     }).join('')||'<div class="empty-state admin-table-empty"><div class="empty-icon">□</div><h3>No products found</h3><p>Try changing the product filters.</p></div>';
 
+    document.querySelectorAll('.admin-adjust-stock').forEach(b=>b.onclick=()=>adjustInventory(b));
     document.querySelectorAll('.moderate-product').forEach(b=>b.onclick=()=>moderateProduct(b));
+  }
+
+
+  async function adjustInventory(button){
+    const productId=button.dataset.productId,product=productFor(productId),variants=variantsForProduct(productId);
+    if(!variants.length){msg('This product has no variants to adjust.',true);return;}
+    const options=variants.map((v,i)=>{
+      const option=Object.entries(v.option_values||{}).map(([k,val])=>k+': '+val).join(', ');
+      return (i+1)+'. '+(v.variant_name||option||'Variant')+' · SKU '+(v.sku||'—')+' · available '+Number(v.stock_quantity||0);
+    }).join('\n');
+    const selectedRaw=prompt('Choose the variant number to adjust:\n'+options+'\n\nEnter a number:','1');
+    if(selectedRaw===null)return;
+    const selectedIndex=Number(selectedRaw)-1;
+    if(!Number.isInteger(selectedIndex)||selectedIndex<0||selectedIndex>=variants.length){msg('Choose a valid variant number.',true);return;}
+    const variant=variants[selectedIndex];
+    const stockRaw=prompt('New AVAILABLE stock quantity for '+(variant.variant_name||'this variant')+'. This is stock available now, after existing reservations:',String(variant.stock_quantity??0));
+    if(stockRaw===null)return;
+    const newStock=Number(stockRaw);
+    if(!Number.isInteger(newStock)||newStock<0||newStock>1000000){msg('Enter a whole number from 0 to 1,000,000.',true);return;}
+    const reason=prompt('Reason for this inventory correction (required):','');
+    if(reason===null)return;
+    if(reason.trim().length<8){msg('Enter a clear reason of at least eight characters.',true);return;}
+    if(!confirm('Update available stock for '+(product?.name||'this product')+' to '+newStock+'?'))return;
+    button.disabled=true;
+    try{
+      const result=await IZZY.rpc('admin_adjust_product_variant_stock',{_variant_id:variant.id,_new_available_stock:newStock,_reason:reason.trim()});
+      msg(result?.updated?'Available variant stock updated and audited.':'No stock change was needed.');
+      await load(false);
+    }catch(error){msg(error.message||'Could not adjust inventory.',true);button.disabled=false;}
   }
 
   async function moderateProduct(btn){
@@ -472,6 +503,15 @@
           <div><small>Customer delivery</small><b>${IZZY.money(o.shipping_fee_at_purchase||0,o.currency)}</b><span>Cairo</span></div>
           <div><small>Customer total</small><b>${IZZY.money(o.total_amount,o.currency)}</b></div>
         </div>
+        <details class="order-details"><summary>Customer delivery details · Edit</summary>
+          <form class="form admin-order-delivery-edit" data-order-id="${IZZY.esc(o.id)}">
+            <label class="field-label">Customer name<input name="customer_name" maxlength="120" value="${IZZY.esc(o.customer_name||'')}" required></label>
+            <label class="field-label">Customer phone<input name="customer_phone" type="tel" maxlength="40" value="${IZZY.esc(o.customer_phone||'')}" required></label>
+            <label class="field-label">Customer email<input name="customer_email" type="email" maxlength="254" value="${IZZY.esc(o.customer_email||'')}"></label>
+            <label class="field-label">Delivery address (JSON object)<textarea name="shipping_address" rows="5" maxlength="2000" spellcheck="false">${IZZY.esc(JSON.stringify(o.shipping_address||{},null,2))}</textarea></label>
+            <button class="btn" type="submit">Save delivery details</button>
+          </form>
+        </details>
         <details class="order-details"><summary>View order items & shipping</summary><div class="admin-order-items">${itemHtml}</div><div class="notice"><b>Shipping company</b><span>${IZZY.esc(shipping.shipping_partner_name||'Not set')} · Internal courier cost: ${shipping.courier_cost_at_purchase==null?'—':IZZY.money(shipping.courier_cost_at_purchase,o.currency)}</span></div></details>
       </article>`;
     }).join('')||'<div class="empty-state"><div class="empty-icon">□</div><h3>No orders found</h3><p>Try changing the order filters.</p></div>';
@@ -908,6 +948,27 @@
   $('#admin-order-status').onchange=()=>{ORDER_OPEN_ONLY=false;renderOrders()};
   $('#admin-order-supplier').onchange=()=>renderOrders();
   if($('#admin-load-more-orders'))$('#admin-load-more-orders').onclick=loadMoreAdminOrders;
+
+
+  $('#orders').addEventListener('submit',async event=>{
+    const form=event.target.closest('.admin-order-delivery-edit');
+    if(!form)return;
+    event.preventDefault();
+    let address;
+    try{address=JSON.parse(form.elements.shipping_address.value||'{}');}
+    catch{msg('Delivery address must be valid JSON. Nothing was saved.',true);return;}
+    if(!address||typeof address!=='object'||Array.isArray(address)){msg('Delivery address must be a JSON object.',true);return;}
+    const button=form.querySelector('[type="submit"]');button.disabled=true;
+    try{
+      await IZZY.rpc('admin_update_order_shipping_details',{
+        _order_id:form.dataset.orderId,_customer_name:form.elements.customer_name.value.trim(),
+        _customer_phone:form.elements.customer_phone.value.trim(),_customer_email:form.elements.customer_email.value.trim()||null,
+        _shipping_address:address
+      });
+      msg('Order delivery details updated and recorded in the audit log.');
+      await load(false);
+    }catch(error){msg(error.message||'Could not update order delivery details.',true);button.disabled=false;}
+  });
 
   $('#commission-supplier').onchange=e=>{SELECTED_SUPPLIER=e.target.value;renderCommissions()};
 
