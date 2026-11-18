@@ -155,7 +155,7 @@ Continue from `main` and the exact next task above. Inspect the existing impleme
   - V2 visual preview safety: run `44331651214`
 - The Atlas markup-parity test now normalizes only the intentional additions to login, supplier, admin, dashboard and storefront pages. Independent source comparison confirmed the changed HTML pages match main after those exact additions are normalized.
 - PR remains **draft and unmerged**. The production website and production Supabase database have not been changed.
-- **Do not mark release complete yet:** the four SQL migrations still need execution and full role/RLS/runtime testing in staging, and the Edge Function still needs secret configuration, staging deployment and end-to-end COD checkout testing.
+- **Historical note superseded by the final audit below:** staging is waived by owner decision. Production rollout is still pending explicit approval, migration deployment, Edge Function deployment and post-deployment smoke tests.
 
 
 ## Final pre-release audit — 2026-11-18
