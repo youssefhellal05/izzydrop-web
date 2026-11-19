@@ -81,8 +81,8 @@ test('Changed functionality-bearing page markup has no unrelated drift',()=>{
       // The public landing-page language control is intentional; its behavior is covered
       // separately by qa/public-landing-language.test.cjs. Strip only these two additions
       // while this legacy test verifies that Atlas did not otherwise alter V1 page markup.
-      next=stripOnce(next,/<button type="button" class="btn ghost public-language-toggle" id="public-language-toggle" data-i18n-skip="true" lang="ar" aria-label="Language">العربية<\\/button>/g,'public language toggle button');
-      next=stripOnce(next,/<script src="public-language-toggle\\.js\\?v=20261119-language1"><\\/script>/g,'public language toggle script');
+      next=stripOnce(next,/<button type="button" class="btn ghost public-language-toggle" id="public-language-toggle" data-i18n-skip="true" lang="ar" aria-label="Language">العربية<\/button>/g,'public language toggle button');
+      next=stripOnce(next,/<script src="public-language-toggle\.js\?v=20261119-language1"><\/script>/g,'public language toggle script');
     }
     if(path==='supplier.html'){
       // These two script changes only refresh the verification implementations.
