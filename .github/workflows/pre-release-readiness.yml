@@ -5,6 +5,9 @@ on:
     branches:
       - feat/pre-release-readiness
     paths:
+      - 'index.html'
+      - 'styles.css'
+      - 'public-language-toggle.js'
       - 'login.html'
       - 'login.js'
       - 'supplier.html'
@@ -25,6 +28,7 @@ on:
       - 'supabase/migrations/20261118150000_admin_verification_edit_controls.sql'
       - 'supabase/functions/native-storefront-gateway/**'
       - 'qa/pre-release-readiness.test.cjs'
+      - 'qa/public-landing-language.test.cjs'
       - 'qa/native-storefront-regression.test.cjs'
       - '.github/workflows/pre-release-readiness.yml'
   pull_request:
@@ -68,6 +72,7 @@ jobs:
           node-version: '22'
       - name: Check browser JavaScript syntax
         run: |
+          node --check public-language-toggle.js
           node --check login.js
           node --check supplier-onboarding.js
           node --check verification-center.js
@@ -80,6 +85,7 @@ jobs:
       - name: Run launch-scope regression tests
         run: |
           node --test qa/pre-release-readiness.test.cjs
+          node --test qa/public-landing-language.test.cjs
           node --test qa/native-storefront-regression.test.cjs
           node --test qa/pilot-onboarding.test.cjs
 
