@@ -34,6 +34,9 @@ on:
   pull_request:
     branches: [main]
     paths:
+      - 'index.html'
+      - 'styles.css'
+      - 'public-language-toggle.js'
       - 'login.html'
       - 'login.js'
       - 'supplier.html'
@@ -54,6 +57,7 @@ on:
       - 'supabase/migrations/20261118150000_admin_verification_edit_controls.sql'
       - 'supabase/functions/native-storefront-gateway/**'
       - 'qa/pre-release-readiness.test.cjs'
+      - 'qa/public-landing-language.test.cjs'
       - 'qa/native-storefront-regression.test.cjs'
       - '.github/workflows/pre-release-readiness.yml'
   workflow_dispatch:
